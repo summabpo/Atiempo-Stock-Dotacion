@@ -12,8 +12,10 @@ class BodegaAdmin(admin.ModelAdmin):
     # Especifica los filtros disponibles en el panel de administración
     list_filter = ('estado', 'id_ciudad', 'fecha_creacion')
 
+    # Excluir los campos 'fecha_creacion' y 'fecha_edicion' ya que no son editables
+    exclude = ('fecha_creacion', 'fecha_edicion')
+
     # Opcionalmente, puedes hacer que los campos se muestren en un solo formulario de edición
-    # como si fueran grupos, lo cual es útil si quieres organizar bien los campos.
     fieldsets = (
         (None, {
             'fields': ('nombre', 'direccion', 'id_ciudad', 'estado')
@@ -21,9 +23,7 @@ class BodegaAdmin(admin.ModelAdmin):
         ('Usuario', {
             'fields': ('id_usuario_creador', 'id_usuario_editor')
         }),
-        ('Fechas', {
-            'fields': ('fecha_creacion', 'fecha_edicion')
-        }),
+        # 'fecha_creacion' y 'fecha_edicion' no se deben mostrar en este formulario
     )
 
 # Registrar el modelo 'Bodega' con la clase de configuración 'BodegaAdmin'

@@ -1,0 +1,9 @@
+# Ignorar archivos compilados de Python
+*.pyc
+__pycache__/
+
+# Ignorar la base de datos SQLite
+db.sqlite3
+
+# Ignorar entorno virtual (si se llama "entornoV")
+/entornoV/
