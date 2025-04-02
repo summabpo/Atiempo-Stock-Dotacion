@@ -8,7 +8,7 @@ class Bodega(models.Model):
     id_bodega = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255)
     id_ciudad = models.ForeignKey(Ciudad, on_delete=models.CASCADE, related_name='bodegas')
-    direccion = models.CharField()
+    direccion = models.CharField(max_length=255, null=True, blank=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_edicion = models.DateTimeField(auto_now=True)
     estado = models.CharField(
