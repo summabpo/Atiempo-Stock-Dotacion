@@ -13,8 +13,9 @@ from django.http import HttpResponse, JsonResponse
 # from django.views.generic import CreateView, UpdateView
 # from django.urls import reverse_lazy
 from .models import Ciudad
-from .forms import CiudadNueva
+from .forms import CiudadNueva, CiudadActualizaForm
 # from django.http import HttpResponseNotAllowed
+from django.contrib import messages
 
 
 def hello(request, username):
@@ -33,7 +34,7 @@ def index(request):
 
 def ciudades(request):
     #ciudades = list(Ciudad.objects.values())
-    ciudades = Ciudad.objects.all()
+    ciudades = Ciudad.objects.all().order_by('id_ciudad')
     return render(request, 'ciudades.html', {
         'ciudades': ciudades
     })
@@ -51,7 +52,25 @@ def crear_ciudad(request):
         })
     else:
         Ciudad.objects.create(nombre=request.POST['nombre'])
+        messages.success(request, "Ciudad Creada Correctamente. ! ")
         return redirect('ciudades')
+
+# def crear_ciudad(request):
+#     #if request.method == 'POST':
+#     #     form = CiudadNueva(request.POST)
+#     #     if form.is_valid():
+#     #         form.save()  # Guarda la nueva ciudad
+#     #         return redirect('ciudades.html')  # Redirige a otra página o a la misma página
+#     # else:
+#     #     form = CiudadNueva()
+        
+#     data = {
+          
+#          'form': CiudadNueva() 
+#     }  
+    
+#     return render(request, 'crear_ciudad.html', data)
+    
     
 def ciudad_detalle(request, id):
     ##ciudad = Ciudad.objects.get(id_ciudad=id)
@@ -86,3 +105,28 @@ def ciudad_detalle(request, id):
 #         return redirect('ciudades:ciudad-list')
 #     except Ciudad.DoesNotExist:
 #         return HttpResponseNotAllowed("Ciudad no encontrada.")
+
+
+def modificar_ciudad(request, id):
+    
+    ciudad =  get_object_or_404(Ciudad, id_ciudad=id)
+    # print(ciudad)
+    # return render(request, 'ciudadDetalle.html',
+    #               {
+    #                   'ciudad':ciudad
+    #               })
+    
+    data = {
+        'form': CiudadActualizaForm(instance=ciudad)
+    }
+    
+    
+    if request.method == 'POST':
+        formulario = CiudadActualizaForm(data=request.POST, instance=ciudad)
+        if formulario.is_valid():
+            formulario.save()
+            messages.success(request, "Ciudad Actualizada Correctamente. ! ")
+            return redirect(to='ciudades')
+        data['form'] = formulario
+            
+    return render(request, 'editarCiudad.html', data)

@@ -1,0 +1,90 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+{% load humanize %}
+
+
+<br>
+<br>
+<div class="card">
+<div class="card-body">
+
+
+
+
+  <div class="d-flex justify-content-between align-items-center">
+    <h2 class="text-center">Bodegas</h2>
+    <!-- Botón para crear ciudad -->
+    <a href="{% url 'crear_bodega' %}"><button class="btn btn-success">Crear Bodega</button></a>
+  </div>
+
+  <hr>
+  <table class="table table-striped table-hover table-responsive-sm text-center">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Nombre</th>
+        <th scope="col">Ciudad</th>
+        <th scope="col">Direccion</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+
+    {% for bodega in bodegas %}
+
+
+    <tr>
+      <th scope="col">{{bodega.id_bodega}}</th>
+      <!-- <th scope="col">
+        <a href="{% url 'bodega_detalle' bodega.id_bodega %}">
+          <h3>{{bodega.nombre | capfirst }}</h3>
+        </a></th> -->
+        <th scope="col">
+          {{bodega.nombre | capfirst }}
+          </th>
+    
+        <th scope="col">
+          {{bodega.id_ciudad | title}}
+          </th>
+
+          <th scope="col">
+            {{bodega.direccion | title }}
+            </th>
+        
+    
+    <!-- {%if ciudad.activo == True %}
+    <th scope="col">✅ {{ciudad.activo}}</th>
+    {% else %}
+    <th scope="col"> {{ciudad.activo}}</th>
+    {% endif %} -->
+    
+    <th scope="col"><a href="{% url 'modificar_bodega' bodega.id_bodega %}"> <button class="btn btn-warning">
+      actualizar
+    </button></a></th>
+
+
+
+ 
+      
+      <!-- {%if ciudad.activo == True %}
+      <h1>✅ {{ciudad.activo}}</h1>
+      {% else %}
+      <h1>inactivo</h1>
+      {% endif %} -->
+    
+     
+
+
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+</div>
+<!-- <p>
+{{ ciudades}}
+</p> -->
+
+
+{% endblock %}

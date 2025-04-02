@@ -1,0 +1,77 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+{% load humanize %}
+
+<br>
+<br>
+<div class="card">
+  <div class="card-body">
+
+
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="text-center">Ciudades</h2>
+      <!-- Botón para crear ciudad -->
+      <a href="{% url 'crear_ciudad' %}"><button class="btn btn-success">Crear Ciudad</button></a>
+    </div>
+
+<hr>
+  <table class="table table-striped table-hover table-responsive-sm text-center">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Nombre</th>
+        <th scope="col">Activo</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+
+  {% for ciudad in ciudades %}
+
+  <tr>
+    <th scope="col">{{ciudad.id_ciudad}}</th>
+    <!-- <th scope="col">
+      <a href="{% url 'ciudad_detalle' ciudad.id_ciudad %}">
+        <h1>{{ciudad.nombre | capfirst}}</h1>
+      </a></th> -->
+
+      <th scope="col">
+        
+          {{ciudad.nombre | capfirst}}
+        </th>  
+  
+  
+  
+  
+  {%if ciudad.activo == True %}
+  <th scope="col">✅ {{ciudad.activo}}</th>
+  {% else %}
+  <th scope="col"> {{ciudad.activo}}</th>
+  {% endif %}
+  
+  <th scope="col"><a href="{% url 'modificar_ciudad' ciudad.id_ciudad %}"> <button class="btn btn-warning">
+    actualizar
+  </button></a></th>
+ 
+  <!-- <button>
+    ✅ Done
+  </button> -->
+</tr>
+
+  {% endfor %}
+</tbody>
+</table>
+
+
+
+</div>
+</div>
+
+<!-- <p>
+{{ ciudades}}
+</p> -->
+
+
+{% endblock %}

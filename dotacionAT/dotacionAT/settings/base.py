@@ -1,9 +1,9 @@
 #import os
 from pathlib import Path
-
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 #BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -14,21 +14,33 @@ SECRET_KEY = 'django-insecure-l=h^a#x%80d=x9p1z38jgi=8*db1z2p2s$8^3ofn3%rih3^^(l
 # Application definition
 
 INSTALLED_APPS = [
+    'admin_interface',
+    'colorfield',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'django.contrib.humanize',
+    
+    
     
     'applications.ciudades',
     'applications.usuarios',
     'applications.bodegas',
+    'applications.proveedores',
+    'applications.productos',
 ]
 
 # Custom user model
 AUTH_USER_MODEL = 'usuarios.Usuario' 
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -49,6 +61,7 @@ TEMPLATES = [
         ##BASE_DIR / 'templates',  # Ruta a la carpeta global de templates
         #'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'DIRS': [BASE_DIR / 'templates'],
+        # 'DIRS': [os.path.join(BASE_DIR, 'templates')],
            
         'APP_DIRS': True,
         'OPTIONS': {

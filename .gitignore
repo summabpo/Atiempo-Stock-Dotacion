@@ -1,9 +1,55 @@
-# Ignorar archivos compilados de Python
-*.pyc
-__pycache__/
+# Ignorar entorno virtual
+/entornoV/
 
-# Ignorar la base de datos SQLite
+# Ignorar base de datos SQLite
 db.sqlite3
 
-# Ignorar entorno virtual (si se llama "entornoV")
-/entornoV/
+# Ignorar archivos de migración generados localmente (excepto las necesarias para el repositorio)
+*.log
+*.pot
+*.pyc
+*.pyo
+*.swp
+*.swo
+
+# Ignorar directorios de compilación de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorar archivos generados por pip
+pip-selfcheck.json
+
+# Ignorar archivos temporales generados por sistemas de archivos
+*.bak
+*.tmp
+
+# Ignorar archivos generados por herramientas de test
+.coverage
+*.coveragerc
+.pytest_cache/
+
+# Ignorar archivos estáticos generados
+staticfiles/
+
+# Archivos de configuración de IDE (ej. Visual Studio Code, PyCharm, etc.)
+.vscode/
+.idea/
+
+# Archivos de configuración de Docker (si usas Docker)
+.docker/
+Dockerfile
+docker-compose.yml
+
+# Ignorar archivos generados por Pillow (si trabajas con imágenes)
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Archivos temporales de Windows (como Thumb.db, Desktop.ini)
+Thumbs.db
+Desktop.ini
+
+# Ignorar archivos relacionados con las configuraciones de Django
+*.pot

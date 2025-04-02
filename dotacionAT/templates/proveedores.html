@@ -1,0 +1,63 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+{% load humanize %}
+
+<br>
+<br>
+<div class="card">
+  <div class="card-body">
+
+
+<div class="d-flex justify-content-between align-items-center">
+  <h2 class="text-center">Proveedores</h2>
+  <!-- Botón para crear ciudad -->
+  <a href="{% url 'crear_proveedor' %}"><button class="btn btn-success">Crear Proveedor</button></a>
+</div>
+
+<hr>
+
+
+  <table class="table table-striped table-hover table-responsive-sm text-center">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Nombre Proveedor</th>
+        <th scope="col">Telefono</th>
+        <th scope="col">Email</th>
+        <th scope="col">Ciudad</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+
+  {% for proveedor in proveedores %}
+
+
+  <tr>
+    <th scope="col">{{proveedor.id_proveedor | intcomma}}</th>
+    <!-- <th scope="col">
+      <a href="{% url 'proveedor_detalle' proveedor.id_proveedor %}">
+        <h1>{{proveedor.nombre | title }}</h1>
+      </a></th> -->
+      <th scope="col">
+             {{proveedor.nombre | title }}
+        </th>
+    <th scope="col">{{proveedor.telefono}}</th>
+    <th scope="col">{{proveedor.email}}</th>
+    <th scope="col">{{proveedor.ciudad | capfirst}}</th> 
+  
+  
+  <th scope="col"><a href="{% url 'modificar_proveedor' proveedor.id_proveedor %}"><button class="btn btn-warning">
+    actualizar
+  </button></a></th>
+  
+</tr>
+  {% endfor %}
+
+</tbody>
+</table>
+</div>
+</div>
+{% endblock %}

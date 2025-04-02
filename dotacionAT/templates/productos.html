@@ -1,0 +1,68 @@
+{% extends 'layouts/base.html' %}
+
+
+{% block content %}
+
+{% load humanize %}
+
+<br>
+<br>
+<div class="card">
+  <div class="card-body">
+
+
+
+<div class="d-flex justify-content-between align-items-center">
+  <h2 class="text-center">Productos</h2>
+  <!-- Botón para crear ciudad -->
+  <a href="{% url 'crear_productos' %}"><button class="btn btn-success">Crear Producto</button></a>
+</div>
+
+<hr>
+<table class="table table-striped table-hover table-responsive-sm text-center">
+  <thead class="thead-dark">
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Nombre</th>
+      <th scope="col">categoria</th>
+      <th scope="col">Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    {% for producto in productos %}
+
+    <tr>
+    <th scope="col">{{producto.id_producto| intcomma}}</th>
+    <th scope="col">{{producto.nombre | capfirst }}</th>
+    <th scope="col">{{producto.categoria | capfirst }}</th>
+<!-- 
+    <article class="card">
+        <a href="{% url 'productos_detalle' producto.id_producto %}">
+          <h1>{{producto.nombre}}</h1>
+        </a>        -->
+      
+      <!-- {%if ciudad.activo == True %}
+      <h1>✅ {{ciudad.activo}}</h1>
+      {% else %}
+      <h1>inactivo</h1>
+      {% endif %} -->     
+      
+  <th scope="col"><a href="{% url 'modificar_producto' producto.id_producto %}"><button class="btn btn-warning">
+    actualizar
+  </button></a></th>
+</tr>
+
+    {% endfor %}
+
+
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- <p>
+{{ ciudades}}
+</p> -->
+
+{% endblock %}
