@@ -1,0 +1,35 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+{% load crispy_forms_tags %}
+
+<div class="container">
+    <br>
+    <br>
+    <div class="row">
+        <div class="col-12 col-md-4 offset-md-4">
+            <br>
+            <div class="card">
+                <div class="cadr-body">
+                    <h2 class="text-center">Editar Categoria</h2>
+                    <br>
+                    <form action="" method="POST"  class="bg-secondary p-4">
+                        {% csrf_token %}
+                        {{ form | crispy }}
+                        <br>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'categorias' %}" class="btn btn-secondary">
+                                Volver
+                            </a>
+                            &nbsp;    
+                            <button type="submit" class="btn btn-success">
+                                Editar Categoria
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

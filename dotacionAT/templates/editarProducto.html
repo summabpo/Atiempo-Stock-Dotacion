@@ -11,28 +11,26 @@
     <div class="col-12 col-md-4 offset-md-4">
       <br>
       <div class="card">
-<div class="cadr-body">
-<h2 class="text-center">Editar Producto</h2>
-<br>
-
-<form method="POST" class="bg-secondary p-4">
-    {% csrf_token %}
-    {{ form | crispy }}
-    <div class="text-center mt-3">
-      <a href="{% url 'productos' %}" class="btn btn-secondary">
-        Volver
-      </a>
-      &nbsp;  
-    <button class="btn btn-success" type="submit">Editar Producto</button>
+        <div class="cadr-body">
+          <h2 class="text-center">Editar Producto</h2>
+          <br>
+          <form method="POST" class="bg-secondary p-4">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <div class="text-center mt-3">
+              <a href="{% url 'productos' %}" class="btn btn-secondary">
+                Volver
+              </a>
+              &nbsp;  
+              <button class="btn btn-success" type="submit">Editar Producto</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-  </form>
 </div>
 
-</div>
-</div>
-
-</div>
-</div>
 {% endblock  %}
 
 <!-- <form>

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import Bodega
+from django.urls import reverse
 from .forms import BodegaNueva
 from django.contrib import messages
 
@@ -14,6 +15,26 @@ def bodegas(request):
     return render(request, 'bodegas.html', {
         'bodegas': bodega
     })
+    
+def list_bodegas(_request):
+    # bodegas =list(Bodega.objects.values())
+    # data={'bodegas':bodegas}
+    # return JsonResponse(data)
+    bodegas = Bodega.objects.select_related('id_ciudad')  # ¡importante para eficiencia!
+    data = {
+        'bodegas': [
+            {
+                'id_bodega': bodega.id_bodega,
+                'nombre': bodega.nombre,
+                'ciudad': bodega.id_ciudad.nombre,  # <--- Aquí llega el nombre
+                'direccion': bodega.direccion,
+                'activo': bodega.estado,
+                'url_editar': reverse('modificar_bodega', args=[bodega.id_bodega])
+            }
+            for bodega in bodegas
+        ]
+    }
+    return JsonResponse(data)    
 
 def crear_bodega(request):
     if request.method == 'POST':
@@ -93,4 +114,4 @@ def modificar_bodega(request, id):
             return redirect(to='bodegas')
         data['form'] = formulario
             
-    return render(request, 'editarbodega.html', data)
+    return render(request, 'editarBodega.html', data)

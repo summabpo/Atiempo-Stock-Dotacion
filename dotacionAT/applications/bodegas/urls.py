@@ -6,5 +6,5 @@ urlpatterns = [
     path('crear_bodega', views.crear_bodega, name='crear_bodega'),
     path('bodega/<int:id>/', views.bodega_detalle, name='bodega_detalle'),
     path('modificar_bodega/<int:id>/', views.modificar_bodega, name='modificar_bodega'),  # Aquí debe estar 'productos'
-    
+    path('list_bodegas/', views.list_bodegas, name='list_bodegas'),
 ]

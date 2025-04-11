@@ -45,18 +45,18 @@ class BodegaNueva(forms.ModelForm):
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Nombre de la Bodega'}),
             'direccion': forms.TextInput(attrs={'class': 'input', 'placeholder': 'Dirección de la Bodega'}),
-            'estado': forms.Select(attrs={'class': 'input'}),
+            # 'estado': forms.Select(attrs={'class': 'input'}),
             'id_ciudad': forms.Select(attrs={'class': 'input'}),
             'id_usuario_creador': forms.Select(attrs={'class': 'input'}),
             'id_usuario_editor': forms.Select(attrs={'class': 'input'}),
         }
 
     # Validación del estado
-    def clean_estado(self):
-        estado = self.cleaned_data.get('estado')
-        if estado not in ['activo', 'inactivo']:
-            raise forms.ValidationError("Estado inválido")
-        return estado
+    # def clean_estado(self):
+    #     estado = self.cleaned_data.get('estado')
+    #     if estado not in ['activo', 'inactivo']:
+    #         raise forms.ValidationError("Estado inválido")
+    #     return estado
     
     # Validación para asegurarse de que se seleccione una ciudad válida
     def clean_id_ciudad(self):

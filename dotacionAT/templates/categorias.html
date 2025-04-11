@@ -1,0 +1,59 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+{% load static %}
+
+{% load humanize %}
+
+<br>
+<br>
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="text-center">Categorias</h2>
+            <a href="{% url 'crear_categoria' %}"><button class="btn btn-success">Crear Categoria</button></a>
+        </div>
+        <hr>
+        <table class="table table-striped table-hover table-responsive-sm text-center table-dark" id="datatableCategoria">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody_categoria"></tbody>
+            
+        </table>
+    </div>
+</div>
+
+
+{% block extra_js %}
+
+<script src="{% static 'js/categorias.js' %}"></script>
+
+{% endblock %}
+
+{% endblock %}
+
+
+<!-- <tbody>
+    {% for categoria in categorias %}
+    <tr> 
+        <th scope="col">{{categoria.id_categoria}}</th>
+        <th scope="col">{{categoria.nombre | title }}</th>
+        {%if categoria.activo == True %}
+        <th scope="col">✅ {{categoria.activo | title }}</th>
+        {% else %}
+        <th scope="col"> {{categoria.activo | title }}</th>
+        {% endif %}
+
+        <th scope="col"><a href="{% url 'modificar_categoria' categoria.id_categoria %}"> <button class="btn btn-warning">
+            Actualizar
+        </button></a></th>
+    </tr>
+    {% endfor %}
+</tbody> -->

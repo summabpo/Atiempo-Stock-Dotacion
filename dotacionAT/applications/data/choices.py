@@ -3,3 +3,7 @@ CATEGORIAS = [
     ('pantalones', 'PANTALONES'),
     ('botas', 'BOTAS'),
 ]
+
+unidadMedida = [
+    ('Unidad', 'Unidad'),
+]

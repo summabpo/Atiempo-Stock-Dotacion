@@ -13,6 +13,7 @@ class Proveedor(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     usuario_creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True) # Relación con User
+    activo = models.BooleanField(default=True, verbose_name="Activo/Inactivo")
 
     def __str__(self):
         return self.nombre

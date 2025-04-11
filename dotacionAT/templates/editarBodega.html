@@ -15,27 +15,24 @@
 
       
       <div class="card">
-      <div class="cadr-body">
-
-      <h2 class="text-center">Editar Bodega</h2>
-      <br>
-<form method="POST" class="bg-secondary p-4 align-items-center">
-
-    {% csrf_token %}
-    {{ form | crispy }}
-    <div class="text-center mt-3"> 
-      <a href="{% url 'bodegas' %}" class="btn btn-secondary">
-        Volver
-      </a>
-     &nbsp;  
-    <button class="btn btn-success" type="submit">Editar Bodega</button>
+        <div class="cadr-body">
+          <h2 class="text-center">Editar Bodega</h2>
+          <br>
+          <form method="POST" class="bg-secondary p-4 align-items-center">
+            {% csrf_token %}
+            {{ form | crispy }}
+            <div class="text-center mt-3"> 
+              <a href="{% url 'bodegas' %}" class="btn btn-secondary">
+                Volver
+              </a>
+              &nbsp;  
+              <button class="btn btn-success" type="submit">Editar Bodega</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-  </form>
-
-</div>
-</div>
-</div>
-</div>
 </div>
 
 {% endblock  %}

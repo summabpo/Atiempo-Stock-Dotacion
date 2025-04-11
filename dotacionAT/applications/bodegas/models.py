@@ -11,11 +11,12 @@ class Bodega(models.Model):
     direccion = models.CharField(max_length=255, null=True, blank=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_edicion = models.DateTimeField(auto_now=True)
-    estado = models.CharField(
-        max_length=10,
-        choices=[('activo', 'Activo'), ('inactivo', 'Inactivo')],
-        default='activo'
-    )
+    estado = models.BooleanField(default=True, verbose_name="Activo/Inactivo")  # Activo/Inactivo
+    # estado = models.CharField(
+    #     max_length=10,
+    #     choices=[('activo', 'Activo'), ('inactivo', 'Inactivo')],
+    #     default='activo'
+    # )
     id_usuario_creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bodegas_creadas', null=True, blank=True)
     id_usuario_editor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bodegas_editadas', null=True, blank=True)
 

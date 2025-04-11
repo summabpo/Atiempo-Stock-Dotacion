@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .models import Proveedor
+from django.urls import reverse
 from .forms import ProveedorForm
 from django.contrib import messages
 
@@ -10,7 +11,34 @@ def proveedor(request):
     return render(request, 'proveedores.html', {
         'proveedores': proveedor
     })
-    
+
+
+
+def list_proveedores(request):
+    proveedores =list(Proveedor.objects.values())
+    data={'proveedores':proveedores}
+    return JsonResponse(data)
+def list_proveedores(_request):
+    # def list_proveedores(request):
+    # proveedores =list(Proveedor.objects.values())
+    # data={'proveedores':proveedores}
+    # return JsonResponse(data)
+    proveedores = Proveedor.objects.all()
+    data = {
+        'proveedores': [
+            {
+                'id_proveedor': p.id_proveedor,
+                'nombre': p.nombre,
+                'telefono': p.telefono,
+                'email': p.email,
+                'direccion': p.direccion,
+                'id_ciudad': p.ciudad.nombre,  # <-- corregido
+                'activo': p.activo,
+                'url_editar': reverse('modificar_proveedor', args=[p.id_proveedor])
+            } for p in proveedores
+        ]
+    }
+    return JsonResponse(data) 
     
 def crear_proveedor(request):
     if request.method == 'POST':

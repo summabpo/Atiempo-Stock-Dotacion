@@ -11,7 +11,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 # from django.views.generic import CreateView, UpdateView
-# from django.urls import reverse_lazy
+from django.urls import reverse
 from .models import Ciudad
 from .forms import CiudadNueva, CiudadActualizaForm
 # from django.http import HttpResponseNotAllowed
@@ -31,6 +31,24 @@ def index(request):
 
 #def index(request):
 #    return HttpResponse('index.html')
+
+def list_ciudades(_request):
+    # ciudades =list(Ciudad.objects.values())
+    # data={'ciudades':ciudades}
+    # return JsonResponse(data)
+    ciudades = Ciudad.objects.all()
+    data = {
+        'ciudades': [
+            {
+                'id_ciudad': ciudad.id_ciudad,
+                'nombre': ciudad.nombre,
+                'activo': ciudad.activo,
+                'url_editar': reverse('modificar_ciudad', args=[ciudad.id_ciudad])
+            } for ciudad in ciudades
+        ]
+    }
+    return JsonResponse(data)
+    
 
 def ciudades(request):
     #ciudades = list(Ciudad.objects.values())
