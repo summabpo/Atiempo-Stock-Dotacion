@@ -63,7 +63,7 @@ const productos = async () => {
     console.log("hola");
     
     try {
-        const response = await fetch('http://127.0.0.1:8000/list_productos/');
+        const response = await fetch('/list_productos/');
         const data = await response.json();
         console.log(data.productos);      // si el JSON 
         // Verificamos que el tbody exista antes de modificarlo
@@ -79,10 +79,10 @@ const productos = async () => {
                     <tr class="text-center">
                         <td style=" text-align: center !important;">${producto.id_producto}</td>
                         <td>${producto.nombre}</td>
-                        <td>${producto.nombre}</td>
-                        <td>${producto.nombre}</td>
-                        <td>${producto.nombre}</td>
-                        <td>${producto.nombre}</td>
+                        <td>${producto.categoria}</td>
+                        <td>${producto.stock}</td>
+                        <td>${producto.costo}</td>
+                        <td>${producto.unidad_medida}</td>
                         
                         <td>
             ${activo

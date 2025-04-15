@@ -63,7 +63,7 @@ const bodegas = async () => {
     console.log("hola");
     
     try {
-        const response = await fetch('http://127.0.0.1:8000/list_bodegas/');
+        const response = await fetch('/list_bodegas/');
         const data = await response.json();
         console.log(data.bodegas);      // si el JSON 
         // Verificamos que el tbody exista antes de modificarlo

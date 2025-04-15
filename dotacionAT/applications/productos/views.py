@@ -13,21 +13,25 @@ from ..data.choices import CATEGORIAS
 # Create your views here.
 
 def list_productos(_request):
-    productos =list(Producto.objects.values())
-    data={'productos':productos}
-    return JsonResponse(data)
-    # categorias = Producto.objects.all()
-    # data = {
-    #     'categorias': [
-    #         {
-    #             'id_categoria': categoria.id_categoria,
-    #             'nombre': categoria.nombre,
-    #             'activo': categoria.activo,
-    #             'url_editar': reverse('modificar_categoria', args=[categoria.id_categoria])
-    #         } for categoria in categorias
-    #     ]
-    # }
+    # productos =list(Producto.objects.values())
+    # data={'productos':productos}
     # return JsonResponse(data)
+    productos = Producto.objects.all()
+    data = {
+        'productos': [
+            {
+                'id_producto': producto.id_producto,
+                'nombre': producto.nombre,
+                'categoria': producto.categoria.nombre,
+                'unidad_medida': producto.unidad_medida,
+                'stock': producto.stock,
+                'costo': producto.costo,
+                'activo': producto.activo,
+                'url_editar': reverse('modificar_producto', args=[producto.id_producto])
+            } for producto in productos
+        ]
+    }
+    return JsonResponse(data)
 
 
 def productos(request):
