@@ -63,7 +63,7 @@ const proveedores = async () => {
     console.log("hola");
     
     try {
-        const response = await fetch('http://127.0.0.1:8000/list_proveedores/');
+        const response = await fetch('/list_proveedores/');
         const data = await response.json();
         console.log(data.proveedores);      // si el JSON 
         // Verificamos que el tbody exista antes de modificarlo

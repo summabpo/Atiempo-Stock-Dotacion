@@ -61,7 +61,7 @@ const initDataTable = async () => {
 
 const categorias = async () => {
     try {
-        const response = await fetch('http://127.0.0.1:8000/list_categorias/');
+        const response = await fetch('/list_categorias/');
         const data = await response.json();
         console.log(data.categorias);
         
