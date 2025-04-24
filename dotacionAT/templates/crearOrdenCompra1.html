@@ -1,0 +1,133 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Crear Orden de Compra</h2>
+    <form id="ordenForm" method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+
+        <h4>Productos</h4>
+        <button type="button" class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#productoModal">
+            + Agregar Producto
+        </button>
+
+        <table class="table table-bordered" id="productosTable">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Los productos se agregan aquí con JS -->
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-success">Guardar Orden</button>
+    </form>
+</div>
+
+<!-- Modal de productos -->
+<div class="modal fade" id="productoModal" tabindex="-1" aria-labelledby="productoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar Productos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <table id="tablaProductos" class="display">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Agregar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td>{{ producto.id }}</td>
+                            <td>{{ producto.nombre }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary"
+                                        onclick="agregarProducto({ id: '{{ producto.id }}', nombre: '{{ producto.nombre }}' })">
+                                    Agregar
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- JS dependencias -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#tablaProductos').DataTable();
+    });
+
+    const productosSeleccionados = [];
+
+    function agregarProducto(producto) {
+        if (productosSeleccionados.find(p => p.id == producto.id)) {
+            alert("Este producto ya fue agregado.");
+            return;
+        }
+
+        productosSeleccionados.push(producto);
+
+        const row = `
+            <tr>
+                <td>
+                    ${producto.nombre}
+                    <input type="hidden" name="productos[]" value="${producto.id}">
+                </td>
+                <td>
+                    <input type="number" name="precios[]" class="form-control" required step="0.01">
+                </td>
+                <td>
+                    <input type="number" name="cantidades[]" class="form-control" required>
+                </td>
+                <td class="subtotal">0.00</td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarProducto(${producto.id}, this)">Eliminar</button>
+                </td>
+            </tr>
+        `;
+
+        $('#productosTable tbody').append(row);
+        $('#productoModal').modal('hide');
+    }
+
+    function eliminarProducto(id, button) {
+        const index = productosSeleccionados.findIndex(p => p.id == id);
+        if (index > -1) productosSeleccionados.splice(index, 1);
+        $(button).closest('tr').remove();
+    }
+
+    // Subtotal dinámico
+    $(document).on('input', 'input[name="precios[]"], input[name="cantidades[]"]', function () {
+        const row = $(this).closest('tr');
+        const precio = parseFloat(row.find('input[name="precios[]"]').val()) || 0;
+        const cantidad = parseInt(row.find('input[name="cantidades[]"]').val()) || 0;
+        const subtotal = (precio * cantidad).toFixed(2);
+        row.find('.subtotal').text(subtotal);
+    });
+</script>
+{% endblock %}

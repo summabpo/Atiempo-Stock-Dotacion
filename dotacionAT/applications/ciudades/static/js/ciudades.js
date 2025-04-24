@@ -61,7 +61,7 @@ const initDataTable = async () => {
 
 const ciudades = async () => {
     try {
-        const response = await fetch('http://127.0.0.1:8000/list_ciudades/');
+        const response = await fetch('/list_ciudades/');
         const data = await response.json();
         console.log(data.ciudades);
         

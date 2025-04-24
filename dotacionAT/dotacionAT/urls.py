@@ -16,6 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
+# from . import views
 ##from applications.ciudades import views
 
 urlpatterns = [
@@ -23,5 +26,13 @@ urlpatterns = [
     path('', include('applications.ciudades.urls')),
     path('', include('applications.bodegas.urls')),
     path('', include('applications.proveedores.urls')),
-    path('', include('applications.productos.urls'))     
+    path('', include('applications.productos.urls')),
+    path('', include('applications.ordenes_compra.urls')),
+    # path('add_venta/',views.add_ventas.as_view(), name='AddVenta'),
+    # path('export/', views.export_pdf_view, name="ExportPDF" ),
+    # path('export/<id>/<iva>', views.export_pdf_view, name="ExportPDF" )     
 ]
+
+
+
+# urlpatterns+= static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

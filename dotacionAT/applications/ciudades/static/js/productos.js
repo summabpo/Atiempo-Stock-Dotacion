@@ -101,7 +101,7 @@ const productos = async () => {
         }
     } catch (ex) {
         alert(ex);
-        console.error("Error al obtener bodegas:", ex);
+        console.error("Error al obtener Productos:", ex);
     }
 }
 

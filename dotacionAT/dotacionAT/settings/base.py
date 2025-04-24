@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'django.contrib.humanize',
+    'widget_tweaks',
     
     
     
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     'applications.bodegas',
     'applications.proveedores',
     'applications.productos',
+    'applications.ordenes_compra',
 ]
 
 # Custom user model
@@ -96,9 +98,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Bogota'
 
 USE_I18N = True
 

@@ -1,0 +1,444 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h2 style="color: black;"></h2>
+        <h1 style="color: black;">
+            Crear Orden de Compra
+            </h1>
+            <ol class="breadcrumb">
+            <li style="font-size:1.4em"><a href="compras"><i class="fa fa-dashboard"></i> Orden de Compra</a></li>
+            <li class="active" style="font-size:1.4em">Crear Orden de Compra</li>
+            </ol>
+            </section>
+            <section class="content">
+                <div class="row"> 
+<div class="col-lg-7 col-md-6 col-sm-12 col-xs-12">
+    <!--=====================================
+    ENTRADA PARA PROVEEDOR
+    ======================================-->
+    <div class="box box-primary" style="color: black;"><strong>PROVEEDORES</strong>
+    <div class="box-header with-border"></div>
+    <div class="box-body">
+
+
+        <table id="tablaProveedoresOrden" class="table table-striped table-responsive-sm text-center" data-page-length="1" width="100%">
+            <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody_proveedorOrden" style="color: black;"></tbody>
+        </table>
+    </div>
+    </div>
+    <div class="box box-success">
+        <div class="box-header with-border"></div>
+        <form role="form" method="post" class="formularioCompra">
+            {% csrf_token %}
+        <div class="box-body">
+        <div class="box">
+
+              <!--=====================================
+    ENTRADA FECHA FACTURA DE COMPRA
+    ======================================-->
+
+    <!--=====================================
+    ENTRADA DEL PROVEEDOR
+    ======================================-->
+    <!-- <div class="form-group row nuevoProveedor">
+    </div>-->
+    <input type="hidden" id="listaProveedor" name="listaProveedor">
+    
+
+    <div class="form-group row nuevoProveedor mt-3">
+        <!-- <label class="col-sm-12 col-form-label"><strong>Proveedor Seleccionado</strong></label> -->
+        <div class="col-sm-12">
+            <table class="table table-bordered text-center" id="proveedorSeleccionado">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Nombre Proveedor</th>
+                        <th>Quitar</th>
+                    </tr>
+                </thead>
+                <tbody style="color: black;"></tbody>
+            </table>
+        </div>
+    </div>
+</br> 
+    <!--=====================================
+    ENTRADA PARA AGREGAR PRODUCTO
+    ======================================-->
+  
+    <!-- <div class="form-group row nuevoProductoCompra"> -->
+  
+    <input type="hidden" id="listaProductos" name="listaProductos">
+
+    <div class="form-group row nuevoProductoCompra mt-3">
+        <!-- <label class="col-sm-12 col-form-label"><strong>Productos Seleccionados</strong></label> -->
+        <div class="col-sm-12">
+            <table class="table table-bordered text-center" id="productosSeleccionados">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                        <th>Subtotal</th>
+                        <th>Quitar</th>
+                    </tr>
+                </thead>
+                <tbody style="color: black;"></tbody>
+            </table>
+        </div>
+    </div>
+    <!--=====================================
+    BOTÓN PARA AGREGAR PRODUCTO
+    ======================================-->
+   
+
+
+
+        </div>
+    </div>
+    <button type="submit" class="btn btn-success">Guardar Orden</button>        
+</form>
+        
+        </div>
+    </div>
+
+
+
+  
+<div class="box box-success">
+    <div class="box-header with-border"></div>
+<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+    <div class="box box-warning" style="color: black;"><strong>PRODUCTOS</strong>
+    <div class="box-header with-border"></div>
+    <div class="box-body">
+        <!-- <table id="tablaProveedoresOrden" class="table table-striped table-responsive-sm text-center" data-page-length="1" width="100%">
+            <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody_proveedorOrden" style="color: black;"></tbody>
+        </table> -->
+
+        <table class="table table-striped table-hover table-responsive-sm text-center " id="datatableProductosOrden">
+            <thead class="thead-dark">
+              <tr>
+                <th >ID</th>
+                <th >Nombre</th>
+                <th >Acciones</th>
+              </tr>
+            </thead>
+           <tbody id="tableBody_productosOrden" style="color: black;"></tbody>
+            </table>
+
+    </div>
+    </div>
+    </div>
+    </div>
+    </section>
+    </div>
+  
+
+
+
+<!-- Scripts -->
+
+{% block extra_js %}
+
+
+
+<!-- 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+ -->
+
+<script>
+
+let dataTableProveedores;
+let dataTableProductos;
+
+let proveedoresInitialized = false;
+let productosInitialized = false;
+
+const dataTableOptions = {
+    columnDefs: [
+        { className: "text-center", targets: "_all" },
+        { orderable: false, targets: -1 }
+    ],
+    pageLength: 10,
+    destroy: true,
+    language: {
+        processing: "Procesando...",
+        lengthMenu: "Mostrar _MENU_ registros",
+        zeroRecords: "No se encontraron resultados",
+        emptyTable: "Ningún dato disponible en esta tabla",
+        info: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+        infoEmpty: "Mostrando 0 de 0 registros",
+        infoFiltered: "(filtrado de un total de _MAX_ registros)",
+        search: "Buscar:",
+        paginate: {
+            first: "Primero",
+            last: "Último",
+            next: "Siguiente",
+            previous: "Anterior"
+        },
+    }
+};
+
+// ✅ Tabla de Proveedores
+const initDataTableProveedores = async () => {
+    if (proveedoresInitialized) {
+        dataTableProveedores.destroy();
+    }
+
+    await cargarProveedores();
+
+    const table = document.getElementById('tablaProveedoresOrden');
+    if (table) {
+        dataTableProveedores = $('#tablaProveedoresOrden').DataTable(dataTableOptions);
+        proveedoresInitialized = true;
+    }
+};
+
+const cargarProveedores = async () => {
+    try {
+        const response = await fetch('/list_proveedores/');
+        const data = await response.json();
+        const tableBody = document.getElementById('tableBody_proveedorOrden');
+
+        if (tableBody) {
+            let content = ``;
+
+            data.proveedores.forEach(proveedor => {
+                const activo = proveedor.activo === true || proveedor.activo === "True";
+                content += `
+                    <tr>
+                        <td>${proveedor.id_proveedor}</td>
+                        <td>${proveedor.nombre}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-primary"
+                                onclick="seleccionarProveedor('${proveedor.id_proveedor}', '${proveedor.nombre}')">
+                                Seleccionar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = content;
+        }
+
+    } catch (error) {
+        console.error("Error al cargar proveedores:", error);
+    }
+};
+
+// function seleccionarProveedor(id, nombre) {
+//     // Setear valores ocultos
+//     document.getElementById('listaProveedor').value = id;
+
+//     // Insertar nombre visualmente en el div
+//     const divProveedor = document.querySelector('.nuevoProveedor');
+//     divProveedor.innerHTML = `
+//         <label class="col-sm-4 col-form-label">Proveedor seleccionado:</label>
+//         <div class="col-sm-8">
+//             <input type="text" class="form-control" value="${nombre}" readonly>
+//         </div>
+//     `;
+// }
+
+function seleccionarProveedor(id, nombre) {
+    // Prevenir múltiples selecciones
+    const tbody = document.querySelector("#proveedorSeleccionado tbody");
+    tbody.innerHTML = ''; // Limpiar contenido anterior
+
+    const fila = document.createElement("tr");
+    fila.setAttribute("data-id", id);
+    fila.innerHTML = `
+        <td>${nombre}<input type="hidden" name="proveedor" value="${id}"></td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="quitarProveedor()">
+                <i class="fa fa-times"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(fila);
+}
+
+function quitarProveedor() {
+    const tbody = document.querySelector("#proveedorSeleccionado tbody");
+    tbody.innerHTML = '';
+    document.getElementById('listaProveedor').value = ''; // limpiar input oculto
+}
+
+
+const dataTableOptionsOrden = {
+    columnDefs: [
+        { className: "text-center", targets: "_all" },
+        { orderable: false, targets: -1 }
+    ],
+    pageLength: 8,
+    destroy: true,
+    language: {
+        processing: "Procesando...",
+        lengthMenu: "Mostrar _MENU_ registros",
+        zeroRecords: "No se encontraron resultados",
+        emptyTable: "Ningún dato disponible en esta tabla",
+        info: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+        infoEmpty: "Mostrando 0 de 0 registros",
+        infoFiltered: "(filtrado de un total de _MAX_ registros)",
+        search: "Buscar:"   
+    },
+    paging: false,
+    info: false,
+};
+
+
+
+
+// ✅ Tabla de Productos
+const initDataTableProductos = async () => {
+    if (productosInitialized) {
+        dataTableProductos.destroy();
+    }
+
+    await cargarProductos();
+
+    const table = document.getElementById('datatableProductosOrden');
+    if (table) {
+        dataTableProductos = $('#datatableProductosOrden').DataTable(dataTableOptionsOrden);
+        productosInitialized = true;
+    }
+};
+
+const cargarProductos = async () => {
+    try {
+        const response = await fetch('/list_productos/');
+        const data = await response.json();
+        const tableBody = document.getElementById('tableBody_productosOrden');
+
+        if (tableBody) {
+            let content = ``;
+            data.productos.forEach(producto => {
+                const activo = producto.activo === "True" || producto.activo === true;
+                content += `
+                    <tr class="text-center">
+                        <td>${producto.id_producto}</td>
+                        <td>${producto.nombre}</td>
+                        <td>
+                            
+                                  <button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.nombre}')">
+        Agregar
+    </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = content;
+        }
+
+    } catch (error) {
+        alert("Error al obtener productos.");
+        console.error("Error al obtener productos:", error);
+    }
+};
+
+// ✅ Llamamos ambas al cargar la página
+window.addEventListener("load", async () => {
+    await initDataTableProveedores();
+    await initDataTableProductos();
+    console.log("Página cargada");
+});
+
+
+let productosAgregados = [];
+
+function agregarProductoAOrden(id, nombre) {
+    // Evitar duplicados
+    if (productosAgregados.includes(id)) {
+        alert("Este producto ya ha sido agregado.");
+        return;
+    }
+
+    productosAgregados.push(id);
+
+    const tbody = document.querySelector("#productosSeleccionados tbody");
+    const fila = document.createElement("tr");
+    fila.setAttribute("data-id", id);
+
+    fila.innerHTML = `
+        <td>${nombre}<input type="hidden" name="productos[]" value="${id}"></td>
+        <td><input type="number" name="cantidades[]" class="form-control text-center" value="1" min="1" onchange="actualizarSubtotal(this)"></td>
+        <td><input type="number" name="precios[]" class="form-control text-center" value="0" step="0.01" onchange="actualizarSubtotal(this)"></td>
+        <td class="subtotal">0.00</td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="quitarProducto(${id}, this)">
+                <i class="fa fa-times"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(fila);
+    actualizarSubtotal(fila); // calcular subtotal inicial
+}
+
+function quitarProducto(id, btn) {
+    productosAgregados = productosAgregados.filter(pid => pid != id);
+    btn.closest("tr").remove();
+}
+
+function actualizarSubtotal(elemento) {
+    const fila = elemento.closest("tr");
+    const cantidad = parseFloat(fila.querySelector('input[name="cantidades[]"]').value) || 0;
+    const precio = parseFloat(fila.querySelector('input[name="precios[]"]').value) || 0;
+    const subtotal = (cantidad * precio).toFixed(2);
+    fila.querySelector(".subtotal").innerText = subtotal;
+}
+
+
+
+
+function agregarProveedorAOrden(id, nombre) {
+    // Evitar duplicados
+    if (productosAgregados.includes(id)) {
+        alert("Este proveedor ya ha sido agregado.");
+        return;
+    }
+
+    productosAgregados.push(id);
+
+    const tbody = document.querySelector("#proveedorSeleccionados tbody");
+    const fila = document.createElement("tr");
+    fila.setAttribute("data-id", id);
+
+    fila.innerHTML = `
+        <td>${nombre}<input type="hidden" name="proveedor[]" value="${id}"></td>
+      
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="quitarProducto(${id}, this)">
+                <i class="fa fa-times"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(fila);
+    
+}
+   
+</script>
+
+{% endblock %}
+
+{% endblock %}

@@ -1,87 +1,311 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Almacen</title>
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
-    <!-- DataTables CSS -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Almacen Atiempo</title>
+
+  <link rel="icon" type="image/x-icon" href="{% static 'index/img/logoAtiempo.png' %}">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{% static 'lib/adminlite/plugins/fontawesome-free/css/all.min.css' %}">
+  <!-- Tempusdominus Bootstrap 4 -->
+  <link rel="stylesheet"
+    href="{% static 'lib/adminlite/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css' %}">
+  <!-- iCheck -->
+  <link rel="stylesheet" href="{% static 'lib/adminlite/plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
+  <!-- JQVMap -->
+  <link rel="stylesheet" href="{% static 'lib/adminlite/plugins/jqvmap/jqvmap.min.css' %}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{% static 'lib/adminlite/css/adminlte.min.css' %}">
+  <!-- overlayScrollbars -->
+  <link rel="stylesheet" href="{% static 'lib/adminlite/plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}">
+  <!-- Daterange picker -->
+  <link rel="stylesheet" href="{% static 'lib/adminlite/plugins/daterangepicker/daterangepicker.css' %}">
+  <!-- summernote -->
+  <link rel="stylesheet" href="{% static 'lib/adminlite/plugins/summernote/summernote-bs4.min.css' %}">
+  <link rel="stylesheet" href="{% static 'index/css/main.css' %}">
+  <!-- <link rel="stylesheet" type="text/css" href="{% static 'index/DataTables/datatables.min.css' %}">
+  <link rel="stylesheet" type="text/css"
+    href="{% static 'index/DataTables/Buttons-2.0.1/css/buttons.dataTables.min.css' %}"> -->
+        <!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-    <!-- font awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <!-- main CSS -->
     <link rel="stylesheet" href="{% static 'styles/main.css' %}"> 
-   
+
+  <script type="text/javascript" charset="utf8" src="{% static 'index/js/jquery.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'jquery-ui/jquery-ui.min.css' %}">
+  <script src="{% static 'jquery-ui/jquery-ui.min.js' %}"></script>
+  <script type="text/javascript" charset="utf8" src="{% static 'index/js/sweet.js' %}"></script>
+  <style>
+   .nav-icon.spin {
+    animation: spin 2s linear infinite;
+  }
+
+  
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+   .nav-icon.pulse {
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .nav-icon {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); /* Sombra sutil */
+  }
+
+  .nav-link {
+    transition: transform 0.3s ease;
+  }
+
+  .nav-link:hover {
+    transform: scale(1.2); /* Aumenta el tamaño al pasar el ratón */
+  }
+  </style>
+
 </head>
-<body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-          <!-- Logo o título de la navegación -->
-          <a class="navbar-brand" href="/">Dotacion AT</a>
+<body class="hold-transition sidebar-mini layout-fixed sidebar-closed sidebar-collapse">
+  <div class="wrapper">
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+      <!-- Left navbar links -->
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+        </li>
+      </ul>
+
+      <!-- Right navbar links -->
+      <ul class="navbar-nav ml-auto">
+        <!-- Notifications Dropdown Menu -->
+        <li class="nav-item">
+          <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+            <i class="fas fa-expand-arrows-alt"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <!-- /.navbar -->
+
+    <!-- Main Sidebar Container -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+      <!-- Brand Logo -->
+      <a href="" class="brand-link">
+        <img src="{% static 'index/img/logoAtiempo.png' %}" alt="Logo" class="brand-image img-circle "
+        style="opacity: .8;">
           
-          <!-- Botón para desplegar el menú en pantallas pequeñas -->
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-      
-          <!-- Menú de navegación colapsable -->
-          <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto">
-              <li class="nav-item mx-3">
-                <a class="btn btn-sm btn-outline-secondary text-dark" href="/">Home</a>
-              </li>
-              <li class="nav-item mx-3">
-                <a class="btn btn-sm btn-outline-secondary text-dark" href="{% url 'ciudades' %}">Ciudades</a>
-              </li>
-              <li class="nav-item mx-3">
-                <a class="btn btn-sm btn-outline-secondary text-dark" href="{% url 'bodegas' %}">Bodegas</a>
-              </li>
-              <li class="nav-item mx-3">
-                <a class="btn btn-sm btn-outline-secondary text-dark" href="{% url 'proveedores' %}">Proveedores</a>
-              </li>
-              <li class="nav-item mx-3">
-                <a class="btn btn-sm btn-outline-secondary text-dark" href="{% url 'productos' %}">Productos</a>
-              </li>
-              <li class="nav-item mx-3">
-                <a class="btn btn-sm btn-outline-secondary text-dark" href="{% url 'categorias' %}">Categoria</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-        
-    <main class="container">
+        <span class="brand-text font-weight-light">Almance</span>
+      </a>
 
-       
+      <!-- Sidebar -->
+      <div class="sidebar">
 
+        <!-- Sidebar Menu -->
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            <!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
 
-        {% block content %}
-        
-        {% endblock %}
+            <li class="nav-header">OPCIONES</li>
+            <li class="nav-item">
+              <a href="{% url 'ordenes_compra' %}" class="nav-link">
+                <i class="nav-icon far fa-calendar-alt"></i>
+                <p>
+                  Orden Compra
+                </p>
+              </a>
+            </li>
+            <!-- <li class="nav-item">
+              <a href="" class="nav-link">
+                <i class="nav-icon fas fa-boxes"></i>
+                <p>
+                  Inventario
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="" class="nav-link">
+                <i class="nav-icon fas fa-industry"></i>
+                <p>
+                  Compras
+                </p>
+              </a>
+            </li> -->
+            <!-- <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <p>
+                  Pedidos
+                  <i class="fas fa-angle-left right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="" class="nav-link">
+                    <i class="nav-icon far fa-circle text-info"></i>
+                    <p>Todos</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="" class="nav-link">
+                    <i class="nav-icon far fa-circle text-warning"></i>
+                    <p>Para hoy</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="" class="nav-link">
+                    <i class="nav-icon far fa-circle text-danger"></i>
+                    <p>Atrasados</p>
+                  </a>
+                </li>
+              </ul>
+            </li> -->
+            <li class="nav-header">EMPRESA</li>
+            <!-- <li class="nav-item">
+              <a href="" class="nav-link">
+                <i class=" nav-icon fas fa-globe"></i>
+                <p>Información</p>
+              </a>
+            </li>  -->
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-cogs spin"></i>
+                <p>
+                  Configuraciones
+                  <i class="fas fa-angle-left right"></i>
+                </p>
+              </a>
+              <ul class="nav nav-treeview">
+                <li class="nav-item">
+                  <a href="{% url 'ciudades' %}" class="nav-link">
+                    <i class="nav-icon fas fa-map-marked-alt text-primary pulse"></i>
+                    <p>Ciudades</p>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a href="{% url 'categorias' %}" class="nav-link">
+                    <i class="nav-icon fas fa-tags text-warning pulse"></i>
+                    <p>Categorias Productos</p>
+                  </a>
+                </li>
 
-    </main>
-    
+                <li class="nav-item">
+                  <a href="{% url 'bodegas' %}" class="nav-link">
+                    <i class="nav-icon fas fa-warehouse text-white pulse"></i>
+                    <p>Bodegas</p>
+                  </a>
+                </li>
+                
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'proveedores' %}" class="nav-link">
+                <i class="nav-icon fas fa-address-book "></i>
+                <p>Proveedores</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'productos' %}" class="nav-link">
+                <i class="nav-icon fas fa-box-open"></i>
+                <p>Productos</p>
+              </a>
+            </li>
+          </ul>
+        </nav>
+        <!-- /.sidebar-menu -->
+      </div>
+      <!-- /.sidebar -->
+    </aside>
 
-<!-- Bootstrap -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
 
-<!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- jQuery (ya lo tienes) -->
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+      <!-- Main content -->
+      <section class="content">
+        <div class="container-fluid">
+          {% block content %}
+          {% endblock %}
+        </div><!-- /.container-fluid -->
+      </section>
+      <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+    <footer class="main-footer text-center text-primary">
+      <a href="https://www.youtube.com/c/AlejandroHernandezmicanal/videos" target="_blank" rel="noopener noreferrer">
+        <!-- <strong>¡Contáctame! <img src="{% static 'index/img/youtube.png' %}" alt="Logo Youtube" width="20"> &copy; El
+          inge
+          Alex
+        </strong> -->
+      </a>
+    </footer>
 
-<!-- DataTables + Bootstrap 5 -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+      <!-- Control sidebar content goes here -->
+    </aside>
+    <!-- /.control-sidebar -->
+  </div>
+  <!-- ./wrapper -->
+
+  <!-- jQuery -->
+  <script src="{% static 'lib/adminlite/plugins/jquery/jquery.min.js' %}"></script>
+  <!-- jQuery UI 1.11.4 -->
+  <script src="{% static 'lib/adminlite/plugins/jquery-ui/jquery-ui.min.js' %}"></script>
+  <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+  <script>
+    $.widget.bridge('uibutton', $.ui.button)
+  </script>
+  <!-- Bootstrap 4 -->
+  <script src="{% static 'lib/adminlite/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <!-- ChartJS -->
+  <!-- Sparkline -->
+  <script src="{% static 'lib/adminlite/plugins/sparklines/sparkline.js' %}"></script>
+  <!-- JQVMap -->
+  <script src="{% static 'lib/adminlite/plugins/jqvmap/jquery.vmap.min.js' %}"></script>
+  <script src="{% static 'lib/adminlite/plugins/jqvmap/maps/jquery.vmap.usa.js' %}"></script>
+  <!-- jQuery Knob Chart -->
+  <script src="{% static 'lib/adminlite/plugins/jquery-knob/jquery.knob.min.js' %}"></script>
+  <!-- daterangepicker -->
+  <script src="{% static 'lib/adminlite/plugins/moment/moment.min.js' %}"></script>
+  <script src="{% static 'lib/adminlite/plugins/daterangepicker/daterangepicker.js' %}"></script>
+  <!-- Tempusdominus Bootstrap 4 -->
+  <script
+    src="{% static 'lib/adminlite/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js' %}"></script>
+  <!-- Summernote -->
+  <script src=" {% static 'lib/adminlite/plugins/summernote/summernote-bs4.min.js' %}"></script>
+  <!-- overlayScrollbars -->
+  <script src=" {% static 'lib/adminlite/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js' %}"></script>
+  <!-- AdminLTE App -->
+  <script src="{% static 'lib/adminlite/js/adminlte.js' %}"></script>
+  <!-- AdminLTE for demo purposes -->
+  <script src="{% static 'lib/adminlite/js/demo.js' %}"></script>
+  <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+  <script src="{% static 'lib/adminlite/js/pages/dashboard.js' %}"></script>
+  <!-- <script src="{% static 'index/DataTables/datatables.min.js' %}"></script>
+  <script src="{% static 'index/DataTables/datatables.min.js' %}"></script>
+  <script src="{% static 'index/DataTables/Buttons-2.0.1/js/dataTables.buttons.min.js' %}"></script>
+  <script src="{% static 'index/DataTables/Buttons-2.0.1/js/buttons.print.min.js' %}"></script>
+  <script src="{% static 'index/DataTables/Buttons-2.0.1/js/buttons.html5.min.js' %}"></script>
+  <script src="{% static 'index/DataTables/Buttons-2.0.1/js/pdfmaker.min.js' %}"></script> -->
+
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
-<!-- Buttons -->
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
@@ -90,7 +314,9 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
 
-<!-- <script src="{% static 'js/ciudades.js' %}"></script> -->
+  <script type="text/javascript" charset="utf8" src="{% static 'index/js/main.js' %}"></script>
+ 
+  <!-- <script src="{% static 'js/ciudades.js' %}"></script> -->
 {% if messages %}
 {% for m in messages %}
  <script>
@@ -103,6 +329,6 @@
 {% endfor %}
 {% endif %}
 
-
 </body>
+
 </html>
