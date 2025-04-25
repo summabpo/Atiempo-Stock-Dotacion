@@ -1,0 +1,186 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <section class="content-header" style="color: black;">
+        <h1>Orden de Compra #{{ orden.id }}</h1>
+        <p><strong>Fecha:</strong> {{ orden.fecha_creacion }}</p>
+        <p><strong>Proveedor:</strong> {{ orden.proveedor.nombre }}</p>
+        <p><strong>Estado:</strong> {{ orden.get_estado_display }}</p>
+        <p><strong>Observaciones:</strong> {{ orden.observaciones }}</p>
+    </section>
+
+    <section class="content">
+        <h3>Productos en la Orden</h3>
+
+        <form method="post" id="ordenForm">
+            {% csrf_token %}
+            <table class="table table-bordered" style="color: black;" id="tablaProductos">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                <th>Subtotal</th>
+                <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% for item in items %}
+                    <p>Producto: {{ item.producto.nombre }}</p>
+    <p>Cantidad: {{ item.cantidad }}</p>
+    <p>Precio: {{ item.precio_unitario }}</p>
+    
+                    <tr>
+                        <td>
+                            {{ item.producto.nombre }}
+                            <input type="hidden" name="productos[]" value="{{ item.producto.id }}">
+                        </td>
+                        <td>
+                            <input type="number" name="cantidades[]" class="form-control text-center" value="{{ item.cantidad }}" min="1" onchange="actualizarSubtotal(this)">
+                        </td>
+                        <td>
+                            <input type="text" name="precios[]" class="form-control text-center precio" value="{{ item.precio_unitario|floatformat:2 }}"  onchange="actualizarSubtotal(this)">
+                        </td>
+                        <td class="subtotal">
+                            {{ item.subtotal|floatformat:2 }}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm" data-id="{{ item.producto.id }}" onclick="quitarProducto(this)">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        </form>
+    </section>
+</div>
+
+
+
+
+
+{% block extra_js %}
+<script>
+    console.log("Hola Comprar Orden");
+
+    // Función para formatear el número con comas y decimales
+function formatearNumero(input) {
+    console.log("hola");
+    
+    // Obtener el valor del input y formatearlo con decimales y comas
+    let value = input.value.replace(/[^0-9.]/g, ''); // Quitar caracteres no numéricos
+    let formattedValue = parseFloat(value).toFixed(2); // Formatear el valor a dos decimales
+
+    // Establecer el valor formateado en el input
+    input.value = formattedValue;
+
+    // Llamar a la función para actualizar el subtotal después de formatear el precio
+    actualizarSubtotal(input);
+}
+
+// Esta función se ejecutará cuando cambien los valores de cantidad o precio
+function actualizarSubtotal(input) {
+
+    console.log("actualizarSubtotal");
+    
+    const row = input.closest('tr');
+    
+    // Obtener los valores de cantidad y precio
+    const cantidad = parseFloat(row.querySelector('input[name="cantidades[]"]').value) || 0;
+    const precio = parseFloat(row.querySelector('input[name="precios[]"]').value) || 0;
+
+    // Calcular el subtotal
+    const subtotal = cantidad * precio;
+
+    // Mostrar el subtotal en la columna correspondiente
+    row.querySelector('.subtotal').textContent = subtotal.toFixed(2);
+
+    
+    // Actualizar el total general
+
+    formatearNumero(input)
+    actualizarTotalGeneral();
+}
+
+// Actualizar el total general sumando todos los subtotales
+function actualizarTotalGeneral() {
+
+    console.log("actualizarTotalGeneral");
+    let total = 0;
+    
+    // Recorremos todas las celdas que contienen el subtotal y las sumamos
+    document.querySelectorAll('.subtotal').forEach(td => {
+        total += parseFloat(td.textContent) || 0;
+    });
+
+    // Actualizar el total general en el HTML
+    document.getElementById('totalGeneral').textContent = total.toFixed(2);
+}
+
+    function quitarProducto(button) {
+        console.log("Hola");
+        
+
+    // Obtener el ID del producto desde el atributo data-id del botón
+    const id = button.getAttribute('data-id');
+    
+    // Encuentra la fila más cercana al botón (la fila de la tabla)
+    const row = button.closest('tr');
+    
+    // Si la fila existe, la eliminamos
+    if (row) {
+        row.remove();
+    }
+
+    // Opcional: Si necesitas hacer algo con el ID, lo puedes usar aquí
+    console.log('Producto con ID', id, 'eliminado');
+}
+
+ 
+
+    function formatearNumero(input) {
+        let value = input.value;
+
+        // Eliminar todos los caracteres no numéricos, excepto el punto decimal
+        value = value.replace(/[^0-9.]/g, '');
+
+        // Si tiene más de un punto decimal, eliminar los demás
+        const parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+
+        // Formatear el número con dos decimales
+        let formattedValue = parseFloat(value).toFixed(2);
+
+        // Usar el formato con comas como separadores de miles
+        formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+        // Asignar el valor formateado de nuevo al input
+        input.value = formattedValue;
+    }
+
+
+       // Calcular total al cargar
+       document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('input[name="cantidades[]"], input[name="precios[]"]').forEach(input => {
+            actualizarSubtotal(input);
+        });
+
+        document.querySelectorAll('.precio').forEach(input => {
+            formatearNumero(input); // Formatear cada valor de precio
+        });
+    });
+
+
+</script>
+{% endblock %}
+
+{% endblock %}

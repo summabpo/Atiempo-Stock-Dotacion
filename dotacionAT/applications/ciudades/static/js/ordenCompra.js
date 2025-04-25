@@ -95,7 +95,7 @@ const OrdenCompras = async () => {
                         }
                     </td>
                     <td>
-                        <a href="">
+                        <a href="${OrdenCompra.url_editar}">
                             <button class="btn btn-sm btn-warning">
                                 <i class='fa-solid fa-pencil'></i>
                             </button>

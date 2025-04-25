@@ -19,7 +19,7 @@ class OrdenCompra(models.Model):
     observaciones = models.TextField(blank=True)
 
     def __str__(self):
-        return f"Orden #{self.id} - {self.proveedor.nombre}"
+        return str(self.id)
 
 
 class ItemOrdenCompra(models.Model):
