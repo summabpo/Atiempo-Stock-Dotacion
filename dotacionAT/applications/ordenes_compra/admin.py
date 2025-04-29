@@ -1,17 +1,37 @@
 from django.contrib import admin
-from .models import OrdenCompra, ItemOrdenCompra
-
+from .models import OrdenCompra, ItemOrdenCompra, Compra, ItemCompra
 class detalleOrdenInline(admin.TabularInline):
     model = ItemOrdenCompra
     extra = 1
 
 @admin.register(OrdenCompra)
 class OrdenCompraAdmin(admin.ModelAdmin):
-    list_display = ('id', 'proveedor', 'estado', 'fecha_creacion')
+    list_display = ('id', 'proveedor', 'estado', 'tipo_documento', 'fecha_creacion')
     list_filter = ('estado', 'fecha_creacion')
     search_fields = ('proveedor__nombre',)
     inlines = [detalleOrdenInline]
 
 @admin.register(ItemOrdenCompra)
 class ItemOrdenCompraAdmin(admin.ModelAdmin):
-    list_display = ('orden', 'producto', 'cantidad', 'precio_unitario')
+    list_display = ('orden', 'producto', 'cantidad', 'tipo_documento', 'precio_unitario')
+    
+    
+class ItemCompraInline(admin.TabularInline):
+    model = ItemCompra
+    extra = 0  # No muestra filas vacías adicionales
+    readonly_fields = ('subtotal',)  # Opcional, si quieres mostrar el subtotal
+
+@admin.register(Compra)
+class CompraAdmin(admin.ModelAdmin):
+    list_display = ('id', 'orden_compra', 'tipo_documento', 'fecha_recepcion')
+    search_fields = ('orden_compra__id', 'orden_compra__proveedor__nombre')
+    inlines = [ItemCompraInline]
+    readonly_fields = ('fecha_recepcion',)
+
+@admin.register(ItemCompra)
+class ItemCompraAdmin(admin.ModelAdmin):
+    list_display = ('compra', 'producto', 'cantidad_recibida', 'precio_unitario', 'subtotal_formateado','tipo_documento')
+    search_fields = ('producto__nombre', 'compra__id')   
+    
+    
+    

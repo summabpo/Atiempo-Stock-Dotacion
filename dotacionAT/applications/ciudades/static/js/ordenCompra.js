@@ -59,60 +59,119 @@ const initDataTable = async () => {
     }
 }
 
+
 const OrdenCompras = async () => {
-    console.log("hola");
+    console.log("Cargando órdenes y compras...");
     
     try {
-    const response = await fetch('/list_orden_compra/');
+        const response = await fetch('/list_orden_y_compra/');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        console.log("Datos combinados:", data);
+
+        const tableBody = document.getElementById('tableBody_ordenCompra');
+        if (tableBody) {
+            let content = ``;
+            data.ordenes_compras.forEach((item, index) => {
+                const activo = item.activo === true;
+            let idTipoDoc =   item.id+' - '+item.tipo_documento;
+            if(item.tipo_documento == 'OC' && item.estado == 'Comprada'){
+                let estadoId = item.estado+' Id '+item.id;
+                                                
+            }else{
+                let estadoId = item.estado;
+            }
+         
+                content += `
+    <tr class="text-center">
+        <td>${idTipoDoc}</td>
+        <td>${item.proveedor}</td>
+<td>${estadoId}</td>
+        <td>${item.fecha}</td>
     
-    // Verificamos si la respuesta es correcta
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        <td>
+            <a href="${item.url_editar}">
+                <button class="btn btn-sm btn-warning">
+                    <i class='fa-solid fa-pencil'></i>
+                </button>
+            </a>
+        </td>
+    </tr>
+`;
+            });
+
+            tableBody.innerHTML = content;
+        }
+    } catch (ex) {
+        alert("Error: " + ex.message);
+        console.error("Error al cargar órdenes y compras:", ex);
     }
+};
 
-    const data = await response.json();
-    console.log("Respuesta completa:", data);
+// const OrdenCompras = async () => {
+//     console.log("hola");
+    
+//     try {
+//     const response = await fetch('/list_orden_y_compra/');
+    
+//     // Verificamos si la respuesta es correcta
+//     if (!response.ok) {
+//         throw new Error(`HTTP error! status: ${response.status}`);
+//     }
 
-    if (!Array.isArray(data.orden_compra)) {
-        throw new Error("La propiedad 'orden_compra' no es un arreglo o no existe.");
-    }
+//     const data = await response.json();
+//     console.log("Respuesta completa:", data);
 
-    const tableBody = document.getElementById('tableBody_ordenCompra');
-    if (tableBody) {
-        let content = ``;
-        data.orden_compra.forEach((OrdenCompra, index) => {
-            const activo = OrdenCompra.activo === "True" || OrdenCompra.activo === true;
+//     if (!Array.isArray(data.orden_compra)) {
+//         throw new Error("La propiedad 'orden_compra' no es un arreglo o no existe.");
+//     }
 
-            content += `
-                <tr class="text-center">
-                    <td style="text-align: center !important;">${OrdenCompra.id}</td>
-                    <td>${OrdenCompra.proveedor}</td>
-                    <td>${OrdenCompra.fecha}</td>
-                    <td>
-                        ${activo
-                            ? "<i class='fa-solid fa-check' style='color: green;'></i>"
-                            : "<i class='fa-solid fa-xmark' style='color: red;'></i>"
-                        }
-                    </td>
-                    <td>
-                        <a href="${OrdenCompra.url_editar}">
-                            <button class="btn btn-sm btn-warning">
-                                <i class='fa-solid fa-pencil'></i>
-                            </button>
-                        </a>
-                    </td>
-                </tr>
-            `;
-        });
-        tableBody.innerHTML = content;
-    }
-} catch (ex) {
-    alert("Error: " + ex.message);
-    console.error("Error al obtener ordenes de compra:", ex);
-}
-}
+//     const tableBody = document.getElementById('tableBody_ordenCompra');
+//     if (tableBody) {
+//         let content = ``;
+//         data.orden_compra.forEach((OrdenCompra, index) => {
+//             const activo = OrdenCompra.activo === "True" || OrdenCompra.activo === true;
+
+//             content += `
+//                 <tr class="text-center">
+//                     <td style="text-align: center !important;">${OrdenCompra.id}</td>
+//                     <td>${OrdenCompra.proveedor}</td>
+//                     <td>${OrdenCompra.fecha}</td>
+//                     <td>
+//                         ${activo
+//                             ? "<i class='fa-solid fa-check' style='color: green;'></i>"
+//                             : "<i class='fa-solid fa-xmark' style='color: red;'></i>"
+//                         }
+//                     </td>
+//                     <td>
+//                         <a href="${OrdenCompra.url_editar}">
+//                             <button class="btn btn-sm btn-warning">
+//                                 <i class='fa-solid fa-pencil'></i>
+//                             </button>
+//                         </a>
+//                     </td>
+//                 </tr>
+//             `;
+//         });
+//         tableBody.innerHTML = content;
+//     }
+// } catch (ex) {
+//     alert("Error: " + ex.message);
+//     console.error("Error al obtener ordenes de compra:", ex);
+// }
+// }
 
 window.addEventListener("load", async () => {
     await initDataTable();
     console.log("Página cargada");
 });
+
+
+
+    // <td>
+        //     ${item.activo
+        //         ? "<i class='fa-solid fa-check' style='color: green;'></i>"
+        //         : "<i class='fa-solid fa-xmark' style='color: red;'></i>"
+        //     }
+        // </td>

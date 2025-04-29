@@ -15,7 +15,7 @@
     <section class="content">
         <h3>Productos en la Orden</h3>
 
-        <form method="post" id="ordenForm">
+        <form method="post" action="{% url 'comprar_orden' orden.id %}">
             {% csrf_token %}
             <table class="table table-bordered" style="color: black;" id="tablaProductos">
                 <thead>
@@ -30,9 +30,9 @@
                 <tbody>
 
                     {% for item in items %}
-                    <p>Producto: {{ item.producto.nombre }}</p>
+                    <!-- <p>Producto: {{ item.producto.nombre }}</p>
     <p>Cantidad: {{ item.cantidad }}</p>
-    <p>Precio: {{ item.precio_unitario }}</p>
+    <p>Precio: {{ item.precio_unitario }}</p> -->
     
                     <tr>
                         <td>
@@ -58,7 +58,7 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+            <button type="submit" class="btn btn-success">Guardar</button>
         </form>
     </section>
 </div>
@@ -179,6 +179,16 @@ function actualizarTotalGeneral() {
             formatearNumero(input); // Formatear cada valor de precio
         });
     });
+
+
+    function confirmarCompra(button) {
+    const ordenId = button.getAttribute('data-orden-id');
+    console.log(ordenId);
+    
+    if (confirm("¿Estás seguro de que deseas confirmar esta compra? Esto afectará el inventario.")) {
+        window.location.href = `/comprar_orden/${ordenId}/`;
+    }
+}
 
 
 </script>

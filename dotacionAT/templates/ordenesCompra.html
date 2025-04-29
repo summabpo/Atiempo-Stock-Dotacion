@@ -17,7 +17,22 @@
       <a href="{% url 'crear_orden_compra' %}"><button class="btn btn-success">Crear Orden Compra</button></a>
     </div>
     <hr>
-    <table class="table table-striped table-hover table-responsive-sm text-center " id="datatableOrdenCompra">
+    <table id="datatableOrdenCompra" class="table table-striped table-hover table-responsive-sm text-center">
+      <thead class="thead-dark">
+          <tr>
+              <th>ID</th>
+              <!-- <th>Tipo</th> -->
+              <th>Proveedor</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Acción</th>
+          </tr>
+      </thead>
+      <tbody id="tableBody_ordenCompra">
+          <!-- Aquí se cargan las filas dinámicamente -->
+      </tbody>
+  </table>
+    <!-- <table class="table table-striped table-hover table-responsive-sm text-center " id="datatableOrdenCompra">
       <thead class="thead-dark">
         <tr>
           <th scope="col">ID</th>
@@ -28,7 +43,7 @@
         </tr>
       </thead>
      <tbody id="tableBody_ordenCompra"></tbody>
-      </table>
+      </table> -->
     </div>
 </div>
 
