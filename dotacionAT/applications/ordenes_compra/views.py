@@ -147,7 +147,7 @@ def crear_orden_compra(request):
                     cantidad=cantidades[i],
                     precio_unitario=precios[i]
                 )
-
+            messages.success(request, "Orden Compra Creada Correctamente. ! ")    
             return redirect('ordenes_compra')  # redirige a donde tengas la lista de órdenes
 
     productos = Producto.objects.all()
@@ -196,14 +196,13 @@ def comprar_orden(request, id):
             )
             print(f">>> ItemCompra creado para producto: {item.producto.nombre}")
 
-        return redirect('comprar_orden_vista')
+        return redirect('list_orden_y_compra')
 
     print(">>> GET recibido: mostrando formulario")  # Verifica que entra en GET también
     return render(request, 'comprarOrden.html', {
         'orden': orden,
         'items': orden.items.all()
     })
-    
     
 
 @transaction.atomic
@@ -240,6 +239,4 @@ def confirmar_compra(request, orden_id):
 
     messages.success(request, "Compra registrada exitosamente y stock actualizado.")
     return redirect('comprar_orden_vista', id=orden.id)        
-    
-    
     

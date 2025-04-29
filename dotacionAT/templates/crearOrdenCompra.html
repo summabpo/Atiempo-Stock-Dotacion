@@ -380,19 +380,36 @@ function agregarProductoAOrden(id, nombre) {
 
     fila.innerHTML = `
         <td>${nombre}<input type="hidden" name="productos[]" value="${id}"></td>
-        <td><input type="number" name="cantidades[]" class="form-control text-center" value="1" min="1" onchange="actualizarSubtotal(this)"></td>
-        <td><input type="number" name="precios[]" class="form-control text-center" value="0" step="0.01" onchange="actualizarSubtotal(this)"></td>
+        <td>
+            <input type="number" name="cantidades[]" class="form-control text-center cantidad" value="1"    min="0" step="0.01" onchange="actualizarSubtotal(this)" required></td>
+
+        <td><input type="number" name="precios[]" class="form-control text-center valorUnitario"   
+     min="0" step="0.01" value="0.00"
+     
+    onchange="actualizarSubtotal(this)"  required></td>
+
         <td class="subtotal">0.00</td>
         <td>
+
+
             <button type="button" class="btn btn-danger btn-sm" onclick="quitarProducto(${id}, this)">
                 <i class="fa fa-times"></i>
             </button>
         </td>
     `;
-
     tbody.appendChild(fila);
+    
+    console.log(typeof $.fn.number);
+    
+    // $(fila).find(".valorUnitario").number(true, 2);
+    // $(fila).find(".cantidad").number(true, 2);
+    
     actualizarSubtotal(fila); // calcular subtotal inicial
 }
+
+$(document).ready(function() {
+    $('.valorUnitario').number(true, 2);
+});
 
 function quitarProducto(id, btn) {
     productosAgregados = productosAgregados.filter(pid => pid != id);
@@ -433,9 +450,30 @@ function agregarProveedorAOrden(id, nombre) {
         </td>
     `;
 
+
     tbody.appendChild(fila);
     
 }
+
+// function validarCantidad(input) {
+//     input.value = input.value.replace(/[^0-9]/g, ''); // solo números enteros positivos
+//     if (input.value === '' || parseInt(input.value) < 1) {
+//         input.value = 1;
+//     }
+// }
+
+// function validarPrecio(input) {
+//     // Elimina caracteres no permitidos excepto el punto
+//     input.value = input.value.replace(/[^0-9.]/g, '');
+
+//     // Limita a 2 decimales
+//     let valor = parseFloat(input.value);
+//     if (isNaN(valor) || valor < 0) {
+//         input.value = '00000000.00';
+//     } else {
+//         input.value = valor.toFixed(2);
+//     }
+// }
    
 </script>
 

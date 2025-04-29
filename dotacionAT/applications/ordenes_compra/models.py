@@ -8,15 +8,14 @@ from django.utils.html import format_html
 
 class OrdenCompra(models.Model):
     ESTADO_CHOICES = [
-        ('borrador', 'Borrador'),
-        ('enviada', 'Enviada'),
-        ('comprada', 'Comprada'),
-        ('cancelada', 'Cancelada'),
+        ('generada', 'generada'),
+        ('recibida', 'recibida'),
+        ('cancelada', 'cancelada'),
     ]
 
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE)
     fecha_creacion = models.DateField(auto_now_add=True)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='borrador')
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='generada')
     observaciones = models.TextField(blank=True)
 
     def __str__(self):

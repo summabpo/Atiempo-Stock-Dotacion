@@ -77,10 +77,10 @@ const OrdenCompras = async () => {
                 const activo = item.activo === true;
             let idTipoDoc =   item.id+' - '+item.tipo_documento;
             if(item.tipo_documento == 'OC' && item.estado == 'Comprada'){
-                let estadoId = item.estado+' Id '+item.id;
+                estadoId = item.estado+' Id '+item.id;
                                                 
             }else{
-                let estadoId = item.estado;
+                estadoId = item.estado;
             }
          
                 content += `
