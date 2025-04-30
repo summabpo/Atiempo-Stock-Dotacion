@@ -2,6 +2,7 @@ from django.db import models
 from applications.proveedores.models import Proveedor
 from applications.productos.models import Producto
 from django.utils.html import format_html
+from decimal import Decimal
 # Create your models here.
 
 
@@ -17,6 +18,8 @@ class OrdenCompra(models.Model):
     fecha_creacion = models.DateField(auto_now_add=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='generada')
     observaciones = models.TextField(blank=True)
+    
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
 
     def __str__(self):
         return str(self.id)
@@ -47,13 +50,15 @@ class Compra(models.Model):
     orden_compra = models.OneToOneField(OrdenCompra, on_delete=models.CASCADE, related_name='compra')
     fecha_recepcion = models.DateField(auto_now_add=True)
     observaciones = models.TextField(blank=True)
+    
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
 
     def __str__(self):
         return f"Compra de orden #{self.orden_compra.id}"
     
     @property
     def tipo_documento(self):
-        return "CP"
+        return "OR"
 
 class ItemCompra(models.Model):
     compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='items')

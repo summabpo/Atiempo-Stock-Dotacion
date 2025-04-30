@@ -58,7 +58,9 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% if orden.get_estado_display == 'generada' %}
             <button type="submit" class="btn btn-success">Guardar</button>
+            {% endif %}
         </form>
     </section>
 </div>

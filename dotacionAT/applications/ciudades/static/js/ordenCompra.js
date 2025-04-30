@@ -82,12 +82,15 @@ const OrdenCompras = async () => {
             }else{
                 estadoId = item.estado;
             }
-         
+        
+            console.log(item.total);
+            
                 content += `
     <tr class="text-center">
         <td>${idTipoDoc}</td>
-        <td>${item.proveedor}</td>
-<td>${estadoId}</td>
+        <td style="text-transform: uppercase;">${item.proveedor}</td>
+<td style="text-transform: uppercase;">${estadoId}</td>
+<td class="total" >${item.total}</td>
         <td>${item.fecha}</td>
     
         <td>
@@ -107,6 +110,8 @@ const OrdenCompras = async () => {
         alert("Error: " + ex.message);
         console.error("Error al cargar órdenes y compras:", ex);
     }
+
+    $(".total").number(true, 2);
 };
 
 // const OrdenCompras = async () => {

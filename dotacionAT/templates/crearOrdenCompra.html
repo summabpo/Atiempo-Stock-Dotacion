@@ -11,8 +11,8 @@
             Crear Orden de Compra
             </h1>
             <ol class="breadcrumb">
-            <li style="font-size:1.4em"><a href="compras"><i class="fa fa-dashboard"></i> Orden de Compra</a></li>
-            <li class="active" style="font-size:1.4em">Crear Orden de Compra</li>
+            
+            <!-- <li class="active" style="font-size:1.4em">Crear Orden de Compra</li> -->
             </ol>
             </section>
             <section class="content">
@@ -21,7 +21,7 @@
     <!--=====================================
     ENTRADA PARA PROVEEDOR
     ======================================-->
-    <div class="box box-primary" style="color: black;"><strong>PROVEEDORES</strong>
+    <div class="box box-primary" style="color: black;"><strong>Seleccione Proveedor</strong>
     <div class="box-header with-border"></div>
     <div class="box-body">
 
@@ -94,6 +94,13 @@
                     </tr>
                 </thead>
                 <tbody style="color: black;"></tbody>
+                <tfoot style="color: black;">
+                    <tr >
+                      <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                      <td id="totalOrden" class="text-center">COP 0.00</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
             </table>
         </div>
     </div>
@@ -101,11 +108,14 @@
     BOTÓN PARA AGREGAR PRODUCTO
     ======================================-->
    
-
+    
 
 
         </div>
     </div>
+
+  
+
     <button type="submit" class="btn btn-success">Guardar Orden</button>        
 </form>
         
@@ -141,6 +151,7 @@
               </tr>
             </thead>
            <tbody id="tableBody_productosOrden" style="color: black;"></tbody>
+      
             </table>
 
     </div>
@@ -166,6 +177,9 @@
 
 <script>
 
+
+
+
 let dataTableProveedores;
 let dataTableProductos;
 
@@ -177,7 +191,7 @@ const dataTableOptions = {
         { className: "text-center", targets: "_all" },
         { orderable: false, targets: -1 }
     ],
-    pageLength: 10,
+    pageLength: 1,
     destroy: true,
     language: {
         processing: "Procesando...",
@@ -194,7 +208,8 @@ const dataTableOptions = {
             next: "Siguiente",
             previous: "Anterior"
         },
-    }
+    },
+    lengthChange: false,
 };
 
 // ✅ Tabla de Proveedores
@@ -381,12 +396,12 @@ function agregarProductoAOrden(id, nombre) {
     fila.innerHTML = `
         <td>${nombre}<input type="hidden" name="productos[]" value="${id}"></td>
         <td>
-            <input type="number" name="cantidades[]" class="form-control text-center cantidad" value="1"    min="0" step="0.01" onchange="actualizarSubtotal(this)" required></td>
+            <input type="text" name="cantidades[]" class="form-control text-center cantidad" value="1"    min="0" step="0.01" onchange="actualizarSubtotal(this)"  required></td>
 
-        <td><input type="number" name="precios[]" class="form-control text-center valorUnitario"   
-     min="0" step="0.01" value="0.00"
+        <td><input type="text" name="precios[]" class="form-control text-center valorUnitario"   
+      
      
-    onchange="actualizarSubtotal(this)"  required></td>
+    onchange="actualizarSubtotal(this)"   required></td>
 
         <td class="subtotal">0.00</td>
         <td>
@@ -401,28 +416,105 @@ function agregarProductoAOrden(id, nombre) {
     
     console.log(typeof $.fn.number);
     
-    // $(fila).find(".valorUnitario").number(true, 2);
-    // $(fila).find(".cantidad").number(true, 2);
+    $(fila).find(".valorUnitario").number(true, 2);
+    $(fila).find(".cantidad").number(true);
+    $(fila).find(".subtotal").number(true, 2);
     
-    actualizarSubtotal(fila); // calcular subtotal inicial
+    actualizarSubtotal(fila); 
+    actualizarTotalGeneral();
+    // calcular subtotal inicial
+    //formatNumber()
 }
 
-$(document).ready(function() {
-    $('.valorUnitario').number(true, 2);
-});
+
+
+function formatNumberInput(inputElement) {
+    let value = parseFloat(inputElement.value);
+    if (!isNaN(value) && value >= 0) {
+        inputElement.value = new Intl.NumberFormat('es-CO', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    } else {
+        inputElement.value = '';
+    }
+}
 
 function quitarProducto(id, btn) {
     productosAgregados = productosAgregados.filter(pid => pid != id);
     btn.closest("tr").remove();
 }
 
-function actualizarSubtotal(elemento) {
-    const fila = elemento.closest("tr");
-    const cantidad = parseFloat(fila.querySelector('input[name="cantidades[]"]').value) || 0;
-    const precio = parseFloat(fila.querySelector('input[name="precios[]"]').value) || 0;
-    const subtotal = (cantidad * precio).toFixed(2);
-    fila.querySelector(".subtotal").innerText = subtotal;
+// function actualizarSubtotal(elemento) {
+//     const fila = elemento.closest("tr");
+//     const cantidad = parseFloat(fila.querySelector('input[name="cantidades[]"]').value) || 0;
+//      console.log("Tipo:", typeof cantidad);
+//     const precio = parseFloat(fila.querySelector('input[name="precios[]"]').value) || 0;
+//     console.log("Tipo:", typeof precio);
+//     const subtotal = (cantidad * precio);
+//     fila.querySelector(".subtotal").innerText = subtotal;
+
+//     console.log(cantidad);
+//     console.log(precio);
+//     console.log(subtotal);
+    
+// }
+
+
+function parsePrecioColombiano(valorRaw) {
+    const soloNumeros = valorRaw.replace(/[^0-9.,]/g, '');  // limpia símbolos
+    const tieneComaDecimal = soloNumeros.includes(',');
+    const tienePuntoDecimal = soloNumeros.includes('.');
+
+    // Caso 1: Formato colombiano: 12.500,00
+    if (tieneComaDecimal && tienePuntoDecimal && soloNumeros.indexOf(',') > soloNumeros.indexOf('.')) {
+        return parseFloat(soloNumeros.replace(/\./g, '').replace(',', '.'));
+    }
+
+    // Caso 2: Formato americano: 12,500.00
+    if (tieneComaDecimal && tienePuntoDecimal && soloNumeros.indexOf('.') > soloNumeros.indexOf(',')) {
+        return parseFloat(soloNumeros.replace(/,/g, ''));
+    }
+
+    // Caso 3: Solo coma (12,50) → 12.50
+    if (!tienePuntoDecimal && tieneComaDecimal) {
+        return parseFloat(soloNumeros.replace(',', '.'));
+    }
+
+    // Caso 4: Solo punto o número limpio
+    return parseFloat(soloNumeros);
 }
+
+
+function actualizarSubtotal(input) {
+    const fila = input.closest('tr');
+
+    const cantidad = parseFloat(fila.querySelector('input[name="cantidades[]"]').value) || 0;
+
+    const inputPrecio = fila.querySelector('input[name="precios[]"]');
+    const raw = inputPrecio.value.trim();
+    const precio = parsePrecioColombiano(raw) || 0;  // Solo convierte coma decimal
+    // const precio = parseFloat(clean) || 0;
+    const subtotal = cantidad * precio;
+
+    fila.querySelector('.subtotal').textContent = subtotal.toLocaleString('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 2
+    });
+
+//     console.log(cantidad);
+//     console.log("Raw:", raw);      // Lo que ve el usuario
+// console.log("Clean:", clean);  // Lo que se va a parsear
+// console.log("Precio:", precio);
+
+
+    console.log(subtotal);
+
+    actualizarTotalGeneral();
+    
+}
+
 
 
 
@@ -455,6 +547,21 @@ function agregarProveedorAOrden(id, nombre) {
     
 }
 
+function actualizarTotalGeneral() {
+    let total = 0;
+    document.querySelectorAll('#productosSeleccionados tbody tr').forEach(fila => {
+        const subtotalTexto = fila.querySelector('.subtotal').textContent;
+        const subtotalNum = parsePrecioColombiano(subtotalTexto) || 0;
+        total += subtotalNum;
+    });
+
+    document.getElementById('totalOrden').textContent = total.toLocaleString('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 2
+    });
+}
+
 // function validarCantidad(input) {
 //     input.value = input.value.replace(/[^0-9]/g, ''); // solo números enteros positivos
 //     if (input.value === '' || parseInt(input.value) < 1) {
@@ -474,6 +581,12 @@ function agregarProveedorAOrden(id, nombre) {
 //         input.value = valor.toFixed(2);
 //     }
 // }
+
+document.querySelector('form').addEventListener('submit', function() {
+    document.querySelectorAll('input[name="precios[]"]').forEach(input => {
+        input.value = input.value.replace(/,/g, '');
+    });
+});
    
 </script>
 

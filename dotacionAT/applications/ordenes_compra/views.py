@@ -74,6 +74,7 @@ def list_orden_y_compra(request):
             'proveedor': orden.proveedor.nombre,
             'fecha': orden.fecha_creacion.strftime('%Y-%m-%d'),
             'tipo_documento': orden.tipo_documento,
+            'total': orden.total,
             'estado': orden.estado,
             'url_editar': f'/comprar_orden/{orden.id}/'
         })
@@ -85,6 +86,7 @@ def list_orden_y_compra(request):
             'proveedor': compra.orden_compra.proveedor.nombre,
             'fecha': compra.fecha_recepcion.strftime('%Y-%m-%d'),
             'tipo_documento': compra.tipo_documento,
+            'total': compra.total,
             'estado': 'Compra',
             'url_editar': f'/comprar_orden/{compra.orden_compra.id}/'
         })

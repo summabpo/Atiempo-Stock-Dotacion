@@ -6,7 +6,7 @@ class detalleOrdenInline(admin.TabularInline):
 
 @admin.register(OrdenCompra)
 class OrdenCompraAdmin(admin.ModelAdmin):
-    list_display = ('id', 'proveedor', 'estado', 'tipo_documento', 'fecha_creacion')
+    list_display = ('id', 'proveedor', 'estado', 'tipo_documento', 'total', 'fecha_creacion')
     list_filter = ('estado', 'fecha_creacion')
     search_fields = ('proveedor__nombre',)
     inlines = [detalleOrdenInline]
@@ -23,7 +23,7 @@ class ItemCompraInline(admin.TabularInline):
 
 @admin.register(Compra)
 class CompraAdmin(admin.ModelAdmin):
-    list_display = ('id', 'orden_compra', 'tipo_documento', 'fecha_recepcion')
+    list_display = ('id', 'orden_compra', 'tipo_documento', 'total', 'fecha_recepcion')
     search_fields = ('orden_compra__id', 'orden_compra__proveedor__nombre')
     inlines = [ItemCompraInline]
     readonly_fields = ('fecha_recepcion',)
