@@ -97,8 +97,9 @@
                 <tfoot style="color: black;">
                     <tr >
                       <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                      <td id="totalOrden" class="text-center">COP 0.00</td>
+                      <td id="totalOrden"  class="text-center">COP 0.00</td>
                       <td></td>
+                      <input type="hidden" name="total_orden" id="inputTotalOrden">
                     </tr>
                   </tfoot>
             </table>
@@ -555,11 +556,16 @@ function actualizarTotalGeneral() {
         total += subtotalNum;
     });
 
-    document.getElementById('totalOrden').textContent = total.toLocaleString('es-CO', {
+    const totalFormateado = total.toLocaleString('es-CO', {
         style: 'currency',
         currency: 'COP',
         minimumFractionDigits: 2
     });
+
+    document.getElementById('totalOrden').textContent = totalFormateado;
+
+    // Actualizar el campo oculto para enviar al backend
+    document.getElementById('inputTotalOrden').value = total.toFixed(2); // Valor limpio, sin formato
 }
 
 // function validarCantidad(input) {

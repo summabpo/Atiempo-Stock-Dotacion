@@ -1,5 +1,10 @@
 console.log("Hola orden Compras");
 
+function getCSRFToken() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return token ? token.content : '';
+}
+
 let dataTable;
 let dataTableIsInitialized = false;
 
@@ -99,6 +104,12 @@ const OrdenCompras = async () => {
                     <i class='fa-solid fa-pencil'></i>
                 </button>
             </a>
+           
+                <button class="btn btn-sm btn-danger" onclick="confirmarCambioEstado('${item.url_cancelar}')">
+                    <i class='fa-solid fa-pencil'></i>
+                </button>
+           
+
         </td>
     </tr>
 `;
@@ -180,3 +191,45 @@ window.addEventListener("load", async () => {
         //         : "<i class='fa-solid fa-xmark' style='color: red;'></i>"
         //     }
         // </td>
+
+        function confirmarCambioEstado(ordenId) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¿Deseas cambiar el estado de esta orden?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, cambiarlo'
+            }).then((result) => {
+                if (result.isConfirmed) {
+
+                   
+
+                    // Puedes usar fetch o enviar un formulario
+                    fetch(`cambiar_estado/${ordenId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCSRFToken(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ estado: 'CANCELADO' })
+                    })
+                    
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Actualizado!', 'El estado fue cambiado.', 'success').then(() => {
+                                location.reload();  // refrescar la página o actualizar solo la fila
+                            });
+                        } else {
+                            Swal.fire('Error', data.message || 'No se pudo cambiar el estado.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Ocurrió un problema al enviar la solicitud.', 'error');
+                    });
+                }
+            });
+        }

@@ -12,5 +12,6 @@ urlpatterns = [
     # path('modificar_categoria/<int:id>/', views.modificar_categoria, name='modificar_categoria'),  # Aquí debe estar 'productos'
     #path('list_orden_compra/', views.list_orden_compra, name='list_orden_compra'),  # Aquí debe estar 'productos'
     #path('list_compra/', views.list_compra, name='list_compra'),  # Aquí debe estar 'productos'
+    path('cambiar_estado/<int:orden_id>/', views.cambiar_estado_orden, name='cambiar_estado_orden'),
 
 ]

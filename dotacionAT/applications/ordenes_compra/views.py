@@ -9,8 +9,9 @@ from applications.proveedores.models import Proveedor
 from django.forms import modelformset_factory
 from django.db import transaction
 from django.contrib import messages
-
-
+from decimal import Decimal
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 # Create your views here.
 
@@ -76,7 +77,8 @@ def list_orden_y_compra(request):
             'tipo_documento': orden.tipo_documento,
             'total': orden.total,
             'estado': orden.estado,
-            'url_editar': f'/comprar_orden/{orden.id}/'
+            'url_editar': f'/comprar_orden/{orden.id}/',
+            'url_cancelar': f'/comprar_orden/{orden.id}/'
         })
 
     # Añadir compras
@@ -88,7 +90,8 @@ def list_orden_y_compra(request):
             'tipo_documento': compra.tipo_documento,
             'total': compra.total,
             'estado': 'Compra',
-            'url_editar': f'/comprar_orden/{compra.orden_compra.id}/'
+            'url_editar': f'/comprar_orden/{compra.orden_compra.id}/',
+            'url_cancelar':''
         })
 
     return JsonResponse({'ordenes_compras': data})
@@ -133,10 +136,22 @@ def crear_orden_compra(request):
         print("Token recibido:", request.POST.get("csrfmiddlewaretoken"))
         proveedor_id = request.POST.get('proveedor')
         observaciones = request.POST.get('observaciones', '')
+        total_orden = request.POST.get('total_orden')
+
+        try:
+            total_orden_decimal = Decimal(total_orden)
+        except:
+            total_orden_decimal = Decimal('0.00')
 
         if proveedor_id:
             proveedor = Proveedor.objects.get(id_proveedor=proveedor_id)
-            orden = OrdenCompra.objects.create(proveedor=proveedor, observaciones=observaciones)
+
+            # Guarda el total si tu modelo OrdenCompra tiene un campo para esto
+            orden = OrdenCompra.objects.create(
+                proveedor=proveedor,
+                observaciones=observaciones,
+                total=total_orden_decimal  # <- este campo debe existir en tu modelo
+            )
 
             productos = request.POST.getlist('productos[]')
             cantidades = request.POST.getlist('cantidades[]')
@@ -149,8 +164,9 @@ def crear_orden_compra(request):
                     cantidad=cantidades[i],
                     precio_unitario=precios[i]
                 )
+
             messages.success(request, "Orden Compra Creada Correctamente. ! ")    
-            return redirect('ordenes_compra')  # redirige a donde tengas la lista de órdenes
+            return redirect('ordenes_compra')
 
     productos = Producto.objects.all()
     return render(request, 'crearOrdenCompra.html', {
@@ -241,4 +257,23 @@ def confirmar_compra(request, orden_id):
 
     messages.success(request, "Compra registrada exitosamente y stock actualizado.")
     return redirect('comprar_orden_vista', id=orden.id)        
-    
+
+
+
+@csrf_exempt  # si usas fetch sin enviar el CSRF token
+def cambiar_estado_orden(request, orden_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            nuevo_estado = data.get('cancelado')
+            
+            orden = OrdenCompra.objects.get(pk=orden_id)
+            orden.estado = nuevo_estado
+            orden.save()
+            
+            return JsonResponse({'success': True})
+        except OrdenCompra.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Orden no encontrada'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
