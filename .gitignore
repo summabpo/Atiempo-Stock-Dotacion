@@ -42,9 +42,9 @@ Dockerfile
 docker-compose.yml
 
 # Ignorar archivos generados por Pillow (si trabajas con imágenes)
-*.png
-*.jpg
-*.jpeg
+# *.png
+# *.jpg
+# *.jpeg
 *.gif
 
 # Archivos temporales de Windows (como Thumb.db, Desktop.ini)
