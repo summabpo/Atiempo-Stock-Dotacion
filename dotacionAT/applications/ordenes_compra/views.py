@@ -78,7 +78,7 @@ def list_orden_y_compra(request):
             'total': orden.total,
             'estado': orden.estado,
             'url_editar': f'/comprar_orden/{orden.id}/',
-            'url_cancelar': f'/comprar_orden/{orden.id}/'
+            'url_cancelar': f'/cambiar_estado_orden/{orden.id}/'
         })
 
     # Añadir compras
@@ -265,7 +265,7 @@ def cambiar_estado_orden(request, orden_id):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            nuevo_estado = data.get('cancelado')
+            nuevo_estado = data.get('estado')
             
             orden = OrdenCompra.objects.get(pk=orden_id)
             orden.estado = nuevo_estado

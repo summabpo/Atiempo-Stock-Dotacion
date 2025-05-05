@@ -88,31 +88,35 @@ const OrdenCompras = async () => {
                 estadoId = item.estado;
             }
         
-            console.log(item.total);
-            
-                content += `
-    <tr class="text-center">
-        <td>${idTipoDoc}</td>
-        <td style="text-transform: uppercase;">${item.proveedor}</td>
-<td style="text-transform: uppercase;">${estadoId}</td>
-<td class="total" >${item.total}</td>
-        <td>${item.fecha}</td>
-    
-        <td>
-            <a href="${item.url_editar}">
-                <button class="btn btn-sm btn-warning">
-                    <i class='fa-solid fa-pencil'></i>
-                </button>
-            </a>
-           
-                <button class="btn btn-sm btn-danger" onclick="confirmarCambioEstado('${item.url_cancelar}')">
-                    <i class='fa-solid fa-pencil'></i>
-                </button>
-           
 
-        </td>
-    </tr>
-`;
+            
+            let botonCancelar = '';
+            if (item.tipo_documento == 'OC' && item.estado == 'generada') {
+                botonCancelar = `
+                    <button title="Cancelar Orden compra" class="btn btn-sm btn-danger" onclick="confirmarCambioEstado('${item.url_cancelar}')">
+                        <i class='fa-solid fa-times'></i>
+                    </button>
+                `;
+            }
+        
+            content += `
+                <tr class="text-center">
+                    <td>${idTipoDoc}</td>
+                    <td style="text-transform: uppercase;">${item.proveedor}</td>
+                    <td style="text-transform: uppercase;">${estadoId}</td>
+                    <td class="total">${item.total}</td>
+                    <td>${item.fecha}</td>
+                    <td>
+                        <a href="${item.url_editar}">
+                            <button title="Ver Detalle O C" class="btn btn-sm btn-warning">
+                                <i class='fa-solid fa-pencil'></i>
+                            </button>
+                        </a>
+                      
+                        ${botonCancelar}
+                    </td>
+                </tr>
+            `;
             });
 
             tableBody.innerHTML = content;
@@ -204,10 +208,11 @@ window.addEventListener("load", async () => {
             }).then((result) => {
                 if (result.isConfirmed) {
 
+                   console.log('Hola');
                    
 
                     // Puedes usar fetch o enviar un formulario
-                    fetch(`cambiar_estado/${ordenId}`, {
+                    fetch(`${ordenId}`, {
                         method: 'POST',
                         headers: {
                             'X-CSRFToken': getCSRFToken(),
