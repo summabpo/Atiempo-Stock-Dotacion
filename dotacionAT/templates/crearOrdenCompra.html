@@ -6,24 +6,23 @@
 
 <div class="content-wrapper">
     <section class="content-header">
-        <h2 style="color: black;"></h2>
+        <br>
         <h1 style="color: black;">
-            Crear Orden de Compra
-            </h1>
-            <ol class="breadcrumb">
+        Crear Orden de Compra
+        </h1>
+    </section>
             
-            <!-- <li class="active" style="font-size:1.4em">Crear Orden de Compra</li> -->
-            </ol>
-            </section>
-            <section class="content">
-                <div class="row"> 
-<div class="col-lg-7 col-md-6 col-sm-12 col-xs-12">
+
+    <div class="row">  
+        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
     <!--=====================================
     ENTRADA PARA PROVEEDOR
     ======================================-->
-    <div class="box box-primary" style="color: black;"><strong>Seleccione Proveedor</strong>
-    <div class="box-header with-border"></div>
-    <div class="box-body">
+    <div class="card " style="color: black;">
+        <div class="card-header bg-success">
+            <h3 class="card-title">Seleccione Proveedor</h3>
+        </div>
+        <div class="card-body">
 
 
         <table id="tablaProveedoresOrden" class="table table-striped table-responsive-sm text-center" data-page-length="1" width="100%">
@@ -38,8 +37,9 @@
         </table>
     </div>
     </div>
-    <div class="box box-success">
-        <div class="box-header with-border"></div>
+    <br>
+    <div class="card">
+        
         <form role="form" method="post" class="formularioCompra">
             {% csrf_token %}
         <div class="box-body">
@@ -64,6 +64,8 @@
                 <thead class="thead-dark">
                     <tr>
                         <th>Nombre Proveedor</th>
+                        <th>Ciudad</th>
+                        <th>Telefono</th>
                         <th>Quitar</th>
                     </tr>
                 </thead>
@@ -125,24 +127,14 @@
 
 
 
-  
-<div class="box box-success">
-    <div class="box-header with-border"></div>
-<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-    <div class="box box-warning" style="color: black;"><strong>PRODUCTOS</strong>
-    <div class="box-header with-border"></div>
-    <div class="box-body">
-        <!-- <table id="tablaProveedoresOrden" class="table table-striped table-responsive-sm text-center" data-page-length="1" width="100%">
-            <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody_proveedorOrden" style="color: black;"></tbody>
-        </table> -->
-
+<!-- <div class="box-header with-border"></div> -->
+<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
+    <div class="card " style="color: black;">
+        <div class="card-header bg-warning">
+            <h3 class="card-title" style="color: white;">Seleccione Producto</h3>
+        </div>
+        <div class="card-body">
+     
         <table class="table table-striped table-hover table-responsive-sm text-center " id="datatableProductosOrden">
             <thead class="thead-dark">
               <tr>
@@ -158,9 +150,11 @@
     </div>
     </div>
     </div>
-    </div>
-    </section>
-    </div>
+    
+
+</div>
+   
+</div>
   
 
 
@@ -245,7 +239,7 @@ const cargarProveedores = async () => {
                         <td>${proveedor.nombre}</td>
                         <td>
                             <button type="button" class="btn btn-sm btn-primary"
-                                onclick="seleccionarProveedor('${proveedor.id_proveedor}', '${proveedor.nombre}')">
+                                onclick="seleccionarProveedor('${proveedor.id_proveedor}', '${proveedor.nombre}', '${proveedor.id_ciudad}', '${proveedor.telefono}')">
                                 Seleccionar
                             </button>
                         </td>
@@ -275,7 +269,7 @@ const cargarProveedores = async () => {
 //     `;
 // }
 
-function seleccionarProveedor(id, nombre) {
+function seleccionarProveedor(id, nombre, ciudad, telefono) {
     // Prevenir múltiples selecciones
     const tbody = document.querySelector("#proveedorSeleccionado tbody");
     tbody.innerHTML = ''; // Limpiar contenido anterior
@@ -284,6 +278,8 @@ function seleccionarProveedor(id, nombre) {
     fila.setAttribute("data-id", id);
     fila.innerHTML = `
         <td>${nombre}<input type="hidden" name="proveedor" value="${id}"></td>
+        <td>${ciudad}<input type="hidden" value="${ciudad}"></td>
+        <td>${telefono}<input type="hidden" value="${telefono}"></td>
         <td>
             <button type="button" class="btn btn-danger btn-sm" onclick="quitarProveedor()">
                 <i class="fa fa-times"></i>
@@ -305,7 +301,7 @@ const dataTableOptionsOrden = {
         { className: "text-center", targets: "_all" },
         { orderable: false, targets: -1 }
     ],
-    pageLength: 8,
+    pageLength: 10,
     destroy: true,
     language: {
         processing: "Procesando...",
@@ -535,7 +531,8 @@ function agregarProveedorAOrden(id, nombre) {
 
     fila.innerHTML = `
         <td>${nombre}<input type="hidden" name="proveedor[]" value="${id}"></td>
-      
+        <td>${proveedor.id_ciudad}</td>
+        <td>${proveedor.telefono}</td>
         <td>
             <button type="button" class="btn btn-danger btn-sm" onclick="quitarProducto(${id}, this)">
                 <i class="fa fa-times"></i>

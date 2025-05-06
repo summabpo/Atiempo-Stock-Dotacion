@@ -4,22 +4,46 @@
 {% block content %}
 
 <div class="content-wrapper">
-    <section class="content-header" style="color: black;">
-        <h1>Orden de Compra #{{ orden.id }}</h1>
-        <p><strong>Fecha:</strong> {{ orden.fecha_creacion }}</p>
-        <p><strong>Proveedor:</strong> {{ orden.proveedor.nombre }}</p>
-        <p><strong>Estado:</strong> {{ orden.get_estado_display }}</p>
-        <p><strong>Observaciones:</strong> {{ orden.observaciones }}</p>
+    <section class="content-header">
+        <div class="card bg-light mb-3">
+            <div class="card-header">
+                <h3 class="mb-0">Orden de Compra #{{ orden.id }}</h3>
+            </div>
+            <div class="card-body text-dark">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label>Fecha Orden Compra:</label>
+                        <input class="form-control" type="text" value="{{ orden.fecha_creacion }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Proveedor:</label>
+                        <input type="text" class="form-control" value="{{ orden.proveedor.nombre }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Ciudad Proveedor:</label>
+                        <input type="text" class="form-control" value="{{ orden.proveedor.ciudad }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Estado:</label>
+                        <input type="text" class="form-control" value="{{ orden.get_estado_display }}" readonly>
+                    </div>
+                    <div class="col-md-12">
+                        <label>Observaciones:</label>
+                        <input type="text" class="form-control" value="{{ orden.observaciones }}">
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <section class="content">
+    <section class="card">
         <h3>Productos en la Orden</h3>
 
         <form method="post" action="{% url 'comprar_orden' orden.id %}">
             {% csrf_token %}
             <table class="table table-bordered" style="color: black;" id="tablaProductos">
-                <thead>
-                    <tr>
+                <thead class="thead-dark">
+                    <tr style="text-align: center;">
                         <th>Producto</th>
                         <th>Cantidad</th>
                         <th>Precio Unitario</th>
