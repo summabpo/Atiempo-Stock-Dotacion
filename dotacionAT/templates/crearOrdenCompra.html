@@ -99,7 +99,7 @@
                 <tfoot style="color: black;">
                     <tr >
                       <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                      <td id="totalOrden"  class="text-center">COP 0.00</td>
+                      <td id="totalOrden"  class="text-right">COP 0.00</td>
                       <td></td>
                       <input type="hidden" name="total_orden" id="inputTotalOrden">
                     </tr>
@@ -395,12 +395,12 @@ function agregarProductoAOrden(id, nombre) {
         <td>
             <input type="text" name="cantidades[]" class="form-control text-center cantidad" value="1"    min="0" step="0.01" onchange="actualizarSubtotal(this)"  required></td>
 
-        <td><input type="text" name="precios[]" class="form-control text-center valorUnitario"   
+        <td><input type="text" name="precios[]" class="form-control text-right valorUnitario"   
       
      
     onchange="actualizarSubtotal(this)"   required></td>
 
-        <td class="subtotal">0.00</td>
+        <td class="subtotal text-right">0.00</td>
         <td>
 
 
@@ -414,7 +414,7 @@ function agregarProductoAOrden(id, nombre) {
     console.log(typeof $.fn.number);
     
     $(fila).find(".valorUnitario").number(true, 2);
-    $(fila).find(".cantidad").number(true);
+    // $(fila).find(".cantidad").number(true);
     $(fila).find(".subtotal").number(true, 2);
     
     actualizarSubtotal(fila); 
@@ -440,6 +440,8 @@ function formatNumberInput(inputElement) {
 function quitarProducto(id, btn) {
     productosAgregados = productosAgregados.filter(pid => pid != id);
     btn.closest("tr").remove();
+
+    actualizarTotalGeneral();
 }
 
 // function actualizarSubtotal(elemento) {
