@@ -7,10 +7,10 @@ from .forms import OrdenCompraForm
 from applications.productos.models import Producto
 from applications.proveedores.models import Proveedor
 from django.forms import modelformset_factory
-from django.db import transaction
 from django.contrib import messages
 from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction, IntegrityError
 import json
 
 # Create your views here.
@@ -76,6 +76,7 @@ def list_orden_y_compra(request):
             'fecha': orden.fecha_creacion.strftime('%Y-%m-%d'),
             'tipo_documento': orden.tipo_documento,
             'total': orden.total,
+            'numero_factura': '',
             'estado': orden.estado,
             'url_editar': f'/comprar_orden/{orden.id}/',
             'url_cancelar': f'/cambiar_estado_orden/{orden.id}/'
@@ -89,7 +90,8 @@ def list_orden_y_compra(request):
             'fecha': compra.fecha_recepcion.strftime('%Y-%m-%d'),
             'tipo_documento': compra.tipo_documento,
             'total': compra.total,
-            'estado': 'Compra',
+            'numero_factura': compra.numero_factura,
+            'estado': compra.estado,
             'url_editar': f'/comprar_orden/{compra.orden_compra.id}/',
             'url_cancelar':''
         })
@@ -137,7 +139,7 @@ def crear_orden_compra(request):
         proveedor_id = request.POST.get('proveedor')
         observaciones = request.POST.get('observaciones', '')
         total_orden = request.POST.get('total_orden')
-
+       
         try:
             total_orden_decimal = Decimal(total_orden)
         except:
@@ -190,21 +192,179 @@ def comprar_orden_vista(request):
 #     })
     
     
+# @transaction.atomic
+# def comprar_orden(request, id):
+#     orden = get_object_or_404(OrdenCompra, id=id)
+
+#     if request.method == 'POST':
+#         print(">>> POST recibido: procesando compra")  # Este debe aparecer en tu consola
+
+#         # Crear compra relacionada con la orden
+#         compra = Compra.objects.create(
+#              orden_compra=orden,
+#              observaciones=observaciones,
+#              total=total_orden_decimal,
+#              bodega_id=bodega if bodega else None,
+#              numero_factura=numero_factura
+#         )
+#         print(f">>> Compra creada con ID: {compra.id}")
+
+#         # Crear los items de la compra copiando los de la orden
+#         for item in orden.items.all():
+#             ItemCompra.objects.create(
+#                 compra=compra,
+#                 producto=item.producto,
+#                 cantidad_recibida=item.cantidad,
+#                 precio_unitario=item.precio_unitario
+#             )
+#             print(f">>> ItemCompra creado para producto: {item.producto.nombre}")
+
+#         return redirect('list_orden_y_compra')
+
+#     print(">>> GET recibido: mostrando formulario")  # Verifica que entra en GET también
+#     return render(request, 'comprarOrden.html', {
+#         'orden': orden,
+#         'items': orden.items.all()
+#     })
+
+# @transaction.atomic
+# def comprar_orden(request, id):
+#     orden = get_object_or_404(OrdenCompra, id=id)
+
+#     if request.method == 'POST':
+#         print(">>> POST recibido: procesando compra")  # Este debe aparecer en tu consola
+
+#         # 🔽 OBTENER LOS CAMPOS DEL FORMULARIO
+#         observaciones = request.POST.get('observaciones', '')
+#         total_orden = request.POST.get('total_orden', '0')
+#         numero_factura = request.POST.get('numero_factura', '')
+#         bodega = request.POST.get('bodega_id')
+
+#         try:
+#             total_orden_decimal = Decimal(total_orden)
+#         except:
+#             total_orden_decimal = Decimal('0.00')
+
+#         # Crear la compra relacionada con la orden
+#         compra = Compra.objects.create(
+#             orden_compra=orden,
+#             observaciones=observaciones,
+#             total=total_orden_decimal,
+#             bodega_id=bodega if bodega else None,
+#             numero_factura=numero_factura
+#         )
+#         print(f">>> Compra creada con ID: {compra.id}")
+
+#         # Crear los items de la compra copiando los de la orden
+#         for item in orden.items.all():
+#             ItemCompra.objects.create(
+#                 compra=compra,
+#                 producto=item.producto,
+#                 cantidad_recibida=item.cantidad,
+#                 precio_unitario=item.precio_unitario
+#             )
+#             print(f">>> ItemCompra creado para producto: {item.producto.nombre}")
+
+#         return redirect('list_orden_y_compra')
+
+#     print(">>> GET recibido: mostrando formulario")  # Verifica que entra en GET también
+#     return render(request, 'comprarOrden.html', {
+#         'orden': orden,
+#         'items': orden.items.all()
+#     })
+    
+
+# @transaction.atomic
+# def comprar_orden(request, id):
+#     orden = get_object_or_404(OrdenCompra, id=id)
+
+#     if request.method == 'POST':
+#         # ✅ Verificar si ya existe una compra asociada
+#         if hasattr(orden, 'compra'):
+#             messages.error(request, "Esta orden ya tiene una compra registrada.")
+#             return redirect('ordenes_compra')
+
+#         # Obtener datos del formulario
+#         observaciones = request.POST.get('observaciones', '')
+#         numero_factura = request.POST.get('numFActura', '')
+#         bodega = request.POST.get('bodega_id')
+
+#         # Calcular el total
+#         total_orden_decimal = sum(
+#             (item.cantidad * item.precio_unitario for item in orden.items.all()),
+#             start=Decimal('0.00')
+#         )
+
+#         # Crear la compra
+#         compra = Compra.objects.create(
+#             orden_compra=orden,
+#             observaciones=observaciones,
+#             total=total_orden_decimal,
+#             bodega_id=bodega if bodega else None,
+#             numero_factura=numero_factura
+#         )
+
+#         # Crear los ítems de la compra
+#         for item in orden.items.all():
+#             ItemCompra.objects.create(
+#                 compra=compra,
+#                 producto=item.producto,
+#                 cantidad_recibida=item.cantidad,
+#                 precio_unitario=item.precio_unitario
+#             )
+            
+#          # Cambia el estado de la orden a "comprada"
+#         orden.estado = 'comprada'+' '+compra.numero_factura
+#         orden.save()    
+
+#         messages.success(request, "Compra registrada correctamente.")
+#         return redirect('ordenes_compra')
+
+#     return render(request, 'comprarOrden.html', {
+#         'orden': orden,
+#         'items': orden.items.all()
+#     })
+    
+
 @transaction.atomic
 def comprar_orden(request, id):
     orden = get_object_or_404(OrdenCompra, id=id)
 
     if request.method == 'POST':
-        print(">>> POST recibido: procesando compra")  # Este debe aparecer en tu consola
+        # ✅ Verificar si ya existe una compra asociada
+        if hasattr(orden, 'compra'):
+            messages.error(request, "Esta orden ya tiene una compra registrada.")
+            return redirect('ordenes_compra')
 
-        # Crear compra relacionada con la orden
+        # Obtener datos del formulario
+        observaciones = request.POST.get('observaciones', '')
+        numero_factura = request.POST.get('numFActura', '')
+        bodega = request.POST.get('bodega_id')
+
+        # 📌 Imprimir datos recibidos como depuración (tipo var_dump)
+        print(">>> Datos del formulario:")
+        print("Observaciones:", observaciones)
+        print("Número de factura:", numero_factura)
+        print("Bodega ID:", bodega)
+        print("POST completo:", dict(request.POST))  # También puedes usar request.POST.items()
+
+        # Calcular el total
+        total_orden_decimal = sum(
+            (item.cantidad * item.precio_unitario for item in orden.items.all()),
+            start=Decimal('0.00')
+        )
+        print("Total calculado:", total_orden_decimal)
+
+        # Crear la compra
         compra = Compra.objects.create(
             orden_compra=orden,
-            observaciones=orden.observaciones
+            observaciones=observaciones,
+            total=total_orden_decimal,
+            bodega_id=bodega if bodega else None,
+            numero_factura=numero_factura
         )
-        print(f">>> Compra creada con ID: {compra.id}")
 
-        # Crear los items de la compra copiando los de la orden
+        # Crear los ítems de la compra
         for item in orden.items.all():
             ItemCompra.objects.create(
                 compra=compra,
@@ -212,16 +372,18 @@ def comprar_orden(request, id):
                 cantidad_recibida=item.cantidad,
                 precio_unitario=item.precio_unitario
             )
-            print(f">>> ItemCompra creado para producto: {item.producto.nombre}")
 
-        return redirect('list_orden_y_compra')
+        # Cambia el estado de la orden a "comprada"
+        orden.estado = 'comprada' + ' ' + compra.numero_factura
+        orden.save()
 
-    print(">>> GET recibido: mostrando formulario")  # Verifica que entra en GET también
+        messages.success(request, "Compra registrada correctamente.")
+        return redirect('ordenes_compra')
+
     return render(request, 'comprarOrden.html', {
         'orden': orden,
         'items': orden.items.all()
-    })
-    
+    })    
 
 @transaction.atomic
 def confirmar_compra(request, orden_id):

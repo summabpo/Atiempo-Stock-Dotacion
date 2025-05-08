@@ -8,6 +8,50 @@ function getCSRFToken() {
 let dataTable;
 let dataTableIsInitialized = false;
 
+// const dataTableOptions = {
+//     columnDefs: [
+//         { className: "text-center", targets: [0, 1, 2, 3] },
+//         { orderable: false, targets: [2, 3] },
+//         { searchable: false, targets: [3] }
+//     ],
+//     pageLength: 10,
+//     destroy: true,
+//     dom: 'Bfrtip',
+//     buttons: [
+//         'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+//     ],
+    
+//     // ✅ Traducción al español
+//     language: {
+//         processing:     "Procesando...",
+//         lengthMenu:     "Mostrar _MENU_ registros",
+//         zeroRecords:    "No se encontraron resultados",
+//         emptyTable:     "Ningún dato disponible en esta tabla",
+//         info:           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+//         infoEmpty:      "Mostrando registros del 0 al 0 de un total de 0 registros",
+//         infoFiltered:   "(filtrado de un total de _MAX_ registros)",
+//         search:         "Buscar:",
+//         loadingRecords: "Cargando...",
+//         paginate: {
+//             first:    "Primero",
+//             last:     "Último",
+//             next:     "Siguiente",
+//             previous: "Anterior"
+//         },
+//         aria: {
+//             sortAscending:  ": Activar para ordenar de forma ascendente",
+//             sortDescending: ": Activar para ordenar de forma descendente"
+//         },
+//         buttons: {
+//             copy: "Copiar",
+//             colvis: "Visibilidad"
+//         },
+//     paging: 10
+        
+//     }
+// };
+
+
 const dataTableOptions = {
     columnDefs: [
         { className: "text-center", targets: [0, 1, 2, 3] },
@@ -18,13 +62,12 @@ const dataTableOptions = {
     destroy: true,
     dom: 'Bfrtip',
     buttons: [
-        'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+        'copy', 'excel', 'pdf', 'print', 'colvis'
     ],
-    
-    // ✅ Traducción al español
+
     language: {
         processing:     "Procesando...",
-        lengthMenu:     "Mostrar _MENU_ registros",
+        lengthMenu:     "Mostrar _MENU_ registros por página",
         zeroRecords:    "No se encontraron resultados",
         emptyTable:     "Ningún dato disponible en esta tabla",
         info:           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
@@ -44,9 +87,12 @@ const dataTableOptions = {
         },
         buttons: {
             copy: "Copiar",
-            colvis: "Visibilidad"
+            colvis: "Visibilidad columnas"
         }
-    }
+    },
+
+    // ✅ Agrega las opciones de cantidad que puede seleccionar el usuario
+    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]]
 };
 
 const initDataTable = async () => {
@@ -86,6 +132,13 @@ const OrdenCompras = async () => {
                                                 
             }else{
                 estadoId = item.estado;
+
+
+            }
+
+            if(item.tipo_documento == 'OR'){
+                idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+
             }
         
 

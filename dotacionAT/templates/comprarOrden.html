@@ -6,6 +6,10 @@
 {% block content %}
 
 <div class="content-wrapper">
+
+    <form method="post" action="{% url 'comprar_orden' orden.id %}">
+    {% csrf_token %}
+
     <section class="content-header">
         <div class="card bg-light mb-3">
             <div class="card-header">
@@ -29,6 +33,16 @@
                         <label>Estado:</label>
                         <input type="text" class="form-control" value="{{ orden.get_estado_display }}" readonly>
                     </div>
+                    <div class="col-md-6">
+                        <label>Numero Factura:</label>
+                        <input type="text" class="form-control" name="numFActura" value="" required>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="selectBodega">Selecciona una bodega:</label>
+                        <select id="selectBodega" name="bodega_id" class="form-control" required>
+                            <option value="">Cargando bodegas...</option>
+                        </select>
+                    </div>
                     <div class="col-md-12">
                         <label>Observaciones:</label>
                         <input type="text" class="form-control" value="{{ orden.observaciones }}">
@@ -41,8 +55,7 @@
     <section class="card">
         <h3>Productos en la Orden</h3>
 
-        <form method="post" action="{% url 'comprar_orden' orden.id %}">
-            {% csrf_token %}
+        
             <table class="table table-bordered" style="color: black;" id="tablaProductos">
                 <thead class="thead-dark">
                     <tr style="text-align: center;">
@@ -66,15 +79,15 @@
                             <input type="hidden" name="productos[]" value="{{ item.producto.id }}">
                         </td>
                         <td>
-                            <input type="number" name="cantidades[]" class="form-control text-center" value="{{ item.cantidad }}" min="1" onchange="actualizarSubtotal(this)">
+                            <input type="number" name="cantidades[]" class="form-control text-center cantidad" value="{{ item.cantidad }}" min="1" onchange="actualizarSubtotal(this)">
                         </td>
                         <td>
-                            <input type="text"  class="form-control text-right precio" value="{{ item.precio_unitario|floatformat:2|intcomma }}"  onchange="actualizarSubtotal(this)">
+                            <input type="text" name="precios[]"  class="form-control text-right precio" value="{{ item.precio_unitario|floatformat:2|intcomma }}"  onchange="actualizarSubtotal(this)">
                             <input type="hidden" class="precio-hidden" value="{{ item.precio_unitario }}">
                         </td>
                         <td class="subtotal text-right">
                             {{ item.subtotal|floatformat:2|intcomma }}
-                            <input type="hidden" name="subtotales[]" class="subtotal-hidden" value="{{ item.subtotal }}">
+                            <input type="hidden" class="subtotal-hidden" value="{{ item.subtotal }}">
                         </td>
                         <td>
                             <button type="button" class="btn btn-danger btn-sm " data-id="{{ item.producto.id }}" onclick="quitarProducto(this)">
@@ -96,7 +109,9 @@
                   </tfoot>
             </table>
             {% if orden.get_estado_display == 'generada' %}
-            <button type="submit" class="btn btn-success">Guardar Entrada</button>
+            <div class="text-end mt-3">
+            <button type="submit" class="btn btn-success btn-sm w-auto" onclick="confirmarCompra(this)">Guardar Entrada</button>
+        </div>
             {% endif %}
         </form>
     </section>
@@ -105,6 +120,29 @@
 
 {% block extra_js %}
 <script>
+
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('/list_bodegas/')
+    .then(response => response.json())
+    .then(data => {
+        const select = document.getElementById('selectBodega');
+        select.innerHTML = '<option value="">Seleccione una bodega</option>';
+
+        data.bodegas.forEach(bodega => {  // <-- ¡Aquí va data.bodegas!
+            const option = document.createElement('option');
+            option.value = bodega.id_bodega;
+            option.textContent = bodega.nombre + ' - ' + bodega.ciudad;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Error al cargar las bodegas:', error);
+        const select = document.getElementById('selectBodega');
+        select.innerHTML = '<option value="">Error al cargar</option>';
+    })
+});
+
+
     console.log("Hola Comprar Orden");
 
     // Función para formatear el número con comas y decimales
@@ -127,6 +165,8 @@ $(document).ready(function () {
     $('#tablaProductos').on('change', 'input.precio', function () {
         const $inputPrecio = $(this);  // El input visible
         const $row = $inputPrecio.closest('tr');
+        console.log($inputPrecio);
+console.log($row);
 
         // Obtener el valor limpio
         const valorLimpio = parsePrecioColombiano($inputPrecio.val());
@@ -139,6 +179,47 @@ $(document).ready(function () {
         // Recalcular subtotal
         actualizarSubtotal(this); // Reutilizas tu función pasando el input como referencia
     });
+
+    $('#tablaProductos').on('change', 'input.cantidad', function () {
+        const $inputPrecio = $(this);  // El input visible
+        const $row = $inputPrecio.closest('tr');
+        console.log($inputPrecio);
+        console.log($row);
+
+        // Obtener el valor limpio
+        const valorLimpio = parsePrecioColombiano($inputPrecio.val());
+
+        // Actualizar el input hidden
+        $row.find('input.cantidad').val(valorLimpio);
+
+       
+
+        // Recalcular subtotal
+        actualizarSubtotal(this); // Reutilizas tu función pasando el input como referencia
+    });
+
+
+    // $('#tablaProductos').on('change', '.subtotal ', function () {
+    //     const $inputPrecio = $(this);  // El input visible
+    //     console.log($inputPrecio);
+    //     console.log("Hola");
+        
+    //     const $row = $inputPrecio.closest('tr');
+
+    //     console.log($row);
+
+    //     // Obtener el valor limpio
+    //     const valorLimpio = parsePrecioColombiano($inputPrecio.val());
+
+    //     // Actualizar el input hidden
+    //     $row.find('input.subtotal-hidden').val(valorLimpio);
+
+
+    //     // Recalcular subtotal
+    //     // actualizarSubtotal(this); // Reutilizas tu función pasando el input como referencia
+    // });
+
+
 });
 
 
@@ -180,6 +261,9 @@ function actualizarSubtotal(input) {
     const hiddenSubtotal = row.querySelector('input.subtotal-hidden');
     const precioHiddenInput = row.querySelector('input.precio-hidden').value;
 
+    // console.log(precioHiddenInput);
+
+    // console.log(hiddenSubtotal);
       
 
     // Convertimos el valor visible a número real
@@ -194,29 +278,66 @@ function actualizarSubtotal(input) {
     // Actualizar la celda subtotal formateada
     const subtotalTd = row.querySelector('.subtotal');
     subtotalTd.childNodes[0].textContent = subtotal.toLocaleString('es-CO', {
-        style: 'currency',
-        currency: 'COP',
+        // style: 'currency',
+        // currency: 'COP',
         minimumFractionDigits: 2
     });
 
-    // precioHiddenInput.childNodes[0].textContent = subtotal.toLocaleString('es-CO', {
+  
+    hiddenSubtotal.value = subtotal;
+   
+
+    // hiddenSubtotal.childNodes[0].textContent = subtotal.toLocaleString('es-CO', {
+    //     // style: 'currency',
+    //     // currency: 'COP',
     //     minimumFractionDigits: 2
     // });
 
-    hiddenSubtotal = row.querySelector('.subtotal');
+   
     // Guardar el subtotal sin formato en el hidden
     //const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
-    subtotalHiddenInput.value = subtotal;
+    // subtotalHiddenInput.value = subtotal;
 
-    const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
-if (subtotalHiddenInput) {
-    subtotalHiddenInput.value = subtotal;
-}
+    //     const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
+    // if (subtotalHiddenInput) {
+    //     subtotalHiddenInput.value = subtotal;
+    // }
 
     actualizarTotalGeneral()
 
-    
+    sumarTotalPagar()
 }
+
+
+// function actualizarSubtotal(input) {
+//     const row = input.closest('tr');
+
+//     const cantidad = parseFloat(row.querySelector('input[name="cantidades[]"]').value) || 0;
+//     const precioHiddenInput = row.querySelector('input.precio-hidden');
+//     const precioVisible = row.querySelector('input.precio');
+//     const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
+
+//     const precioLimpio = parsePrecioColombiano(precioHiddenInput.value);
+
+//     // Calcular el subtotal
+//     const subtotal = cantidad * precioLimpio;
+
+//     // Actualizar la celda visible del subtotal
+//     const subtotalTd = row.querySelector('.subtotal');
+//     subtotalTd.textContent = subtotal.toLocaleString('es-CO', {
+//         style: 'currency',
+//         currency: 'COP',
+//         minimumFractionDigits: 2
+//     });
+
+//     // Actualizar el input hidden con el valor sin formato
+//     if (subtotalHiddenInput) {
+//         subtotalHiddenInput.value = subtotal;
+//     }
+
+//     actualizarTotalGeneral();
+// }
+
 
 precioTextInput.addEventListener('change', function () {
     const nuevoValor = parsePrecioColombiano(this.value);
@@ -242,6 +363,7 @@ function quitarProducto(button) {
         row.remove();
     }
 
+    actualizarTotalGeneral();
     // Opcional: Si necesitas hacer algo con el ID, lo puedes usar aquí
     console.log('Producto con ID', id, 'eliminado');
     
@@ -292,51 +414,42 @@ function quitarProducto(button) {
     console.log(ordenId);
     
     if (confirm("¿Estás seguro de que deseas confirmar esta compra? Esto afectará el inventario.")) {
-        window.location.href = `/comprar_orden/${ordenId}/`;
+        window.location.href = `comprar_orden/${ordenId}/`;
     }
 
     }
 
 
-//     function sumarTotalPagar() {
-//     var subTotal = $(".nuevoPrecioProductosuma");
-//     var totalIvas = $(".nuevabaseIva");
-//     var ultraProces = $(".precioulProcess");
-//     var arrayVenta = [];
-//     var suma = 0;
+function actualizarTotalGeneral() {
+    let total = 0;
 
-//     // Función para obtener un valor numérico válido
-//     function obtenerValorNumerico(elemento) {
-//         var valor = Number($(elemento).val());
-//         return isNaN(valor) ? 0 : valor; // Devuelve 0 si el valor no es numérico
-//     }
+    // Recorre todos los inputs ocultos con el subtotal real
+    document.querySelectorAll('input.subtotal-hidden').forEach(input => {
+        const valor = parseFloat(input.value) || 0;
+        total += valor;
+    });
 
-//     // Recopilar valores de los elementos
-//     for (var i = 0; i < subTotal.length; i++) {
-//         arrayVenta.push(obtenerValorNumerico(subTotal[i]));
-//     }
+    // Formatear el total como moneda colombiana
+    const totalFormateado = total.toLocaleString('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 2
+    });
 
-//     for (var i = 0; i < totalIvas.length; i++) {
-//         arrayVenta.push(obtenerValorNumerico(totalIvas[i]));
-//     }
+    // Actualizar el contenido visible
+    const totalTd = document.getElementById('totalOrden');
+    if (totalTd) {
+        totalTd.textContent = totalFormateado;
+    }
 
-//     for (var i = 0; i < ultraProces.length; i++) {
-//         arrayVenta.push(obtenerValorNumerico(ultraProces[i]));
-//     }
+    // Actualizar el input oculto para enviar al backend
+    const inputTotal = document.getElementById('inputTotalOrden');
+    if (inputTotal) {
+        inputTotal.value = total.toFixed(2);  // Sin formato
+    }
 
-//     // Sumar todos los valores
-//     for (var j = 0; j < arrayVenta.length; j++) {
-//         suma += arrayVenta[j];
-//     }
-
-//     console.log('Suma', suma);
-
-//     // Actualizar elementos del DOM
-//     $("#nuevoTotalVenta").val(suma);
-//     $("#totalVentas").val(suma);
-//     $("#nuevoTotalVenta").attr("total", suma); // Si realmente necesitas este atributo
-// }
-
+    console.log('Total actualizado:', total);
+}
 
 
 </script>

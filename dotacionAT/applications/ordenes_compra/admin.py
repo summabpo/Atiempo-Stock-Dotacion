@@ -23,8 +23,8 @@ class ItemCompraInline(admin.TabularInline):
 
 @admin.register(Compra)
 class CompraAdmin(admin.ModelAdmin):
-    list_display = ('id', 'orden_compra', 'tipo_documento', 'total', 'fecha_recepcion')
-    search_fields = ('orden_compra__id', 'orden_compra__proveedor__nombre')
+    list_display = ('id', 'orden_compra', 'tipo_documento', 'total', 'bodega', 'estado', 'numero_factura', 'fecha_recepcion')
+    search_fields = ('orden_compra__id', 'orden_compra__proveedor__nombre', 'numero_factura')
     inlines = [ItemCompraInline]
     readonly_fields = ('fecha_recepcion',)
 
