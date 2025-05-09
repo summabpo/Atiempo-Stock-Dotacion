@@ -70,6 +70,8 @@ class Compra(models.Model):
     # ✅ NUEVOS CAMPOS
     bodega = models.ForeignKey(Bodega, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
     numero_factura = models.CharField(max_length=50, blank=True, verbose_name="Número de Factura")
+    proveedor = models.ForeignKey(Proveedor, null=True, on_delete=models.CASCADE)
+    
 
     def __str__(self):
         return f"Compra de orden #{self.orden_compra.id}"

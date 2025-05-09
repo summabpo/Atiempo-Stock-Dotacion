@@ -7,32 +7,30 @@
 
 <div class="content-wrapper">
 
-    <form method="post" action="{% url 'comprar_orden' orden.id %}">
-    {% csrf_token %}
-
+    <form method="post">
+   
     <section class="content-header">
         <div class="card bg-light mb-3">
             <div class="card-header">
-                <h3 class="mb-0">Orden de Compra #{{ orden.id }}</h3>
+                <h3 class="mb-0">compra de Compra #{{ compra.id }}</h3>
             </div>
             <div class="card-body text-dark">
                 <div class="row">
                     <div class="col-md-6 mb-2">
-                        <label>Fecha Orden Compra:</label>
-                        <input class="form-control" type="text" value="{{ orden.fecha_creacion }}" readonly>
+                        <label>Fecha compra Compra:</label>
+                        <input class="form-control" type="text" value="{{ compra.fecha_creacion }}" readonly>
                     </div>
                     <div class="col-md-6 mb-2">
                         <label>Proveedor:</label>
-                        <input type="text" class="form-control" value="{{ orden.proveedor.nombre }}" readonly>
-                        <input type="hidden" name="proveedor[]" class="form-control" value="{{ orden.proveedor.id }}" readonly>
+                        <input type="text" class="form-control" value="{{ compra.proveedor.nombre }}" readonly>
                     </div>
                     <div class="col-md-6 mb-2">
                         <label>Ciudad Proveedor:</label>
-                        <input type="text" class="form-control" value="{{ orden.proveedor.ciudad }}" readonly>
+                        <input type="text" class="form-control" value="{{ compra.proveedor.ciudad }}" readonly>
                     </div>
                     <div class="col-md-6 mb-2">
                         <label>Estado:</label>
-                        <input type="text" class="form-control" value="{{ orden.get_estado_display }}" readonly>
+                        <input type="text" class="form-control" value="{{ compra.get_estado_display }}" readonly>
                     </div>
                     <div class="col-md-6">
                         <label>Numero Factura:</label>
@@ -46,7 +44,7 @@
                     </div>
                     <div class="col-md-12">
                         <label>Observaciones:</label>
-                        <input type="text" class="form-control" value="{{ orden.observaciones }}">
+                        <input type="text" class="form-control" value="{{ compra.observaciones }}">
                     </div>
                 </div>
             </div>
@@ -54,7 +52,7 @@
     </section>
 
     <section class="card">
-        <h3>Productos en la Orden</h3>
+        <h3>Productos en la compra</h3>
 
         
             <table class="table table-bordered" style="color: black;" id="tablaProductos">
@@ -103,13 +101,13 @@
                 <tfoot style="color: black;">
                     <tr >
                       <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                      <td id="totalOrden"  class="text-right">COP {{ orden.total|floatformat:2|intcomma }}</td>
+                      <td id="totalcompra"  class="text-right">COP {{ compra.total|floatformat:2|intcomma }}</td>
                       <td></td>
-                      <input type="hidden" name="total_orden" id="inputTotalOrden">
+                      <input type="hidden" name="total_compra" id="inputTotalcompra">
                     </tr>
                   </tfoot>
             </table>
-            {% if orden.get_estado_display == 'generada' %}
+            {% if compra.get_estado_display == 'generada' %}
             <div class="text-end mt-3">
             <button type="submit" class="btn btn-success btn-sm w-auto" onclick="confirmarCompra(this)">Guardar Entrada</button>
         </div>
@@ -144,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-    console.log("Hola Comprar Orden");
+    console.log("Hola Comprar compra");
 
 
 
@@ -405,11 +403,11 @@ function quitarProducto(button) {
 
 
     function confirmarCompra(button) {
-    const ordenId = button.getAttribute('data-orden-id');
-    console.log(ordenId);
+    const compraId = button.getAttribute('data-compra-id');
+    console.log(compraId);
     
     if (confirm("¿Estás seguro de que deseas confirmar esta compra? Esto afectará el inventario.")) {
-        window.location.href = `comprar_orden/${ordenId}/`;
+        window.location.href = `comprar_compra/${compraId}/`;
     }
 
     }
@@ -436,13 +434,13 @@ function actualizarTotalGeneral() {
     });
 
     // Actualizar el contenido visible
-    const totalTd = document.getElementById('totalOrden');
+    const totalTd = document.getElementById('totalcompra');
     if (totalTd) {
         totalTd.textContent = totalFormateado;
     }
 
     // Actualizar el input oculto para enviar al backend
-    const inputTotal = document.getElementById('inputTotalOrden');
+    const inputTotal = document.getElementById('inputTotalcompra');
     if (inputTotal) {
         inputTotal.value = total.toFixed(2);  // Sin formato
     }

@@ -92,7 +92,7 @@ def list_orden_y_compra(request):
             'total': compra.total,
             'numero_factura': compra.numero_factura,
             'estado': compra.estado,
-            'url_editar': f'/comprar_orden/{compra.orden_compra.id}/',
+            'url_editar': f'/detalle_comprar/{compra.orden_compra.id}/',
             'url_cancelar':''
         })
 
@@ -179,7 +179,19 @@ def comprar_orden_vista(request):
     comprar_orden = OrdenCompra.objects.all()
     return render (request, 'comprarOrden.html', {
         'comprar_orden': comprar_orden
-    })    
+    })
+    
+    
+def detalle_comprar(request, id):
+    detalle_comprar = get_object_or_404(Compra, id=id) 
+    items = detalle_comprar.items.all()
+    return render(request, 'compraDetalle.html', {
+        'detalle_comprar': detalle_comprar,
+        'items': items,
+    })
+    # return render (request, 'detalleCompra.html', {
+    #     'detalle_comprar': comprar_orden
+    # })         
     
     
 # def comprar_orden(request, id):
@@ -337,9 +349,14 @@ def comprar_orden(request, id):
             return redirect('ordenes_compra')
 
         # Obtener datos del formulario
+        proveedor = request.POST.get('proveedor', '')
         observaciones = request.POST.get('observaciones', '')
         numero_factura = request.POST.get('numFActura', '')
         bodega = request.POST.get('bodega_id')
+        total = request.POST.get('total_orden')
+        productos = request.POST.getlist('productos[]')
+        cantidades = request.POST.getlist('cantidades[]')
+        precios = request.POST.getlist('precios[]')
 
         # 📌 Imprimir datos recibidos como depuración (tipo var_dump)
         print(">>> Datos del formulario:")
@@ -359,18 +376,30 @@ def comprar_orden(request, id):
         compra = Compra.objects.create(
             orden_compra=orden,
             observaciones=observaciones,
-            total=total_orden_decimal,
+            total=total,
+            proveedor=proveedor,
             bodega_id=bodega if bodega else None,
             numero_factura=numero_factura
         )
 
         # Crear los ítems de la compra
-        for item in orden.items.all():
+        # for item in orden.items.all():
+        #     ItemCompra.objects.create(
+        #         compra=compra,
+        #         producto=item.producto,
+        #         cantidad_recibida=item.cantidad,
+        #         precio_unitario=item.precio_unitario
+        #     )
+        for i in range(len(productos)):
+            producto_id = productos[i]
+            cantidad = int(cantidades[i])
+            precio_unitario = Decimal(precios[i].replace(',', ''))  # limpia el formato si viene con comas
+
             ItemCompra.objects.create(
                 compra=compra,
-                producto=item.producto,
-                cantidad_recibida=item.cantidad,
-                precio_unitario=item.precio_unitario
+                producto_id=producto_id,
+                cantidad_recibida=cantidad,
+                precio_unitario=precio_unitario
             )
 
         # Cambia el estado de la orden a "comprada"

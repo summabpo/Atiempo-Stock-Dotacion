@@ -30,8 +30,25 @@ class CompraAdmin(admin.ModelAdmin):
 
 @admin.register(ItemCompra)
 class ItemCompraAdmin(admin.ModelAdmin):
-    list_display = ('compra', 'producto', 'cantidad_recibida', 'precio_unitario', 'subtotal_formateado','tipo_documento')
-    search_fields = ('producto__nombre', 'compra__id')   
+    list_display = (
+        'compra',
+        'numero_factura',
+        'fecha_recepcion',
+        'producto',
+        'cantidad_recibida',
+        'precio_unitario',
+        'subtotal_formateado',
+        'tipo_documento'
+    )
+    search_fields = ('producto__nombre', 'compra__id')
+
+    def numero_factura(self, obj):
+        return obj.compra.numero_factura
+    numero_factura.short_description = 'N° Factura'
+
+    def fecha_recepcion(self, obj):
+        return obj.compra.fecha_recepcion
+    fecha_recepcion.short_description = 'Fecha Recepción'  
     
     
     
