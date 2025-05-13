@@ -23,17 +23,17 @@ class ItemCompraInline(admin.TabularInline):
 
 @admin.register(Compra)
 class CompraAdmin(admin.ModelAdmin):
-    list_display = ('id', 'orden_compra', 'tipo_documento', 'total', 'bodega', 'estado', 'numero_factura', 'fecha_recepcion')
+    list_display = ('id', 'orden_compra', 'tipo_documento', 'proveedor', 'total', 'bodega', 'estado', 'numero_factura', 'fecha_creacion', 'fecha_compra', 'observaciones')
     search_fields = ('orden_compra__id', 'orden_compra__proveedor__nombre', 'numero_factura')
     inlines = [ItemCompraInline]
-    readonly_fields = ('fecha_recepcion',)
+    readonly_fields = ('fecha_creacion',)
 
 @admin.register(ItemCompra)
 class ItemCompraAdmin(admin.ModelAdmin):
     list_display = (
         'compra',
         'numero_factura',
-        'fecha_recepcion',
+        'fecha_compra',
         'producto',
         'cantidad_recibida',
         'precio_unitario',
@@ -46,9 +46,9 @@ class ItemCompraAdmin(admin.ModelAdmin):
         return obj.compra.numero_factura
     numero_factura.short_description = 'N° Factura'
 
-    def fecha_recepcion(self, obj):
-        return obj.compra.fecha_recepcion
-    fecha_recepcion.short_description = 'Fecha Recepción'  
+    def fecha_compra(self, obj):
+        return obj.compra.fecha_compra
+    fecha_compra.short_description = 'Fecha de Compra'  
     
     
     

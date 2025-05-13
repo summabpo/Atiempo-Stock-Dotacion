@@ -63,7 +63,8 @@ class ItemOrdenCompra(models.Model):
 
 class Compra(models.Model):
     orden_compra = models.OneToOneField(OrdenCompra, on_delete=models.CASCADE, related_name='compra')
-    fecha_recepcion = models.DateTimeField(auto_now_add=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_compra = models.DateField(auto_now_add=True)
     observaciones = models.TextField(blank=True)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     estado = models.CharField(max_length=20, default='Compra')
@@ -107,4 +108,4 @@ class ItemCompra(models.Model):
     
     @property
     def tipo_documento(self):
-        return "CP"
+        return "OR"

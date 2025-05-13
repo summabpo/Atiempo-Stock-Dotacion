@@ -28,6 +28,7 @@ urlpatterns = [
     path('', include('applications.proveedores.urls')),
     path('', include('applications.productos.urls')),
     path('', include('applications.ordenes_compra.urls')),
+    path('', include('applications.inventario.urls')),
     # path('add_venta/',views.add_ventas.as_view(), name='AddVenta'),
     # path('export/', views.export_pdf_view, name="ExportPDF" ),
     # path('export/<id>/<iva>', views.export_pdf_view, name="ExportPDF" )     

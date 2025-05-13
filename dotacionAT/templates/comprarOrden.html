@@ -17,14 +17,18 @@
             </div>
             <div class="card-body text-dark">
                 <div class="row">
-                    <div class="col-md-6 mb-2">
+                    <div class="col-md-3 mb-2">
                         <label>Fecha Orden Compra:</label>
                         <input class="form-control" type="text" value="{{ orden.fecha_creacion }}" readonly>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label>Fecha Compra:</label>
+                        <input class="form-control" type="date" value="" name="fechaCompra" required>
                     </div>
                     <div class="col-md-6 mb-2">
                         <label>Proveedor:</label>
                         <input type="text" class="form-control" value="{{ orden.proveedor.nombre }}" readonly>
-                        <input type="hidden" name="proveedor[]" class="form-control" value="{{ orden.proveedor.id }}" readonly>
+                        <input type="hidden" name="proveedor" class="form-control" value="{{ orden.proveedor.id_proveedor}}" readonly>
                     </div>
                     <div class="col-md-6 mb-2">
                         <label>Ciudad Proveedor:</label>

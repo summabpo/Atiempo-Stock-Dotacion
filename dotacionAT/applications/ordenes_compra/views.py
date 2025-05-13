@@ -11,6 +11,8 @@ from django.contrib import messages
 from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, IntegrityError
+
+
 import json
 
 # Create your views here.
@@ -87,12 +89,12 @@ def list_orden_y_compra(request):
         data.append({
             'id': compra.id,
             'proveedor': compra.orden_compra.proveedor.nombre,
-            'fecha': compra.fecha_recepcion.strftime('%Y-%m-%d'),
+            'fecha': compra.fecha_compra.strftime('%Y-%m-%d'),
             'tipo_documento': compra.tipo_documento,
             'total': compra.total,
             'numero_factura': compra.numero_factura,
             'estado': compra.estado,
-            'url_editar': f'/detalle_comprar/{compra.orden_compra.id}/',
+            'url_editar': f'/detalle_comprar/{compra.id}/',
             'url_cancelar':''
         })
 
@@ -349,7 +351,7 @@ def comprar_orden(request, id):
             return redirect('ordenes_compra')
 
         # Obtener datos del formulario
-        proveedor = request.POST.get('proveedor', '')
+        proveedor_id = request.POST.get('proveedor', '').strip()
         observaciones = request.POST.get('observaciones', '')
         numero_factura = request.POST.get('numFActura', '')
         bodega = request.POST.get('bodega_id')
@@ -357,6 +359,7 @@ def comprar_orden(request, id):
         productos = request.POST.getlist('productos[]')
         cantidades = request.POST.getlist('cantidades[]')
         precios = request.POST.getlist('precios[]')
+        fecha_compra = request.POST.getlist('fechaCompra[]')
 
         # 📌 Imprimir datos recibidos como depuración (tipo var_dump)
         print(">>> Datos del formulario:")
@@ -371,12 +374,24 @@ def comprar_orden(request, id):
             start=Decimal('0.00')
         )
         print("Total calculado:", total_orden_decimal)
+        
+        if not proveedor_id:
+            messages.error(request, "Debe seleccionar un proveedor.")
+            return redirect('comprar_orden', id=id)
+
+        try:
+            proveedor = Proveedor.objects.get(id_proveedor=proveedor_id)
+        except Proveedor.DoesNotExist:
+            messages.error(request, "Proveedor no válido.")
+            return redirect('comprar_orden', id=id)
+        
 
         # Crear la compra
         compra = Compra.objects.create(
             orden_compra=orden,
             observaciones=observaciones,
             total=total,
+            fecha_compra = fecha_compra,
             proveedor=proveedor,
             bodega_id=bodega if bodega else None,
             numero_factura=numero_factura
@@ -412,7 +427,83 @@ def comprar_orden(request, id):
     return render(request, 'comprarOrden.html', {
         'orden': orden,
         'items': orden.items.all()
-    })    
+    }) 
+
+
+
+# @transaction.atomic
+# def comprar_orden(request, id):
+#     orden = get_object_or_404(OrdenCompra, id=id)
+
+#     if request.method == 'POST':
+#         # Verificar si ya existe una compra asociada
+#         if hasattr(orden, 'compra'):
+#             messages.error(request, "Esta orden ya tiene una compra registrada.")
+#             return redirect('ordenes_compra')
+
+#         # Obtener datos del formulario
+#         proveedor_id = request.POST.get('proveedor').strip()
+#         observaciones = request.POST.get('observaciones', '').strip()
+#         numero_factura = request.POST.get('numFActura').strip()
+#         bodega = request.POST.get('bodega_id', None)
+#         total = request.POST.get('total_orden', '0.00')
+#         productos = request.POST.getlist('productos[]')
+#         cantidades = request.POST.getlist('cantidades[]')
+#         precios = request.POST.getlist('precios[]')
+
+#         # Validar proveedor
+#         if not proveedor_id:
+#             messages.error(request, "Debe seleccionar un proveedor.")
+#             return redirect('comprar_orden', id=id)
+
+#         try:
+#             proveedor = Proveedor.objects.get(id_proveedor=proveedor_id)
+#         except Proveedor.DoesNotExist:
+#             messages.error(request, "Proveedor no válido.")
+#             return redirect('comprar_orden', id=id)
+
+#         # Calcular total de los productos de la orden por seguridad
+#         total_orden_decimal = sum(
+#             (item.cantidad * item.precio_unitario for item in orden.items.all()),
+#             start=Decimal('0.00')
+#         )
+
+#         # Crear la compra
+#         compra = Compra.objects.create(
+#             orden_compra=orden,
+#             observaciones=observaciones,
+#             total=total_orden_decimal,
+#             proveedor=proveedor,
+#             bodega_id=bodega if bodega else None,
+#             numero_factura=numero_factura
+#         )
+
+#         # Crear los ítems de la compra
+#         for i in range(len(productos)):
+#             producto_id = productos[i]
+#             cantidad = int(cantidades[i])
+#             precio_unitario = Decimal(precios[i].replace(',', '').strip())
+
+#             ItemCompra.objects.create(
+#                 compra=compra,
+#                 producto_id=producto_id,
+#                 cantidad_recibida=cantidad,
+#                 precio_unitario=precio_unitario
+#             )
+
+#         # Cambiar estado de la orden
+#         orden.estado = 'comprada ' + compra.numero_factura
+#         orden.save()
+
+#         messages.success(request, "Compra registrada correctamente.")
+#         return redirect('ordenes_compra')
+
+#     return render(request, 'comprarOrden.html', {
+#         'orden': orden,
+#         'items': orden.items.all(),
+#         'proveedores': Proveedor.objects.all(),  # Solo si lo necesitas en el template
+#     })
+   
 
 @transaction.atomic
 def confirmar_compra(request, orden_id):
