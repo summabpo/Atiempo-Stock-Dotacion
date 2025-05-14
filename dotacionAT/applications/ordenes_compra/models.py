@@ -12,6 +12,7 @@ class OrdenCompra(models.Model):
     ESTADO_CHOICES = [
         ('generada', 'generada'),
         ('recibida', 'recibida'),
+        ('comprada', 'comprada'),
         ('cancelada', 'cancelada'),
     ]
 

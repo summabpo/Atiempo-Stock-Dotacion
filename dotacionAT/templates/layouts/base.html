@@ -330,13 +330,13 @@
   <!-- <script src="{% static 'js/ciudades.js' %}"></script> -->
 {% if messages %}
 {% for m in messages %}
- <script>
-    Swal.fire({
-        "title":"Felicitaciones",
-        "text":"{{m}}",
-        "icon":"success"
-    })
- </script>
+<script>
+  Swal.fire({
+    title: "{% if 'error' in m.tags %}Error{% elif 'warning' in m.tags %}Advertencia{% elif 'success' in m.tags %}Felicitaciones{% else %}Mensaje{% endif %}",
+    text: "{{ m }}",
+    icon: "{% if 'error' in m.tags %}error{% elif 'warning' in m.tags %}warning{% elif 'success' in m.tags %}success{% else %}info{% endif %}"
+  });
+</script>
 {% endfor %}
 {% endif %}
 

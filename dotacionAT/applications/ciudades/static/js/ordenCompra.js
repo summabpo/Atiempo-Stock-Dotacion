@@ -126,20 +126,30 @@ const OrdenCompras = async () => {
             let content = ``;
             data.ordenes_compras.forEach((item, index) => {
                 const activo = item.activo === true;
-            let idTipoDoc =   item.id+' - '+item.tipo_documento;
-            if(item.tipo_documento == 'OC' && item.estado == 'Comprada'){
-                estadoId = item.estado+' Id '+item.id;
+            if(item.tipo_documento == 'OC'){
+
+                idTipoDoc =   item.id+' - '+item.tipo_documento;
+            }else if(item.tipo_documento == 'OR'){
+
+               idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+            } 
+                
+           
+
+            if(item.tipo_documento == 'OC' && item.estado == 'comprada'){
+                
+                estadoId = item.estado+' # '+item.numero_factura;
                                                 
             }else{
+                
                 estadoId = item.estado;
 
-
             }
 
-            if(item.tipo_documento == 'OR'){
-                idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+            // if(item.tipo_documento == 'OR'){
+            //     idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
 
-            }
+            // }
         
 
             

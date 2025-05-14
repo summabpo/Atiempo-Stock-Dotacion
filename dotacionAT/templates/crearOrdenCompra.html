@@ -163,21 +163,12 @@
 
 
 
-<!-- Scripts -->
+
 
 {% block extra_js %}
 
 
-
-<!-- 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
- -->
-
 <script>
-
-
-
 
 let dataTableProveedores;
 let dataTableProductos;
@@ -355,7 +346,7 @@ const cargarProductos = async () => {
                         <td>${producto.nombre}</td>
                         <td>
                             
-                                  <button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.nombre}')">
+                                  <button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.nombre}', '${producto.costo}')">
         Agregar
     </button>
                         </td>
@@ -381,7 +372,7 @@ window.addEventListener("load", async () => {
 
 let productosAgregados = [];
 
-function agregarProductoAOrden(id, nombre) {
+function agregarProductoAOrden(id, nombre, costo) {
     // Evitar duplicados
     if (productosAgregados.includes(id)) {
         alert("Este producto ya ha sido agregado.");
@@ -397,12 +388,12 @@ function agregarProductoAOrden(id, nombre) {
     fila.innerHTML = `
         <td>${nombre}<input type="hidden" name="productos[]" value="${id}"></td>
         <td>
-            <input type="text" name="cantidades[]" class="form-control text-center cantidad" value="1"    min="0" step="0.01" onchange="actualizarSubtotal(this)"  required></td>
+            <input type="text" name="cantidades[]" class="form-control text-center cantidad" value="1"  min="0" step="0.01" onchange="actualizarSubtotal(this)"  required></td>
 
         <td><input type="text" name="precios[]" class="form-control text-right valorUnitario"   
       
      
-    onchange="actualizarSubtotal(this)"   required></td>
+    onchange="actualizarSubtotal(this)" value="${costo}"  required></td>
 
         <td class="subtotal text-right">0.00</td>
         <td>
@@ -426,6 +417,8 @@ function agregarProductoAOrden(id, nombre) {
     // calcular subtotal inicial
     //formatNumber()
 }
+
+
 
 
 

@@ -15,6 +15,10 @@ from django.db import transaction, IntegrityError
 
 import json
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Create your views here.
 
 # def list_orden_compra(_request):
@@ -134,53 +138,171 @@ def ordenes_compra(request):
 #         'form': form,
 #         'productos': productos
 #     })
+# @transaction.atomic
+# def crear_orden_compra(request):
+    
+  
+    
+    
+#     if request.method == 'POST':
+#         print("Token recibido:", request.POST.get("csrfmiddlewaretoken"))
+#         proveedor_id = request.POST.get('proveedor')
+#         observaciones = request.POST.get('observacion')
+#         total_orden = request.POST.get('total_orden')
+        
+#         productos = request.POST.getlist('productos[]')
+
+#         # ✅ Validación temprana DENTRO del POST
+#         if not proveedor_id or not productos:
+#             messages.error(request, "Debe seleccionar un proveedor y al menos un producto.")
+#             return redirect('crear_orden_compra')
+       
+
+#         # 💰 Conversión de total
+       
+#         try:
+#             total_orden_decimal = Decimal(total_orden)
+#         except:
+#             total_orden_decimal = Decimal('0.00')
+
+#         if proveedor_id:
+#             proveedor = Proveedor.objects.get(id_proveedor=proveedor_id)
+
+#             # Guarda el total si tu modelo OrdenCompra tiene un campo para esto
+#             orden = OrdenCompra.objects.create(
+#                 proveedor=proveedor,
+#                 observaciones=observaciones,
+#                 total=total_orden_decimal  # <- este campo debe existir en tu modelo
+#             )
+
+#             productos = request.POST.getlist('productos[]')
+#             cantidades = request.POST.getlist('cantidades[]')
+#             precios = request.POST.getlist('precios[]')
+            
+            
+     
+
+#             for i in range(len(productos)):
+                
+                
+                
+                
+                
+#                 ItemOrdenCompra.objects.create(
+#                     orden=orden,
+#                     producto_id=productos[i],
+#                     cantidad=cantidades[i],
+#                     precio_unitario=precios[i]
+#                 )
+
+#             messages.success(request, "Orden Compra Creada Correctamente. ! ")    
+#             return redirect('ordenes_compra')
+
+#     productos = Producto.objects.all()
+#     return render(request, 'crearOrdenCompra.html', {
+#         'productos': productos
+#     })
+    
+    
 @transaction.atomic
 def crear_orden_compra(request):
     if request.method == 'POST':
-        print("Token recibido:", request.POST.get("csrfmiddlewaretoken"))
         proveedor_id = request.POST.get('proveedor')
-        observaciones = request.POST.get('observaciones', '')
+        productos = request.POST.getlist('productos[]')
+        cantidades = request.POST.getlist('cantidades[]')
+        precios = request.POST.getlist('precios[]')
+        observaciones = request.POST.get('observacion')
         total_orden = request.POST.get('total_orden')
-       
+
+        # Validación temprana para proveedor y productos
+        if not proveedor_id or not productos:
+            messages.error(request, "Debe seleccionar un proveedor y al menos un producto.")
+            return redirect('crear_orden_compra')
+
+        # 💰 Conversión segura del total
         try:
             total_orden_decimal = Decimal(total_orden)
         except:
             total_orden_decimal = Decimal('0.00')
 
-        if proveedor_id:
+        try:
             proveedor = Proveedor.objects.get(id_proveedor=proveedor_id)
+        except Proveedor.DoesNotExist:
+            messages.error(request, "Proveedor no válido.")
+            return redirect('crear_orden_compra')
 
-            # Guarda el total si tu modelo OrdenCompra tiene un campo para esto
-            orden = OrdenCompra.objects.create(
-                proveedor=proveedor,
-                observaciones=observaciones,
-                total=total_orden_decimal  # <- este campo debe existir en tu modelo
+        # Revisa si hay productos válidos
+        productos_validos = 0  # Para contar productos con cantidad > 0
+        items = []
+
+        for i in range(len(productos)):
+            try:
+                cantidad = int(cantidades[i])
+                precio_unitario = Decimal(precios[i].replace(',', ''))
+
+                if cantidad > 0:  # Solo permite productos con cantidad mayor que 0
+                    items.append({
+                        'producto_id': productos[i],
+                        'cantidad': cantidad,
+                        'precio_unitario': precio_unitario
+                    })
+                    productos_validos += 1
+
+            except (ValueError, IndexError, Decimal.InvalidOperation):
+                continue  # Si ocurre un error, simplemente pasa al siguiente
+
+        # Si no hay productos válidos, muestra mensaje y no crea la orden
+        if productos_validos == 0:
+            messages.error(request, "No se puede agregar la orden por que hay productos en Cantidad 0")
+            return redirect('crear_orden_compra')
+
+        # Si hay productos válidos, crea la orden
+        orden = OrdenCompra.objects.create(
+            proveedor=proveedor,
+            observaciones=observaciones,
+            total=total_orden_decimal
+        )
+
+        # Ahora crea los ítems de la orden con los productos válidos
+        for item in items:
+            ItemOrdenCompra.objects.create(
+                orden=orden,
+                producto_id=item['producto_id'],
+                cantidad=item['cantidad'],
+                precio_unitario=item['precio_unitario']
             )
 
-            productos = request.POST.getlist('productos[]')
-            cantidades = request.POST.getlist('cantidades[]')
-            precios = request.POST.getlist('precios[]')
-
-            for i in range(len(productos)):
-                ItemOrdenCompra.objects.create(
-                    orden=orden,
-                    producto_id=productos[i],
-                    cantidad=cantidades[i],
-                    precio_unitario=precios[i]
-                )
-
-            messages.success(request, "Orden Compra Creada Correctamente. ! ")    
-            return redirect('ordenes_compra')
+        messages.success(request, "Orden de compra creada correctamente.")
+        return redirect('ordenes_compra')
 
     productos = Producto.objects.all()
-    return render(request, 'crearOrdenCompra.html', {
-        'productos': productos
-    })
+    return render(request, 'crearOrdenCompra.html', {'productos': productos})    
     
-def comprar_orden_vista(request):
-    comprar_orden = OrdenCompra.objects.all()
-    return render (request, 'comprarOrden.html', {
-        'comprar_orden': comprar_orden
+# def comprar_orden_vista(request):
+#     comprar_orden = OrdenCompra.objects.all()
+#     return render (request, 'comprarOrden.html', {
+#         'comprar_orden': comprar_orden
+#     })
+
+def comprar_orden_vista(request, orden_id):
+    orden = get_object_or_404(OrdenCompra, id=orden_id)
+
+    try:
+        compra = orden.compra  # usa el related_name
+    except Compra.DoesNotExist:
+        compra = None
+
+    items = orden.items.all()  # ajusta según tu modelo real
+    
+    logger.info(f"ORDEN: {orden}")
+    logger.info(f"ESTADO: {orden.estado}")
+    logger.info(f"COMPRA: {compra}")
+    logger.info(f"ITEMS: {list(items)}")
+
+    return render(request, 'comprarOrden.html', {
+        'orden': orden,
+        'compra': compra,
+        'items': items,
     })
     
     
@@ -367,13 +489,6 @@ def comprar_orden(request, id):
         print("Número de factura:", numero_factura)
         print("Bodega ID:", bodega)
         print("POST completo:", dict(request.POST))  # También puedes usar request.POST.items()
-
-        # Calcular el total
-        total_orden_decimal = sum(
-            (item.cantidad * item.precio_unitario for item in orden.items.all()),
-            start=Decimal('0.00')
-        )
-        print("Total calculado:", total_orden_decimal)
         
         if not proveedor_id:
             messages.error(request, "Debe seleccionar un proveedor.")
@@ -384,6 +499,18 @@ def comprar_orden(request, id):
         except Proveedor.DoesNotExist:
             messages.error(request, "Proveedor no válido.")
             return redirect('comprar_orden', id=id)
+
+
+
+
+        # Calcular el total
+        total_orden_decimal = sum(
+            (item.cantidad * item.precio_unitario for item in orden.items.all()),
+            start=Decimal('0.00')
+        )
+        print("Total calculado:", total_orden_decimal)
+        
+       
         
 
         # Crear la compra
@@ -423,11 +550,25 @@ def comprar_orden(request, id):
 
         messages.success(request, "Compra registrada correctamente.")
         return redirect('ordenes_compra')
+    
+    try:
+        compra = orden.compra  # usa el related_name
+    except Compra.DoesNotExist:
+        compra = None
 
+    items = orden.items.all()  # ajusta según tu modelo real
+    
+   
     return render(request, 'comprarOrden.html', {
         'orden': orden,
-        'items': orden.items.all()
-    }) 
+        'compra': compra,
+        'items': items,
+    })
+
+    # return render(request, 'comprarOrden.html', {
+    #     'orden': orden,
+    #     'items': orden.items.all()
+    # }) 
 
 
 

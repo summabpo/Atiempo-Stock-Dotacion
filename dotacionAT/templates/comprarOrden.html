@@ -23,7 +23,14 @@
                     </div>
                     <div class="col-md-3 mb-2">
                         <label>Fecha Compra:</label>
-                        <input class="form-control" type="date" value="" name="fechaCompra" required>
+
+                        {% if orden.get_estado_display != 'generada' and compra %}
+                            <input class="form-control" type="date" value="{{ compra.fecha_compra|date:'Y-m-d' }}" readonly>
+                            {% else %}
+                            <input class="form-control" type="date" value="" name="fechaCompra" required>
+                        {% endif %}
+
+                        
                     </div>
                     <div class="col-md-6 mb-2">
                         <label>Proveedor:</label>
@@ -40,17 +47,31 @@
                     </div>
                     <div class="col-md-6">
                         <label>Numero Factura:</label>
-                        <input type="text" class="form-control" name="numFActura" value="" required>
+
+                        {% if orden.get_estado_display != 'generada' and compra %}
+                            <input class="form-control" type="text" value="{{ compra.numero_factura }}" readonly>
+                            {% else %}
+                            <input type="text" class="form-control" name="numFActura" value="" required placeholder="Ingrese numero de Factura">
+                        {% endif %}
+                        
                     </div>
                     <div class="form-group col-md-6">
                         <label for="selectBodega">Selecciona una bodega:</label>
+
+                        {% if orden.get_estado_display != 'generada' and compra %}
+                        <input type="text" class="form-control"  value="{{ compra.bodega }}" required readonly>
+                        {% else %}
                         <select id="selectBodega" name="bodega_id" class="form-control" required>
                             <option value="">Cargando bodegas...</option>
                         </select>
+                    {% endif %}
+                       
+
+                        
                     </div>
                     <div class="col-md-12">
                         <label>Observaciones:</label>
-                        <input type="text" class="form-control" value="{{ orden.observaciones }}">
+                        <input type="text" class="form-control" value="{{ orden.observaciones }}" >
                     </div>
                 </div>
             </div>
