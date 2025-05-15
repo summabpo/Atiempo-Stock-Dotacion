@@ -1,0 +1,40 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<br>
+<br>
+<div class="card">
+  <div class="card-body">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+    <h2 class="text-center">Inventario por Bodega</h2>
+  </div>
+    <table class="table table-striped table-hover " id="datatableInventario">
+        <thead class="table-dark">
+            <tr>
+                <th>Bodega</th>
+                <th>Producto</th>
+                <th>Total Entradas</th>
+                <th>Total Salidas</th>
+                <th>Stock Actual</th>
+                <th>Última Entrada</th>
+                <th>Última Salida</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody_inventario" style="color: black;">
+        
+        </tbody>
+    </table>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/inventario.js' %}"></script>
+  <script>
+    console.log("Script en línea funcionando");
+  </script>
+{% endblock %}

@@ -7,7 +7,7 @@
 
 <div class="content-wrapper">
 
-    <form method="post" action="{% url 'comprar_orden' orden.id %}">
+    <form method="post" id="formCompra" action="{% url 'comprar_orden' orden.id %}">
     {% csrf_token %}
 
     <section class="content-header">
@@ -49,9 +49,9 @@
                         <label>Numero Factura:</label>
 
                         {% if orden.get_estado_display != 'generada' and compra %}
-                            <input class="form-control" type="text" value="{{ compra.numero_factura }}" readonly>
+                            <input class="form-control" type="text" value="{{ compra.numero_factura }}" readonly >
                             {% else %}
-                            <input type="text" class="form-control" name="numFActura" value="" required placeholder="Ingrese numero de Factura">
+                            <input type="text" class="form-control" name="numFActura" value=""  placeholder="Ingrese numero de Factura" required>
                         {% endif %}
                         
                     </div>
@@ -429,15 +429,81 @@ function quitarProducto(button) {
      });
 
 
+    // function confirmarCompra(button) {
+    // const ordenId = button.getAttribute('data-orden-id');
+    // console.log(ordenId);
+
+    // const fecha = document.querySelector("[name='fechaCompra']");
+    // const factura = document.querySelector("[name='numFActura']");
+    // const bodega = document.querySelector("[name='bodega_id']");
+
+    // let camposFaltantes = [];
+
+    // if (fecha && !fecha.value) {
+    //     camposFaltantes.push("Fecha de compra");
+    // }
+
+    // if (factura && !factura.value.trim()) {
+    //     camposFaltantes.push("Número de factura");
+    // }
+
+    // if (bodega && !bodega.value) {
+    //     camposFaltantes.push("Bodega");
+    // }
+
+    // if (camposFaltantes.length > 0) {
+    //     e.preventDefault();  // Detener el envío del formulario
+    //     alert("Debe completar los campos: " + camposFaltantes.join(", "));
+    // }
+
+
+
+    
+    // if (confirm("¿Estás seguro de que deseas confirmar esta compra? Esto afectará el inventario.")) {
+    //     window.location.href = `comprar_orden/${ordenId}/`;
+    // }
+
+
+
+    // }
+
     function confirmarCompra(button) {
     const ordenId = button.getAttribute('data-orden-id');
-    console.log(ordenId);
     
-    if (confirm("¿Estás seguro de que deseas confirmar esta compra? Esto afectará el inventario.")) {
-        window.location.href = `comprar_orden/${ordenId}/`;
+    const fecha = document.querySelector("[name='fechaCompra']");
+    const factura = document.querySelector("[name='numFActura']");
+    const bodega = document.querySelector("[name='bodega_id']");
+
+    let camposFaltantes = [];
+
+    if (fecha && !fecha.value) {
+        camposFaltantes.push("Fecha de compra");
     }
 
+    if (factura && !factura.value.trim()) {
+        camposFaltantes.push("Número de factura");
     }
+
+    if (bodega && !bodega.value) {
+        camposFaltantes.push("Bodega");
+    }
+
+    // 🛑 Si hay campos faltantes, mostrar alerta y salir
+    if (camposFaltantes.length > 0) {
+        alert("Debe completar los campos: " + camposFaltantes.join(", "));
+        return; // Evita seguir con el proceso
+    }
+
+    // ✅ Si todo está completo, pedir confirmación
+    if (confirm("¿Estás seguro de que deseas confirmar esta compra? Esto afectará el inventario.")) {
+        // En lugar de redirigir con window.location.href (que usa GET y rompe tu lógica),
+        // simplemente envía el formulario de forma normal
+        const form = button.closest("form");
+        if (form) {
+            form.submit();
+        }
+    }
+}
 
 
 
@@ -474,6 +540,9 @@ function actualizarTotalGeneral() {
 
     console.log('Total actualizado:', total);
 }
+
+
+
 
 
 </script>

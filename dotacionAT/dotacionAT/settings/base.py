@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'django.contrib.humanize',
     'widget_tweaks',
-    
+    'django_select2',
     
     
     'applications.ciudades',
@@ -44,6 +44,10 @@ AUTH_USER_MODEL = 'usuarios.Usuario'
 CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
+
+# Configuración para evitar conflictos con crispy-forms
+CRISPY_CLASS_CONVERTERS = {'select2': ''}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

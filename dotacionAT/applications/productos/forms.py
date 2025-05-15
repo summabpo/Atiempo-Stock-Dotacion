@@ -16,13 +16,17 @@
 from django import forms
 from .models import Producto, Categoria
 from ..data.choices import unidadMedida
-
+from django_select2.forms import Select2Widget
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
         fields = ['nombre', 'categoria', 'unidad_medida']  # Los campos que deseas permitir editar
 
     categoria = forms.ModelChoiceField(queryset=Categoria.objects.all(), empty_label="Seleccione una categoría", required=False)
+    widgets = {
+            'categoria': Select2Widget(attrs={'class': 'form-control text-black', 'data-placeholder': 'Selecciona una Categoria'}),
+            'unidad_medida': Select2Widget(attrs={'class': 'form-control text-black', 'data-placeholder': 'Selecciona una Unidad'}),
+        }
 
     def __init__(self, *args, categorias_choices=None, **kwargs):
         super().__init__(*args, **kwargs)
