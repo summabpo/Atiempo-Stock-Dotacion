@@ -45,7 +45,7 @@
   <script src="{% static 'jquery-ui/jquery-ui.min.js' %}"></script>
   <script type="text/javascript" charset="utf8" src="{% static 'index/js/sweet.js' %}"></script>
   
-  <style>
+  <!-- <style>
    .nav-icon.spin {
     animation: spin 2s linear infinite;
   }
@@ -77,11 +77,11 @@
   .nav-link:hover {
     transform: scale(1.2); /* Aumenta el tamaño al pasar el ratón */
   }
-  </style>
+  </style> -->
 
 </head>
-
-<body class="hold-transition sidebar-mini layout-fixed sidebar-closed sidebar-collapse">
+<!-- class="hold-transition sidebar-mini layout-fixed sidebar-closed sidebar-collapse" -->
+<body >
   <div class="wrapper">
 
     <!-- Navbar -->
@@ -89,7 +89,8 @@
       <!-- Left navbar links -->
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+          <a class="nav-link brand-link" style="margin-top: -20px;" data-widget="pushmenu" href="#" role="button"> <img src="{% static 'index/img/logoAtiempo.png' %}" alt="Logo" class="brand-image img-circle "
+            style="opacity: .8;"></i></a>
         </li>
       </ul>
 
@@ -108,7 +109,7 @@
     <!-- Main Sidebar Container -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
       <!-- Brand Logo -->
-      <a href="" class="brand-link">
+      <a href="/" class="brand-link">
         <img src="{% static 'index/img/logoAtiempo.png' %}" alt="Logo" class="brand-image img-circle "
         style="opacity: .8;">
           
@@ -226,6 +227,7 @@
                 
               </ul>
             </li>
+            
             <li class="nav-item">
               <a href="{% url 'proveedores' %}" class="nav-link">
                 <i class="nav-icon fas fa-address-book "></i>
@@ -236,6 +238,13 @@
               <a href="{% url 'productos' %}" class="nav-link">
                 <i class="nav-icon fas fa-box-open"></i>
                 <p>Productos</p>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a href="{% url 'cliente' %}" class="nav-link">
+                <i class="nav-icon fa fa-users"></i>
+                <p>Clientes</p>
               </a>
             </li>
           </ul>

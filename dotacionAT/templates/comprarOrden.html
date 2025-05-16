@@ -61,7 +61,7 @@
                         {% if orden.get_estado_display != 'generada' and compra %}
                         <input type="text" class="form-control"  value="{{ compra.bodega }}" required readonly>
                         {% else %}
-                        <select id="selectBodega" name="bodega_id" class="form-control" required>
+                        <select id="selectBodega" id="selectBodega" name="bodega_id" class="form-control" required>
                             <option value="">Cargando bodegas...</option>
                         </select>
                     {% endif %}
@@ -145,7 +145,18 @@
 
 
 {% block extra_js %}
+
+
+  {{ form.media }}
+
 <script>
+
+$('#selectBodega').select2({
+    placeholder: 'Seleccione una bodega',
+    allowClear: true,
+    width: '100%'  // Asegura que use el ancho completo del contenedor
+});
+
 
 document.addEventListener('DOMContentLoaded', function () {
     fetch('/list_bodegas/')
@@ -549,3 +560,5 @@ function actualizarTotalGeneral() {
 {% endblock %}
 
 {% endblock %}
+
+

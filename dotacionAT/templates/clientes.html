@@ -1,0 +1,71 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+{% load static %}
+
+{% load humanize %}
+
+<br>
+<br>
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="text-center">Clientes</h2>
+      <!-- Botón para crear ciudad -->
+      <a href=""><button class="btn btn-success">Crear Cliente</button></a>
+    </div>
+    <hr>
+    <table class="table table-striped table-hover table-responsive-sm text-center " id="datatableCliente">
+      <thead class="thead-dark">
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Nombre Cliente</th>
+          <th scope="col">Telefono</th>
+          <th scope="col">Email</th>
+          <th scope="col">Direccion</th>
+          <th scope="col">Ciudad</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody_cliente"></tbody>
+      </table>
+    </div>
+  </div>
+
+{% block extra_js %}
+
+<script src="{% static 'js/clientes.js' %}"></script>
+{% endblock %}
+
+
+{% endblock %}
+
+
+<!-- <tbody>
+  {% for proveedor in proveedores %}
+  <tr>
+    <th scope="col">{{proveedor.id_proveedor | intcomma}}</th> -->
+    <!-- <th scope="col">
+      <a href="{% url 'proveedor_detalle' proveedor.id_proveedor %}">
+        <h1>{{proveedor.nombre | title }}</h1>
+      </a></th> -->
+      <!-- <th scope="col">
+        {{proveedor.nombre | title }}
+      </th>
+      <th scope="col">{{proveedor.telefono}}</th>
+      <th scope="col">{{proveedor.email}}</th>
+      <th scope="col">{{proveedor.ciudad | capfirst}}</th> 
+      
+      {%if proveedor.activo == True %}
+      <th scope="col">✅ {{proveedor.activo}}</th>
+      {% else %}
+      <th scope="col"> {{proveedor.activo}}</th>
+      {% endif %}
+      <th scope="col"><a href="{% url 'modificar_proveedor' proveedor.id_proveedor %}"><button class="btn btn-warning">
+        Actualizar
+      </button></a></th>
+    </tr>
+    {% endfor %}
+  </tbody> -->
