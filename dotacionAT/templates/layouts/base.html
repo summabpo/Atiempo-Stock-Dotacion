@@ -45,7 +45,7 @@
   <script src="{% static 'jquery-ui/jquery-ui.min.js' %}"></script>
   <script type="text/javascript" charset="utf8" src="{% static 'index/js/sweet.js' %}"></script>
   
-  <!-- <style>
+  <style>
    .nav-icon.spin {
     animation: spin 2s linear infinite;
   }
@@ -77,7 +77,7 @@
   .nav-link:hover {
     transform: scale(1.2); /* Aumenta el tamaño al pasar el ratón */
   }
-  </style> -->
+  </style>
 
 </head>
 <!-- class="hold-transition sidebar-mini layout-fixed sidebar-closed sidebar-collapse" -->
@@ -143,6 +143,16 @@
                 </p>
               </a>
             </li>
+
+            <li class="nav-item">
+              <a href="{% url 'ordenes_salida' %}" class="nav-link">
+                <i class="nav-icon far fa-calendar-alt"></i>
+                <p>
+                  Administrar Salidas
+                </p>
+              </a>
+            </li>
+
 
             <!-- <li class="nav-item">
               <a href="" class="nav-link">
@@ -336,10 +346,12 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery-number@2.1.6/jquery.number.min.js"></script>
-<script type="text/javascript" charset="utf8" src="{% static 'index/js/main.js' %}"></script>
+<!-- <script type="text/javascript" charset="utf8" src="{% static 'index/js/main.js' %}"></script>  -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> 
 
-  <!-- <script src="{% static 'js/ciudades.js' %}"></script> -->
+
+
+
 {% if messages %}
 {% for m in messages %}
 <script>
@@ -361,7 +373,9 @@
 {% endfor %}
 {% endif %}
 
-{% block extra_js %}{% endblock %}
+{% block extra_js %} {% endblock %}
+
+
 </body>
 
 </html>

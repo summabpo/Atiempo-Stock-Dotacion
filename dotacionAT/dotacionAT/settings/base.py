@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'applications.ordenes_compra',
     'applications.inventario',
     'applications.clientes',
+    'applications.ordenes_salida',
 ]
 
 # Custom user model

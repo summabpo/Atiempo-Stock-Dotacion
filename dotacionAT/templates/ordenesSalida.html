@@ -1,0 +1,110 @@
+{% extends 'layouts/base.html' %}
+
+
+{% block content %}
+
+{% load static %}
+
+{% load humanize %}
+
+<br>
+<br>
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="text-center">Ordenes Salida</h2>
+      <!-- Botón para crear ciudad -->
+      <a href="{% url 'crear_salida' %}"><button class="btn btn-success">Crear Entrega</button></a>
+    </div>
+    <hr>
+    <table id="datatableOrdenSalida" class="table table-striped table-hover table-responsive-sm text-center">
+      <thead class="thead-dark">
+          <tr>
+              <th>ID</th>
+              <!-- <th>Tipo</th> -->
+              <th>Cliente</th>
+              <!-- <th>Estado</th> -->
+              <th>Total</th>
+              <th>Fecha</th>              
+              <th>Acción</th>
+          </tr>
+      </thead>
+      <tbody id="tableBody_ordenSalida">
+          <!-- Aquí se cargan las filas dinámicamente -->
+      </tbody>
+  </table>
+    <!-- <table class="table table-striped table-hover table-responsive-sm text-center " id="datatableOrdenCompra">
+      <thead class="thead-dark">
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Proveedor</th>
+          <th scope="col">estado</th>
+          <th scope="col">fecha Creacion</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+     <tbody id="tableBody_ordenCompra"></tbody>
+      </table> -->
+    </div>
+</div>
+
+<!-- <p>
+{{ ciudades}}
+</p> -->
+
+
+{% block extra_js %}
+
+<script src="{% static 'js/ordenSalida.js' %}"></script>
+
+{% endblock %}
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+<!-- <tbody>
+  {% for producto in productos %}
+  <tr>
+    <th scope="col">{{producto.id_producto| intcomma}}</th>
+    <th scope="col">{{producto.nombre | capfirst }}</th>
+    <th scope="col">{{producto.categoria | title }}</th>
+
+    <th scope="col">{{producto.stock | intcomma }}</th>
+
+    <th scope="col">{{producto.costo | intcomma }}</th>
+
+    <th scope="col">{{producto.unidad_medida | title }}</th>
+
+    <th scope="col">{%if producto.activo == True %}
+      ✅ {{producto.activo}}
+      {% else %}
+      inactivo
+      {% endif %} </th> -->
+    <!-- 
+    <article class="card">
+      <a href="{% url 'productos_detalle' producto.id_producto %}">
+        <h1>{{producto.nombre}}</h1>
+      </a>        -->
+      <!-- <th scope="col"></th>
+      {%if producto.activo == True %}
+      <h1>✅ {{producto.activo}}</h1>
+      {% else %}
+      <h1>inactivo</h1>
+      {% endif %}      
+    </th> -->
+
+      <!-- <th scope="col"><a href="{% url 'modificar_producto' producto.id_producto %}"><button class="btn btn-warning">
+        Actualizar
+      </button></a></th>
+    </tr>
+    {% endfor %}
+  </tbody> -->

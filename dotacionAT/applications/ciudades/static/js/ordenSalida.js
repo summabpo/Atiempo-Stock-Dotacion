@@ -1,15 +1,14 @@
 (function () {
 
-console.log("Hola Orden Inventario");
+console.log("Hola orden salida");
 
-// function getCSRFToken() {
-//     const token = document.querySelector('meta[name="csrf-token"]');
-//     return token ? token.content : '';
-// }
+function getCSRFToken() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return token ? token.content : '';
+}
 
 let dataTable;
 let dataTableIsInitialized = false;
-
 
 
 const dataTableOptions = {
@@ -60,41 +59,84 @@ const initDataTable = async () => {
         dataTable.destroy();
     }
 
-    await Inventario();
+    await OrdenSalida();
 
     // Verificamos si la tabla existe antes de inicializar DataTable
-    const table = document.getElementById('datatableInventario');
+    const table = document.getElementById('datatableOrdenSalida');
     if (table) {
-        dataTable = $('#datatableInventario').DataTable(dataTableOptions);
+        dataTable = $('#datatableOrdenSalida').DataTable(dataTableOptions);
         dataTableIsInitialized = true;
     }
 }
 
 
-const Inventario = async () => {
-    console.log("Inventario...");
+const OrdenSalida = async () => {
+    console.log("Cargando salidas...");
     
     try {
-        const response = await fetch('/inventario_bodega_json/');
+        const response = await fetch('/list_orden_salida/');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const data = await response.json();
         console.log("Datos combinados:", data);
 
-        const tableBody = document.getElementById('tableBody_inventario');
+        const tableBody = document.getElementById('tableBody_ordenSalida');
         if (tableBody) {
             let content = ``;
-            data.inventarios.forEach((item, index) => {
+            data.ordenes_salida.forEach((item, index) => {
+                const activo = item.activo === true;
+           
+            // if(item.tipo_documento == 'OC'){
+
+            //     idTipoDoc =   item.id+' - '+item.tipo_documento;
+            // }else if(item.tipo_documento == 'OR'){
+
+            //    idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+            // } 
+                
+           
+
+            // if(item.tipo_documento == 'OC' && item.estado == 'comprada'){
+                
+            //     estadoId = item.estado+' # '+item.numero_factura;
+                                                
+            // }else{
+                
+            //     estadoId = item.estado;
+
+            // }
+
+            // if(item.tipo_documento == 'OR'){
+            //     idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+
+            // }
+        
+
+            
+            let botonCancelar = '';
+            if (item.tipo_documento == 'OC' && item.estado == 'generada') {
+                botonCancelar = `
+                    <button title="Cancelar Orden compra" class="btn btn-sm btn-danger" onclick="confirmarCambioEstado('${item.url_cancelar}')">
+                        <i class='fa-solid fa-times'></i>
+                    </button>
+                `;
+            }
         
             content += `
                 <tr class="text-center">
-                    <td>${item.bodega}</td>
-                    <td style="text-transform: uppercase;">${item.producto}</td>
-                    <td style="text-transform: uppercase;">${item.entradas}</td>
-                    <td class="total">${item.salidas}</td>
-                    <td class="total">${item.stock}</td>
-                    <td class="total">${item.ultima_entrada}</td>
-                    <td class="total">${item.ultima_salida}</td>         
+                    <td>${item.tipo_documento}</td>
+                    <td style="text-transform: uppercase;">${item.cliente}</td>
+                    <td class="total">${item.total}</td>
+                    <td>${item.fecha}</td>
+                    <td>
+                        <a href="${item.url_editar}">
+                            <button title="Ver Detalle O C" class="btn btn-sm btn-warning">
+                                <i class='fa-solid fa-pencil'></i>
+                            </button>
+                        </a>
+                      
+                        ${botonCancelar}
+                    </td>
                 </tr>
             `;
             });
@@ -110,12 +152,10 @@ const Inventario = async () => {
 };
 
 
+
 window.addEventListener("load", async () => {
     await initDataTable();
     console.log("Página cargada");
 });
 
-})();
-
-
-    
+})();  

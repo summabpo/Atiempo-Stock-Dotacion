@@ -151,10 +151,12 @@
 
 <script>
 
-$('#selectBodega').select2({
-    placeholder: 'Seleccione una bodega',
-    allowClear: true,
-    width: '100%'  // Asegura que use el ancho completo del contenedor
+$(document).ready(function() {
+    $('#selectBodega').select2({
+        placeholder: 'Seleccione una bodega',
+        allowClear: true,
+        width: '100%'
+    });
 });
 
 

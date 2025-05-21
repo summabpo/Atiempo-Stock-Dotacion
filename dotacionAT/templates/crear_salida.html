@@ -5,27 +5,28 @@
 {% block content %}
 
 <div class="content-wrapper">
+    
     <section class="content-header">
         <br>
         <h1 style="color: black;">
-        Crear Orden de Compra
+        Crear Entrega
         </h1>
     </section>
             
 
     <div class="row">  
-        <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+    <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
     <!--=====================================
-    ENTRADA PARA PROVEEDOR
+    ENTRADA PARA CLIENTE
     ======================================-->
     <div class="card " style="color: black;">
         <div class="card-header bg-success">
-            <h3 class="card-title">Seleccione Proveedor</h3>
+            <h3 class="card-title">Seleccione Cliente</h3>
         </div>
         <div class="card-body">
 
 
-        <table id="tablaProveedoresOrden" class="table table-striped table-responsive-sm text-center" data-page-length="1" width="100%">
+        <table id="tablaClienteEntrega" class="table table-striped table-responsive-sm text-center" data-page-length="1" width="100%">
             <thead class="thead-dark">
                 <tr>
                     <th>ID</th>
@@ -33,7 +34,7 @@
                     <th>Acción</th>
                 </tr>
             </thead>
-            <tbody id="tableBody_proveedorOrden" style="color: black;"></tbody>
+            <tbody id="tableBody_clienteOrden" style="color: black;"></tbody>
         </table>
     </div>
     </div>
@@ -45,7 +46,7 @@
         <div class="box-body">
         <div class="box">
 
-              <!--=====================================
+    <!--=====================================
     ENTRADA FECHA FACTURA DE COMPRA
     ======================================-->
 
@@ -54,7 +55,7 @@
     ======================================-->
     <!-- <div class="form-group row nuevoProveedor">
     </div>-->
-    <input type="hidden" id="listaProveedor" name="listaProveedor">
+    <input type="hidden" id="listaCliente" >
     
 
     <div class="form-group row nuevoProveedor mt-3">
@@ -80,7 +81,7 @@
   
     <!-- <div class="form-group row nuevoProductoCompra"> -->
   
-    <input type="hidden" id="listaProductos" name="listaProductos">
+    <input type="hidden" id="listaProductos" >
 
     <div class="form-group row nuevoProductoCompra mt-3">
         <!-- <label class="col-sm-12 col-form-label"><strong>Productos Seleccionados</strong></label> -->
@@ -161,20 +162,24 @@
 </div>
   
 
-
-
-
-
 {% block extra_js %}
 
 
 <script>
 
-let dataTableProveedores;
-let dataTableProductos;
+// document.querySelector('form').addEventListener('submit', function(e) {
+//     console.log("Proveedor:", document.querySelector('input[name="proveedor"]').value);
+//     console.log("Productos:", [...document.querySelectorAll('input[name="productos[]"]')].map(i => i.value));
+//     console.log("Cantidades:", [...document.querySelectorAll('input[name="cantidades[]"]')].map(i => i.value));
+//     console.log("Precios:", [...document.querySelectorAll('input[name="precios[]"]')].map(i => i.value));
+//     console.log("Total:", document.getElementById('inputTotalOrden').value);
+// });
 
-let proveedoresInitialized = false;
-let productosInitialized = false;
+var dataTableClienteSalida;
+var dataTableProductos;
+
+var proveedoresInitialized = false;
+var productosInitialized = false;
 
 const dataTableOptions = {
     columnDefs: [
@@ -203,38 +208,38 @@ const dataTableOptions = {
 };
 
 // ✅ Tabla de Proveedores
-const initDataTableProveedores = async () => {
+const initDataTableClienteSalida = async () => {
     if (proveedoresInitialized) {
-        dataTableProveedores.destroy();
+        dataTableClienteSalida.destroy();
     }
 
     await cargarProveedores();
 
-    const table = document.getElementById('tablaProveedoresOrden');
+    const table = document.getElementById('tablaClienteEntrega');
     if (table) {
-        dataTableProveedores = $('#tablaProveedoresOrden').DataTable(dataTableOptions);
+        dataTableClienteSalida = $('#tablaClienteEntrega').DataTable(dataTableOptions);
         proveedoresInitialized = true;
     }
 };
 
 const cargarProveedores = async () => {
     try {
-        const response = await fetch('/list_proveedores/');
+        const response = await fetch('/list_clientes/');
         const data = await response.json();
-        const tableBody = document.getElementById('tableBody_proveedorOrden');
+        const tableBody = document.getElementById('tableBody_clienteOrden');
 
         if (tableBody) {
             let content = ``;
 
-            data.proveedores.forEach(proveedor => {
+            data.cliente.forEach(proveedor => {
                 const activo = proveedor.activo === true || proveedor.activo === "True";
                 content += `
                     <tr>
-                        <td>${proveedor.id_proveedor}</td>
+                        <td>${proveedor.id_cliente}</td>
                         <td>${proveedor.nombre}</td>
                         <td>
                             <button type="button" class="btn btn-sm btn-primary"
-                                onclick="seleccionarProveedor('${proveedor.id_proveedor}', '${proveedor.nombre}', '${proveedor.id_ciudad}', '${proveedor.telefono}')">
+                                onclick="seleccionarProveedor('${proveedor.id_cliente}', '${proveedor.nombre}', '${proveedor.id_ciudad}', '${proveedor.telefono}')">
                                 Seleccionar
                             </button>
                         </td>
@@ -287,7 +292,7 @@ function seleccionarProveedor(id, nombre, ciudad, telefono) {
 function quitarProveedor() {
     const tbody = document.querySelector("#proveedorSeleccionado tbody");
     tbody.innerHTML = '';
-    document.getElementById('listaProveedor').value = ''; // limpiar input oculto
+    document.getElementById('listaCliente').value = ''; // limpiar input oculto
 }
 
 
@@ -364,7 +369,7 @@ const cargarProductos = async () => {
 
 // ✅ Llamamos ambas al cargar la página
 window.addEventListener("load", async () => {
-    await initDataTableProveedores();
+    await initDataTableClienteSalida();
     await initDataTableProductos();
     console.log("Página cargada");
 });
@@ -386,7 +391,7 @@ function agregarProductoAOrden(id, nombre, costo) {
     fila.setAttribute("data-id", id);
 
     fila.innerHTML = `
-        <td>${nombre}<input type="hidden" name="productos[]" value="${id}"></td>
+        <td>${nombre}<input type="hidden" name="productosNew[]" value="${id}"></td>
         <td>
             <input type="text" name="cantidades[]" class="form-control text-center cantidad" value="1"  min="0" step="0.01" onchange="actualizarSubtotal(this)"  required></td>
 
@@ -591,9 +596,12 @@ document.querySelector('form').addEventListener('submit', function() {
 });
    
 
-
 </script>
 
+
+
 {% endblock %}
+
+
 
 {% endblock %}

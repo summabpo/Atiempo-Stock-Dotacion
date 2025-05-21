@@ -1,9 +1,9 @@
 console.log("Hola");
 
-let dataTable;
-let dataTableIsInitialized = false;
+var dataTable;
+var dataTableIsInitialized = false;
 
-const dataTableOptions = {
+const dataTableOptionsCategoria = {
     columnDefs: [
         { className: "text-center", targets: [0, 1, 2, 3] },
         { orderable: false, targets: [2, 3] },
@@ -54,7 +54,7 @@ const initDataTable = async () => {
     // Verificamos si la tabla existe antes de inicializar DataTable
     const table = document.getElementById('datatableCategoria');
     if (table) {
-        dataTable = $('#datatableCategoria').DataTable(dataTableOptions);
+        dataTable = $('#datatableCategoria').DataTable(dataTableOptionsCategoria);
         dataTableIsInitialized = true;
     }
 }
@@ -98,7 +98,7 @@ console.log(categoria.url_editar);
     }
 }
 
-window.addEventListener("load", async () => {
-    await initDataTable();
-    console.log("Página cargada");
-});
+// window.addEventListener("load", async () => {
+//     await initDataTable();
+//     console.log("Página cargada");
+// });

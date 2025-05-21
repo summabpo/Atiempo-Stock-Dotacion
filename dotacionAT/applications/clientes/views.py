@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from .models import Cliente
 from django.urls import reverse
-# from .forms import ProveedorForm
+from .forms import ClienteForm
 from django.contrib import messages
 
 # Create your views here.
@@ -32,8 +32,47 @@ def list_clientes(_request):
                 'direccion': c.direccion,
                 'id_ciudad': c.ciudad.nombre,  # <-- corregido
                 'activo': c.activo,
-                'url_editar': '1'
+                 'url_editar': reverse('modificar_cliente', args=[c.id_cliente])
             } for c in cliente
         ]
     }
     return JsonResponse(data)     
+
+
+def crear_cliente(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            form.save()  # Guardar el nuevo proveedor
+            messages.success(request, "Cliente Actualizada Correctamente. ! ")
+            return redirect('cliente')  # Redirigir después de guardar
+    else:
+        form = ClienteForm()
+
+    return render(request, 'crear_cliente.html', {'form': form})
+
+
+
+def modificar_cliente(request, id):
+    
+    cliente =  get_object_or_404(Cliente, id_cliente=id)
+    # print(ciudad)
+    # return render(request, 'ciudadDetalle.html',
+    #               {
+    #                   'ciudad':ciudad
+    #               })
+    
+    data = {
+        'form': ClienteForm(instance=cliente)
+    }
+    
+    
+    if request.method == 'POST':
+        formulario = ClienteForm(data=request.POST, instance=cliente)
+        if formulario.is_valid():
+            formulario.save()
+            messages.success(request, "Cliente Actualizada Correctamente. ! ")
+            return redirect(to='cliente')
+        data['form'] = formulario
+            
+    return render(request, 'editarCliente.html', data)  

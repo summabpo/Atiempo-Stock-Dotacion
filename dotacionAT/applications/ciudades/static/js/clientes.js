@@ -1,3 +1,4 @@
+(function () {
 console.log("clientes");
 
 let dataTable;
@@ -65,7 +66,7 @@ const clientes = async () => {
     try {
         const response = await fetch('/list_clientes/');
         const data = await response.json();
-        console.log(data.clientes);      // si el JSON 
+       
         // Verificamos que el tbody exista antes de modificarlo
         const tableBody = document.getElementById('tableBody_cliente');
         if (tableBody) {
@@ -89,7 +90,7 @@ const clientes = async () => {
                 : "<i class='fa-solid fa-xmark' style='color: red;'></i>"
             }
         </td>
-                       <td><a href=""><button class="btn btn-sm btn-warning">
+                       <td><a href="${item.url_editar}""><button class="btn btn-sm btn-warning">
                             <i class='fa-solid fa-pencil'></i>
                         </button></a></td>
                         
@@ -108,3 +109,5 @@ window.addEventListener("load", async () => {
     await initDataTable();
     console.log("Página cargada");
 });
+
+})();

@@ -1,3 +1,4 @@
+(function () {
 console.log("Hola orden Compras");
 
 function getCSRFToken() {
@@ -301,3 +302,5 @@ window.addEventListener("load", async () => {
                 }
             });
         }
+
+})();        

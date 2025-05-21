@@ -1,3 +1,5 @@
+(function () {
+
 console.log("Hola");
 
 let dataTable;
@@ -108,3 +110,5 @@ window.addEventListener("load", async () => {
     await initDataTable();
     console.log("Página cargada");
 });
+
+})();  
