@@ -12,7 +12,7 @@ class ItemSalidaInline(admin.TabularInline):
 
 @admin.register(Salida)
 class SalidaAdmin(admin.ModelAdmin):
-    list_display = ['id', 'tipo_documento', 'fecha_creacion', 'total', 'estado']
+    list_display = ['id', 'tipo_documento', 'fecha_creacion', 'total', 'bodegaSalida', 'bodegaEntrada', 'estado']
     # list_filter = ['tipo_documento', 'fecha_creacion', 'estado']
     search_fields = ['numero_factura', 'cliente__nombre']
     inlines = [ItemSalidaInline]

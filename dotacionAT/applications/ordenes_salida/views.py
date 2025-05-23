@@ -6,6 +6,7 @@ from django.http import JsonResponse
 # from .forms import OrdenCompraForm
 from applications.productos.models import Producto
 from applications.clientes.models import Cliente
+from applications.bodegas.models import Bodega
 from django.forms import modelformset_factory
 from django.contrib import messages
 from decimal import Decimal
@@ -24,7 +25,7 @@ def ordenes_salida(request):
     
 def list_orden_salida(request):
     
-    salidas = Salida.objects.select_related('bodega', 'cliente')
+    salidas = Salida.objects.select_related('bodegaEntrada', 'bodegaSalida', 'cliente')
 
     data = []
 
@@ -33,9 +34,9 @@ def list_orden_salida(request):
         data.append({
             'id': salida.id,
             'cliente': salida.cliente.nombre,
-            'fecha': '',
+            'fecha': salida.fecha_creacion,
             'tipo_documento': salida.tipo_documento,
-            'total': salida.total,
+            # 'total': salida.total,
             'url_editar': '',
             # 'url_editar': f'/detalle_salida/{salida.id}/',
         })
@@ -50,11 +51,14 @@ def crear_salida(request):
         cliente_id = request.POST.get('proveedor')
         productos = request.POST.getlist('productosNew[]')
         cantidades = request.POST.getlist('cantidades[]')
-        precios = request.POST.getlist('precios[]')
-        observaciones = request.POST.get('observacion')
-        total_orden = request.POST.get('total_orden')
+        #precios = request.POST.getlist('precios[]')
+        precios = 0
+        bodegaSalida = request.POST.get('bodegaSalida')
+        bodegaEntrada = request.POST.get('bodegaEntrada')
+        #total_orden = request.POST.get('total_orden')
+        total_orden = 0
         
-        # print(request.POST)
+        print(request.POST)
         
         # print("Productos:", cliente_id)
         # print("Cantidades:", cantidades)
@@ -68,13 +72,18 @@ def crear_salida(request):
             return redirect('crear_salida')
 
         # 💰 Conversión segura del total
-        try:
-            total_orden_decimal = Decimal(total_orden)
-        except:
-            total_orden_decimal = Decimal('0.00')
+        # try:
+        #     total_orden_decimal = Decimal(total_orden)
+        # except:
+        #     total_orden_decimal = Decimal('0.00')
 
         try:
             cliente = Cliente.objects.get(id_cliente=cliente_id)
+            bodegaSalida = Bodega.objects.get(id_bodega=bodegaSalida)
+            if bodegaEntrada:
+                bodegaEntrada = Bodega.objects.get(id_bodega=bodegaEntrada)
+            else:
+                bodegaEntrada = None
         except Cliente.DoesNotExist:
             messages.error(request, "Cliente no válido.")
             return redirect('crear_salida')
@@ -86,7 +95,7 @@ def crear_salida(request):
         for i in range(len(productos)):
             try:
                 cantidad = int(cantidades[i])
-                precio_unitario = Decimal(precios[i].replace(',', ''))
+                precio_unitario = 0
 
                 if cantidad > 0:  # Solo permite productos con cantidad mayor que 0
                     items.append({
@@ -108,7 +117,9 @@ def crear_salida(request):
         salida = Salida.objects.create(
             cliente=cliente,  # Si es el proveedor que corresponde a 'cliente', asignalo así
             total= 0,
-            observaciones=observaciones,
+            bodegaSalida = bodegaSalida,
+            bodegaEntrada = bodegaEntrada
+            #observaciones=observaciones,
             # Aquí puedes agregar cualquier otro campo necesario, como tipo_documento, bodega, etc.
         )
 

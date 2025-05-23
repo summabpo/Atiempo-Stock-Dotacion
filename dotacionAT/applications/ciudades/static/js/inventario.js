@@ -7,6 +7,18 @@ console.log("Hola Orden Inventario");
 //     return token ? token.content : '';
 // }
 
+function formatearFecha(fechaISO) {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+
 let dataTable;
 let dataTableIsInitialized = false;
 
@@ -93,8 +105,8 @@ const Inventario = async () => {
                     <td style="text-transform: uppercase;">${item.entradas}</td>
                     <td class="total">${item.salidas}</td>
                     <td class="total">${item.stock}</td>
-                    <td class="total">${item.ultima_entrada}</td>
-                    <td class="total">${item.ultima_salida}</td>         
+                    <td >${formatearFecha(item.ultima_entrada)}</td>
+                    <td >${formatearFecha(item.ultima_salida)}</td>         
                 </tr>
             `;
             });

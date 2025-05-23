@@ -12,12 +12,25 @@ from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, IntegrityError
 
-
 import json
 
 import logging
 
+import time
+
+
 logger = logging.getLogger(__name__)
+
+def mi_vista(request):
+    inicio = time.time()
+    
+    # tu lógica...
+    response = render(request, 'mi_template.html')
+
+    fin = time.time()
+    print(f"⏱ Tiempo de respuesta del servidor: {fin - inicio:.2f} segundos")
+
+    return response
 
 # Create your views here.
 

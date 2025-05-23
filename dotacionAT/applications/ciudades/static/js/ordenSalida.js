@@ -1,5 +1,17 @@
 (function () {
 
+function formatearFecha(fechaISO) {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+
 console.log("Hola orden salida");
 
 function getCSRFToken() {
@@ -124,10 +136,10 @@ const OrdenSalida = async () => {
         
             content += `
                 <tr class="text-center">
-                    <td>${item.tipo_documento}</td>
+                    <td>${item.id}</td>
                     <td style="text-transform: uppercase;">${item.cliente}</td>
-                    <td class="total">${item.total}</td>
-                    <td>${item.fecha}</td>
+                    <td style="text-transform: uppercase;">${item.tipo_documento}</td>
+                    <td>${formatearFecha(item.fecha)}</td>
                     <td>
                         <a href="${item.url_editar}">
                             <button title="Ver Detalle O C" class="btn btn-sm btn-warning">
