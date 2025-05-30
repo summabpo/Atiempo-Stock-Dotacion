@@ -91,6 +91,8 @@ def crear_salida(request):
         # Revisa si hay productos válidos
         productos_validos = 0  # Para contar productos con cantidad > 0
         items = []
+        
+        print(request.POST)
 
         for i in range(len(productos)):
             try:

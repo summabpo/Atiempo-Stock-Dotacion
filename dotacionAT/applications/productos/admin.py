@@ -10,7 +10,7 @@ class CategoriaAdmin(admin.ModelAdmin):
 # Registrar el modelo Producto
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'categoria', 'unidad_medida', 'activo', 'id_usuario', 'fecha_creacion')  # El campo 'precio' ya no está en el modelo
+    list_display = ('id_producto', 'nombre', 'categoria', 'unidad_medida', 'activo', 'id_usuario', 'fecha_creacion')  # El campo 'precio' ya no está en el modelo
     list_filter = ('categoria', 'id_usuario')
     search_fields = ('nombre', 'categoria__nombre', 'descripcion')  # 'descripcion' aún está en la búsqueda
     date_hierarchy = 'fecha_creacion'

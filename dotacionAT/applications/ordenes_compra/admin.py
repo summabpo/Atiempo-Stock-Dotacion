@@ -32,6 +32,7 @@ class CompraAdmin(admin.ModelAdmin):
 class ItemCompraAdmin(admin.ModelAdmin):
     list_display = (
         'compra',
+        'producto_id_display',
         'numero_factura',
         'fecha_compra',
         'producto',
@@ -48,7 +49,11 @@ class ItemCompraAdmin(admin.ModelAdmin):
 
     def fecha_compra(self, obj):
         return obj.compra.fecha_compra
-    fecha_compra.short_description = 'Fecha de Compra'  
+    fecha_compra.short_description = 'Fecha de Compra'
+    
+    @admin.display(description='ID Producto')
+    def producto_id_display(self, obj):
+        return obj.producto.pk if obj.producto else 'N/A'  
     
     
     

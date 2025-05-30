@@ -61,6 +61,18 @@ const initDataTable = async () => {
     }
 }
 
+
+   const style = document.createElement('style');
+style.textContent = `
+    .bg-warning-custom {
+        background-color: #ff9800 !important;
+        color: white !important;
+        padding: 4px 8px;
+        border-radius: 5px;
+    }
+`;
+document.head.appendChild(style);
+
 const productos = async () => {
     console.log("hola");
     
@@ -76,13 +88,24 @@ const productos = async () => {
             let content = ``;
             data.productos.forEach((producto, index) => {
 
+                
+                   if (producto.stock < 10) {
+        colorClass = 'bg-danger text-white fw-bold rounded px-2 py-1'; // rojo
+    } else if (producto.stock < 20) {
+        colorClass = 'bg-warning-custom'; // naranja
+    } else {
+        colorClass = 'bg-success text-white fw-bold rounded px-2 py-1'; // verde
+    }
+
+
+
                 const activo = producto.activo === "True" || producto.activo === true;
                 content += `
                     <tr class="text-center">
                         <td style=" text-align: center !important;">${producto.id_producto}</td>
                         <td>${producto.nombre}</td>
                         <td>${producto.categoria}</td>
-                        <td>${producto.stock}</td>
+                        <<td><span class="${colorClass}">${producto.stock}</span></td>
                         <td>${producto.costo}</td>
                         <td>${producto.unidad_medida}</td>
                         

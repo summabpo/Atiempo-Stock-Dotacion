@@ -83,6 +83,17 @@ const initDataTable = async () => {
 }
 
 
+const style = document.createElement('style');
+style.textContent = `
+    .bg-warning-custom {
+        background-color: #ff9800 !important;
+        color: white !important;
+        padding: 4px 8px;
+        border-radius: 5px;
+    }
+`;
+document.head.appendChild(style);
+
 const Inventario = async () => {
     console.log("Inventario...");
     
@@ -97,6 +108,15 @@ const Inventario = async () => {
         if (tableBody) {
             let content = ``;
             data.inventarios.forEach((item, index) => {
+
+                   if (item.stock < 10) {
+        colorClass = 'bg-danger text-white fw-bold rounded px-2 py-1'; // rojo
+    } else if (item.stock < 20) {
+        colorClass = 'bg-warning-custom'; // naranja
+    } else {
+        colorClass = 'bg-success text-white fw-bold rounded px-2 py-1'; // verde
+    }
+
         
             content += `
                 <tr class="text-center">
@@ -104,7 +124,7 @@ const Inventario = async () => {
                     <td style="text-transform: uppercase;">${item.producto}</td>
                     <td style="text-transform: uppercase;">${item.entradas}</td>
                     <td class="total">${item.salidas}</td>
-                    <td class="total">${item.stock}</td>
+                    <td><span class="${colorClass}">${item.stock}</span></td>
                     <td >${formatearFecha(item.ultima_entrada)}</td>
                     <td >${formatearFecha(item.ultima_salida)}</td>         
                 </tr>

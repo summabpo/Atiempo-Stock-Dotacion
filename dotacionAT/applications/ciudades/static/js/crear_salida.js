@@ -6,6 +6,7 @@
 //     console.log("Total:", document.getElementById('inputTotalOrden').value);
 // });
 
+
 console.log("Hola Crear Salida");
 
 
@@ -180,63 +181,160 @@ const dataTableOptionsOrden = {
 
 
 // ✅ Tabla de Productos
-const initDataTableProductos = async () => {
-    if (productosInitialized) {
-        dataTableProductos.destroy();
-    }
+// const initDataTableProductos = async () => {
+//     if (productosInitialized) {
+//         dataTableProductos.destroy();
+//     }
 
-    await cargarProductos();
+//     await cargarProductos();
 
-    const table = document.getElementById('datatableProductosOrden');
-    if (table) {
-        dataTableProductos = $('#datatableProductosOrden').DataTable(dataTableOptionsOrden);
-        productosInitialized = true;
+//     const table = document.getElementById('datatableProductosOrden');
+//     if (table) {
+//         dataTableProductos = $('#datatableProductosOrden').DataTable(dataTableOptionsOrden);
+//         productosInitialized = true;
+//     }
+// };
+
+// const cargarProductos = async () => {
+//     try {
+//         const response = await fetch('/inventario_bodega_json/');
+//         const data = await response.json();
+//         const tableBody = document.getElementById('tableBody_productosOrden');
+
+//         if (tableBody) {
+//             let content = ``;
+//             data.inventarios.forEach(producto => {
+//                 const activo = producto.activo === "True" || producto.activo === true;
+//                 content += `
+//                     <tr class="text-center">
+//                         <td>${producto.id_producto}</td>
+//                         <td>${producto.nombre}</td>
+//                         <td>
+                            
+//                                   <button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.nombre}', '0')">
+//         Agregar
+//     </button>
+//                         </td>
+//                     </tr>
+//                 `;
+//             });
+//             tableBody.innerHTML = content;
+//         }
+
+//     } catch (error) {
+//         alert("Error al obtener productos.");
+//         console.error("Error al obtener productos:", error);
+//     }
+// };
+
+
+$(document).ready(function() {
+    // Cargar productos inicialmente si ya hay una bodega seleccionada
+  
+
+    const style = document.createElement('style');
+style.textContent = `
+    .bg-warning-custom {
+        background-color: #ff9800 !important;
+        color: white !important;
+        padding: 4px 8px;
+        border-radius: 5px;
     }
-};
+`;
+document.head.appendChild(style);
+
+
+
+    // Ejecutar al cambiar el select de bodega
+$('#selectBodegaSalida').on('change', function() {
+        
+console.log("Hola");
+
 
 const cargarProductos = async () => {
     try {
+        const filtroBodega = document.getElementById('selectBodegaSalida').value;
+
         const response = await fetch('/inventario_bodega_json/');
         const data = await response.json();
         const tableBody = document.getElementById('tableBody_productosOrden');
 
         if (tableBody) {
-            let content = ``;
-            data.inventarios.forEach(producto => {
-                const activo = producto.activo === "True" || producto.activo === true;
-                content += `
-                    <tr class="text-center">
-                        <td>${producto.id_producto}</td>
-                        <td>${producto.nombre}</td>
-                        <td>
-                            
-                                  <button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.nombre}', '0')">
-        Agregar
-    </button>
-                        </td>
-                    </tr>
-                `;
-            });
+            // Destruye el DataTable si ya está inicializado
+            if ($.fn.DataTable.isDataTable('#datatableProductosOrden')) {
+                $('#datatableProductosOrden').DataTable().destroy();
+            }
+
+    let content = ``;
+const inventariosFiltrados = filtroBodega
+    ? data.inventarios.filter(p => p.bodega_id == filtroBodega)
+    : data.inventarios;
+
+inventariosFiltrados.forEach(producto => {
+    let colorClass = '';
+
+    if (producto.stock < 10) {
+        colorClass = 'bg-danger text-white fw-bold rounded px-2 py-1'; // rojo
+    } else if (producto.stock < 20) {
+        colorClass = 'bg-warning-custom'; // naranja
+    } else {
+        colorClass = 'bg-success text-white fw-bold rounded px-2 py-1'; // verde
+    }
+
+    
+
+    content += `
+        <tr class="text-center">
+            <td>${producto.id_producto}</td>
+            <td>${producto.producto}</td>
+            <td><span class="${colorClass}">${producto.stock}</span></td>
+             <td>
+                ${producto.stock > 0
+                    ? `<button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.producto}', '${producto.stock}')">
+                        Agregar
+                       </button>`
+                    : `<span class="text-muted">Sin stock</span>`
+                }
+            </td>
+        </tr>
+    `;
+});
+
             tableBody.innerHTML = content;
+
+            // Reinicializa el DataTable
+            $('#datatableProductosOrden').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.5/i18n/es-ES.json'
+                }
+            });
         }
 
     } catch (error) {
         alert("Error al obtener productos.");
         console.error("Error al obtener productos:", error);
     }
-};
+}
+
+
+    // 👉 Llamada a la función que definiste arriba
+    cargarProductos()
+    })
+})
+
+
 
 // ✅ Llamamos ambas al cargar la página
 window.addEventListener("load", async () => {
     await initDataTableClienteSalida();
-    await initDataTableProductos();
+    // await initDataTableProductos();
     console.log("Página cargada");
 });
 
 
 let productosAgregados = [];
 
-function agregarProductoAOrden(id, nombre, costo) {
+function agregarProductoAOrden(id, nombre, stock) {
     // Evitar duplicados
     if (productosAgregados.includes(id)) {
         alert("Este producto ya ha sido agregado.");
@@ -252,12 +350,9 @@ function agregarProductoAOrden(id, nombre, costo) {
     fila.innerHTML = `
         <td>${nombre}<input type="hidden" name="productosNew[]" value="${id}"></td>
         <td>
-            <input type="text" name="cantidades[]" class="form-control text-center cantidad" value="1"  min="0" step="0.01" required></td>
-
-      
+            <input type="text" name="cantidades[]" class="form-control text-center cantidad" value="1" onchange="cambiarCantidad(this)"  min="0" step="0.01" required>
+            <input type="hidden" class="stock-hidden" value="${stock}"></td>      
         <td>
-
-
             <button type="button" class="btn btn-danger btn-sm" onclick="quitarProducto(${id}, this)">
                 <i class="fa fa-times"></i>
             </button>
@@ -275,6 +370,7 @@ function agregarProductoAOrden(id, nombre, costo) {
     // actualizarTotalGeneral();
     // calcular subtotal inicial
     //formatNumber()
+    cambiarCantidad()
 }
 
 
@@ -371,7 +467,6 @@ function actualizarSubtotal(input) {
     // actualizarTotalGeneral();
     
 }
-
 
 
 
@@ -509,3 +604,31 @@ document.addEventListener('DOMContentLoaded', function () {
         select.innerHTML = '<option value="">Error al cargar</option>';
     })
 });
+
+
+
+
+function cambiarCantidad(input) {
+    const fila = input.closest('tr'); // Encuentra la fila donde está el input
+    const stockInput = fila.querySelector('.stock-hidden'); // Encuentra el input hidden con el stock
+    const stock = parseFloat(stockInput.value); // Stock disponible
+    const cantidad = parseFloat(input.value); // Cantidad digitada
+
+    if (cantidad > stock) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Cantidad excedida',
+            text: `La cantidad ingresada (${cantidad}) excede el stock disponible (${stock}).`,
+            confirmButtonText: 'Aceptar'
+        }).then(() => {
+            // Opciones:
+            // 1. Eliminar la fila:
+            // fila.remove();
+
+            // 2. O simplemente volver a poner 1 como valor válido:
+            input.value = 1;
+        });
+    }
+}
+
+
