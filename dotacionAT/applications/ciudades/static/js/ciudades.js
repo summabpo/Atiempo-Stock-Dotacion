@@ -1,5 +1,5 @@
 (function () {
-    console.log("Hola");
+    console.log("Hola Ciudades");
 
     let dataTable;
     let dataTableIsInitialized = false;
@@ -12,9 +12,9 @@
         ],
         pageLength: 10,
         destroy: true,
-        dom: 'Bfrtip',
+        dom: 'Blfrtip',
         buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+            'excel', 'pdf', 'colvis'
         ],
 
         // ✅ Traducción al español
@@ -39,7 +39,6 @@
                 sortDescending: ": Activar para ordenar de forma descendente"
             },
             buttons: {
-                copy: "Copiar",
                 colvis: "Visibilidad"
             }
         }

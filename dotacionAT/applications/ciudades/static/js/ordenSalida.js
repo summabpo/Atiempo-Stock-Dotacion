@@ -11,7 +11,6 @@ function formatearFecha(fechaISO) {
     });
 }
 
-
 console.log("Hola orden salida");
 
 function getCSRFToken() {
@@ -31,9 +30,9 @@ const dataTableOptions = {
     ],
     pageLength: 10,
     destroy: true,
-    dom: 'Bfrtip',
+    dom: 'Blfrtip',
     buttons: [
-        'copy', 'excel', 'pdf', 'print', 'colvis'
+        'excel', 'pdf', 'colvis'
     ],
 
     language: {
@@ -57,7 +56,7 @@ const dataTableOptions = {
             sortDescending: ": Activar para ordenar de forma descendente"
         },
         buttons: {
-            copy: "Copiar",
+           // copy: "Copiar",
             colvis: "Visibilidad columnas"
         }
     },
@@ -80,7 +79,6 @@ const initDataTable = async () => {
         dataTableIsInitialized = true;
     }
 }
-
 
 const OrdenSalida = async () => {
     console.log("Cargando salidas...");
@@ -122,10 +120,9 @@ const OrdenSalida = async () => {
             //     idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
 
             // }
-        
-
             
             let botonCancelar = '';
+             let estado = '';
             if (item.tipo_documento == 'OC' && item.estado == 'generada') {
                 botonCancelar = `
                     <button title="Cancelar Orden compra" class="btn btn-sm btn-danger" onclick="confirmarCambioEstado('${item.url_cancelar}')">
@@ -133,16 +130,22 @@ const OrdenSalida = async () => {
                     </button>
                 `;
             }
+
+             if (item.cliente == 'Atiempo SAS' ) {
+                estado = `Traslado a Bodega - ${item.bodegaSalida}`;
+            }else{
+                estado ='';
+            }
         
             content += `
                 <tr class="text-center">
                     <td>${item.id}</td>
                     <td style="text-transform: uppercase;">${item.cliente}</td>
-                    <td style="text-transform: uppercase;">${item.tipo_documento}</td>
+                    <td style="text-transform: uppercase;">${estado}</td>
                     <td>${formatearFecha(item.fecha)}</td>
                     <td>
                         <a href="${item.url_editar}">
-                            <button title="Ver Detalle O C" class="btn btn-sm btn-warning">
+                            <button title="Ver Detalle Salida" class="btn btn-sm btn-warning">
                                 <i class='fa-solid fa-pencil'></i>
                             </button>
                         </a>
@@ -162,7 +165,6 @@ const OrdenSalida = async () => {
 
     $(".total").number(true, 2);
 };
-
 
 
 window.addEventListener("load", async () => {

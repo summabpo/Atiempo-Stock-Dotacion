@@ -36,8 +36,8 @@ def list_orden_salida(request):
             'cliente': salida.cliente.nombre,
             'fecha': salida.fecha_creacion,
             'tipo_documento': salida.tipo_documento,
-            # 'total': salida.total,
-            'url_editar': '',
+            'bodegaSalida': salida.bodegaSalida.nombre,
+            'url_editar': f'/detalle_salida/{salida.id}/',
             # 'url_editar': f'/detalle_salida/{salida.id}/',
         })
 
@@ -139,3 +139,11 @@ def crear_salida(request):
 
     productos = Producto.objects.all()
     return render(request, 'crear_salida.html', {'productos': productos})
+
+def detalle_salida(request, id):
+    detalle_salida = get_object_or_404(Salida, id=id) 
+    items = detalle_salida.items.all()
+    return render(request, 'ver_salida.html', {
+        'detalle_salida': detalle_salida,
+        'items': items,
+    })

@@ -1,4 +1,6 @@
-console.log("Hola");
+(function () {
+
+console.log("Hola categoria");
 
 var dataTable;
 var dataTableIsInitialized = false;
@@ -11,9 +13,9 @@ const dataTableOptionsCategoria = {
     ],
     pageLength: 10,
     destroy: true,
-    dom: 'Bfrtip',
+    dom: 'Blfrtip',
     buttons: [
-        'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+        'excel', 'pdf', 'colvis'
     ],
     
     // ✅ Traducción al español
@@ -38,13 +40,16 @@ const dataTableOptionsCategoria = {
             sortDescending: ": Activar para ordenar de forma descendente"
         },
         buttons: {
-            copy: "Copiar",
-            colvis: "Visibilidad"
+            copy: "Copiar"
+            
         }
     }
 };
 
 const initDataTable = async () => {
+
+
+
     if (dataTableIsInitialized) {
         dataTable.destroy();
     }
@@ -63,14 +68,14 @@ const categorias = async () => {
     try {
         const response = await fetch('/list_categorias/');
         const data = await response.json();
-        console.log(data.categorias);
+       
         
         // Verificamos que el tbody exista antes de modificarlo
         const tableBody = document.getElementById('tableBody_categoria');
         if (tableBody) {
             let content = ``;
             data.categorias.forEach((categoria, index) => {
-console.log(categoria.url_editar);
+
 
                 const activo = categoria.activo === "True" || categoria.activo === true;
                 content += `
@@ -98,7 +103,8 @@ console.log(categoria.url_editar);
     }
 }
 
-// window.addEventListener("load", async () => {
-//     await initDataTable();
-//     console.log("Página cargada");
-// });
+window.addEventListener("load", async () => {
+    await initDataTable();
+    console.log("Página cargada");
+});
+})();

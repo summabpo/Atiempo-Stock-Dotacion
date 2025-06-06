@@ -12,8 +12,8 @@
         ],
         pageLength: 10,
         destroy: true,
-        dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
+        dom: 'Blfrtip',
+        buttons: ['excel', 'pdf', 'colvis'],
         language: {
             processing: "Procesando...",
             lengthMenu: "Mostrar _MENU_ registros",
@@ -35,7 +35,6 @@
                 sortDescending: ": Activar para ordenar de forma descendente"
             },
             buttons: {
-                copy: "Copiar",
                 colvis: "Visibilidad"
             }
         }

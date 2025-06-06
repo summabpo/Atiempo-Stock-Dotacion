@@ -12,9 +12,9 @@ const dataTableOptions = {
     ],
     pageLength: 10,
     destroy: true,
-    dom: 'Bfrtip',
+    dom: 'Blfrtip',
     buttons: [
-        'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+        'excel', 'pdf', 'colvis'
     ],
     
     // ✅ Traducción al español
@@ -39,7 +39,6 @@ const dataTableOptions = {
             sortDescending: ": Activar para ordenar de forma descendente"
         },
         buttons: {
-            copy: "Copiar",
             colvis: "Visibilidad"
         }
     }
@@ -53,9 +52,9 @@ const initDataTable = async () => {
     await clientes();
 
     // Verificamos si la tabla existe antes de inicializar DataTable
-    const table = document.getElementById('datatableCliente');
+    const table = document.getElementById('datatableClienteAll');
     if (table) {
-        dataTable = $('#datatableCliente').DataTable(dataTableOptions);
+        dataTable = $('#datatableClienteAll').DataTable(dataTableOptions);
         dataTableIsInitialized = true;
     }
 }

@@ -32,9 +32,9 @@ const dataTableOptions = {
     ],
     pageLength: 10,
     destroy: true,
-    dom: 'Bfrtip',
+    dom: 'Blfrtip',
     buttons: [
-        'copy', 'excel', 'pdf', 'print', 'colvis'
+        'excel', 'pdf', 'colvis'
     ],
 
     language: {
@@ -58,7 +58,7 @@ const dataTableOptions = {
             sortDescending: ": Activar para ordenar de forma descendente"
         },
         buttons: {
-            copy: "Copiar",
+            // copy: "Copiar",
             colvis: "Visibilidad columnas"
         }
     },

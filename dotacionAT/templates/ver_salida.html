@@ -1,0 +1,562 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% load humanize %}
+
+{% block content %}
+
+<div class="content-wrapper">
+
+    <form method="post" id="formCompra" >
+    {% csrf_token %}
+
+    <section class="content-header">
+        <div class="card bg-light mb-3">
+            <div class="card-header">
+                <!-- <h3 class="mb-0">Orden de Compra #{{ orden.id }}</h3> -->
+            </div>
+            <div class="card-body text-dark">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label>Fecha Salida:</label>
+                        <input class="form-control" type="text" value="{{ detalle_salida.fecha_creacion }}" readonly>
+                    </div>
+                  
+                    <div class="col-md-6 mb-2">
+                        <label>Cliente:</label>
+                      <input class="form-control" type="text" value="{{ detalle_salida.cliente.nombre }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Ciudad Cliente:</label>
+                      <input class="form-control" type="text" value="{{ detalle_salida.cliente.ciudad }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Estado:</label>
+                     {% if detalle_salida.cliente.nombre == 'Atiempo SAS' %}
+                            <input class="form-control" type="text" value="Traslado {{ detalle_salida.bodegaEntrada.nombre }}" readonly >
+                            {% else %}
+                            <input type="text" class="form-control" name="numFActura" value="Salida"  placeholder="" required>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label>ID Salida:</label>
+<input class="form-control" type="text" value="{{ detalle_salida.id }}" readonly>
+                        <!-- {% if orden.get_estado_display != 'generada' and compra %}
+                            <input class="form-control" type="text" value="{{ compra.numero_factura }}" readonly >
+                            {% else %}
+                            <input type="text" class="form-control" name="numFActura" value=""  placeholder="Ingrese numero de Factura" required>
+                        {% endif %} -->
+                        
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="selectBodega">Bodega Salida:</label>
+<input class="form-control" type="text" value="{{ detalle_salida.bodegaSalida.nombre }}" readonly>
+                        <!-- {% if orden.get_estado_display != 'generada' and compra %}
+                        <input type="text" class="form-control"  value="{{ compra.bodega }}" required readonly>
+                        {% else %}
+                        <select id="selectBodega" id="selectBodega" name="bodega_id" class="form-control" required>
+                            <option value="">Cargando bodegas...</option>
+                        </select>
+                    {% endif %} -->
+                       
+
+                        
+                    </div>
+                    
+                    <div class="col-md-12">
+                        <label>Observaciones:</label>
+                       <input type="text" class="form-control" value="{{ detalle_salida.observaciones }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h3>Productos en la Orden</h3>
+
+        
+            <table class="table table-bordered" style="color: black;" id="tablaProductos">
+                <thead class="thead-dark">
+                    <tr style="text-align: center;">
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                <th>Subtotal</th>
+                <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% for item in items %}
+                    <!-- <p>Producto: {{ item.producto.nombre }}</p>
+    <p>Cantidad: {{ item.cantidad }}</p>
+    <p>Precio: {{ item.precio_unitario }}</p> -->
+    
+                    <tr>
+                        <td>
+                            {{ item.producto.nombre }}
+                            <input type="hidden" name="productos[]" value="{{ item.producto.id_producto }}">
+                        </td>
+                        <td>
+                            <input type="number" name="cantidades[]" class="form-control text-center cantidad" value="{{ item.cantidad }}" min="1" onchange="actualizarSubtotal(this)">
+                        </td>
+                        <td>
+                            <input type="text" name="precios[]"  class="form-control text-right precio" value="{{ item.precio_unitario|floatformat|intcomma }}"  onchange="actualizarSubtotal(this)">
+                            <input type="hidden" class="precio-hidden" value="{{ item.precio_unitario }}">
+                        </td>
+                        <td class="subtotal text-right">
+                            {{ item.subtotal|floatformat|intcomma }}
+                            <input type="hidden" class="subtotal-hidden" value="{{ item.subtotal }}">
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm " data-id="{{ item.producto.id }}" onclick="quitarProducto(this)">
+                                <i class="fa fa-times"></i>
+                            </button>
+                            
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <!-- <tbody style="color: black;"></tbody>
+                <tfoot style="color: black;">
+                    <tr >
+                      <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                      <td id="totalOrden"  class="text-right">COP {{ orden.total|floatformat:2|intcomma }}</td>
+                      <td></td>
+                      <input type="hidden" name="total_orden" id="inputTotalOrden">
+                    </tr>
+                  </tfoot> -->
+            </table>
+            <!-- {% if orden.get_estado_display == 'generada' %}
+            <div class="text-end mt-3">
+            
+        </div>
+            {% endif %} -->
+        </form>
+    </section>
+</div>
+
+
+{% block extra_js %}
+
+
+  {{ form.media }}
+
+<script>
+
+    
+
+// $(document).ready(function() {
+//     $('#selectBodega').select2({
+//         placeholder: 'Seleccione una bodega',
+//         allowClear: true,
+//         width: '100%'
+//     });
+// });
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('/list_bodegas/')
+    .then(response => response.json())
+    .then(data => {
+        const select = document.getElementById('selectBodega');
+        select.innerHTML = '<option value="">Seleccione una bodega</option>';
+
+        data.bodegas.forEach(bodega => {  // <-- ¡Aquí va data.bodegas!
+            const option = document.createElement('option');
+            option.value = bodega.id_bodega;
+            option.textContent = bodega.nombre + ' - ' + bodega.ciudad;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Error al cargar las bodegas:', error);
+        const select = document.getElementById('selectBodega');
+        select.innerHTML = '<option value="">Error al cargar</option>';
+    })
+});
+
+
+    console.log("Hola Comprar Ver salida");
+
+
+
+
+
+// $(document).ready(function () {
+
+//     $('.precio').number(true, 0);
+    
+//     // Escuchar cambios en cualquier input.precio dentro del formulario
+//     $('#tablaProductos').on('change', 'input.precio', function () {
+//         const $inputPrecio = $(this);  // El input visible
+//         const $row = $inputPrecio.closest('tr');
+//         console.log($inputPrecio);
+
+//         console.log($row);
+
+//         // Obtener el valor limpio
+//         const valorLimpio = parsePrecioColombiano($inputPrecio.val());
+
+//         // Actualizar el input hidden
+//         $row.find('input.precio-hidden').val(valorLimpio);
+
+//         $('.precio').number(true, 0);
+
+//         // Recalcular subtotal
+//         actualizarSubtotal(this); // Reutilizas tu función pasando el input como referencia
+//     });
+
+
+    // $('#tablaProductos').on('change', 'input.cantidad', function () {
+    //     const $inputPrecio = $(this);  // El input visible
+    //     const $row = $inputPrecio.closest('tr');
+    //     console.log($inputPrecio);
+    //     console.log($row);
+
+    //     // Obtener el valor limpio
+    //     const valorLimpio = parsePrecioColombiano($inputPrecio.val());
+
+    //     // Actualizar el input hidden
+    //     $row.find('input.cantidad').val(valorLimpio);
+
+       
+
+    //     // Recalcular subtotal
+    //     actualizarSubtotal(this); // Reutilizas tu función pasando el input como referencia
+    // });
+
+
+
+
+
+// });
+
+
+// function parsePrecioColombiano(valorRaw) {
+//     const soloNumeros = valorRaw.replace(/[^0-9.,]/g, '');  // limpia símbolos
+//     const tieneComaDecimal = soloNumeros.includes(',');
+//     const tienePuntoDecimal = soloNumeros.includes('.');
+
+//     // Caso 1: Formato colombiano: 12.500,00
+//     if (tieneComaDecimal && tienePuntoDecimal && soloNumeros.indexOf(',') > soloNumeros.indexOf('.')) {
+//         return parseFloat(soloNumeros.replace(/\./g, '').replace(',', '.'));
+//     }
+
+//     // Caso 2: Formato americano: 12,500.00
+//     if (tieneComaDecimal && tienePuntoDecimal && soloNumeros.indexOf('.') > soloNumeros.indexOf(',')) {
+//         return parseFloat(soloNumeros.replace(/,/g, ''));
+//     }
+
+//     // Caso 3: Solo coma (12,50) → 12.50
+//     if (!tienePuntoDecimal && tieneComaDecimal) {
+//         return parseFloat(soloNumeros.replace(',', '.'));
+//     }
+
+//     // Caso 4: Solo punto o número limpio
+//     return parseFloat(soloNumeros);
+//     console.log(soloNumeros);
+    
+// }
+
+
+
+
+// Esta función se ejecutará cuando cambien los valores de cantidad o precio
+// function actualizarSubtotal(input) {
+//     const row = input.closest('tr');
+
+//     const cantidad = parseFloat(row.querySelector('input[name="cantidades[]"]').value) || 0;
+//     const precioVisible = row.querySelector('input.precio');
+//     const hiddenSubtotal = row.querySelector('input.subtotal-hidden');
+//     const precioHiddenInput = row.querySelector('input.precio-hidden').value;
+
+    // console.log(precioHiddenInput);
+
+    // console.log(hiddenSubtotal);
+      
+
+    // Convertimos el valor visible a número real
+    //const precioLimpio = parsePrecioColombiano(precioHiddenInput);
+
+    // Actualizamos el hidden con ese valor
+    //precioHiddenInput.value = precioLimpio;
+
+    // Calcular el subtotal
+    //const subtotal = cantidad * precioLimpio;
+
+    // Actualizar la celda subtotal formateada
+    // const subtotalTd = row.querySelector('.subtotal');
+    // subtotalTd.childNodes[0].textContent = subtotal.toLocaleString('es-CO', {
+        // style: 'currency',
+        // currency: 'COP',
+    //     minimumFractionDigits: 0
+    // });
+
+  
+    // hiddenSubtotal.value = subtotal;
+   
+
+    // hiddenSubtotal.childNodes[0].textContent = subtotal.toLocaleString('es-CO', {
+    //     // style: 'currency',
+    //     // currency: 'COP',
+    //     minimumFractionDigits: 2
+    // });
+
+   
+    // Guardar el subtotal sin formato en el hidden
+    //const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
+    // subtotalHiddenInput.value = subtotal;
+
+    //     const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
+    // if (subtotalHiddenInput) {
+    //     subtotalHiddenInput.value = subtotal;
+    // }
+
+//     actualizarTotalGeneral()
+
+
+// }
+
+
+// function actualizarSubtotal(input) {
+//     const row = input.closest('tr');
+
+//     const cantidad = parseFloat(row.querySelector('input[name="cantidades[]"]').value) || 0;
+//     const precioHiddenInput = row.querySelector('input.precio-hidden');
+//     const precioVisible = row.querySelector('input.precio');
+//     const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
+
+//     const precioLimpio = parsePrecioColombiano(precioHiddenInput.value);
+
+//     // Calcular el subtotal
+//     const subtotal = cantidad * precioLimpio;
+
+//     // Actualizar la celda visible del subtotal
+//     const subtotalTd = row.querySelector('.subtotal');
+//     subtotalTd.textContent = subtotal.toLocaleString('es-CO', {
+//         style: 'currency',
+//         currency: 'COP',
+//         minimumFractionDigits: 2
+//     });
+
+//     // Actualizar el input hidden con el valor sin formato
+//     if (subtotalHiddenInput) {
+//         subtotalHiddenInput.value = subtotal;
+//     }
+
+//     actualizarTotalGeneral();
+// }
+
+
+// precioTextInput.addEventListener('change', function () {
+//     const nuevoValor = parsePrecioColombiano(this.value);
+//     row.querySelector('input.precio-hidden').value = nuevoValor;
+// });
+
+
+
+
+// function quitarProducto(button) {
+    
+//     console.log("Hola");
+        
+
+    // Obtener el ID del producto desde el atributo data-id del botón
+    //const id = button.getAttribute('data-id');
+    
+    // Encuentra la fila más cercana al botón (la fila de la tabla)
+    //const row = button.closest('tr');
+    
+    // Si la fila existe, la eliminamos
+    // if (row) {
+    //     row.remove();
+    // }
+
+    //actualizarTotalGeneral();
+    // Opcional: Si necesitas hacer algo con el ID, lo puedes usar aquí
+//     console.log('Producto con ID', id, 'eliminado');
+    
+// }
+
+ 
+
+
+
+    // Función para formatear el número con comas y decimales
+// function formatearNumero(input) {
+//     console.log("hola");
+    
+//     // Obtener el valor del input y formatearlo con decimales y comas
+//     let value = input.value.replace(/[^0-9.]/g, ''); // Quitar caracteres no numéricos
+//     let formattedValue = parseFloat(value).toFixed(2); // Formatear el valor a dos decimales
+
+//     // Establecer el valor formateado en el input
+//     input.value = formattedValue;
+
+//     // Llamar a la función para actualizar el subtotal después de formatear el precio
+//     actualizarSubtotal(input);
+// }
+
+
+    // function formatearNumero(input) {
+    //     let value = input.value;
+
+    //     // Eliminar todos los caracteres no numéricos, excepto el punto decimal
+    //     value = value.replace(/[^0-9.]/g, '');
+
+    //     // Si tiene más de un punto decimal, eliminar los demás
+    //     const parts = value.split('.');
+    //     if (parts.length > 2) {
+    //         value = parts[0] + '.' + parts.slice(1).join('');
+    //     }
+
+    //     // Formatear el número con dos decimales
+    //     let formattedValue = parseFloat(value).toFixed(2);
+
+    //     // Usar el formato con comas como separadores de miles
+    //     formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    //     // Asignar el valor formateado de nuevo al input
+    //     input.value = formattedValue;
+    // }
+
+
+    //   Calcular total al cargar
+    // document.addEventListener("DOMContentLoaded", () => {
+    //     document.querySelectorAll('input[name="precios[]"]').forEach(input => {
+    //         actualizarSubtotal(input);
+    // });
+
+  
+
+
+    //     document.querySelectorAll('.precio').forEach(input => {
+    //         formatearNumero(input); // Formatear cada valor de precio
+    //     });
+    // });
+
+
+    // function confirmarCompra(button) {
+    // const ordenId = button.getAttribute('data-orden-id');
+    // console.log(ordenId);
+
+    // const fecha = document.querySelector("[name='fechaCompra']");
+    // const factura = document.querySelector("[name='numFActura']");
+    // const bodega = document.querySelector("[name='bodega_id']");
+
+    // let camposFaltantes = [];
+
+    // if (fecha && !fecha.value) {
+    //     camposFaltantes.push("Fecha de compra");
+    // }
+
+    // if (factura && !factura.value.trim()) {
+    //     camposFaltantes.push("Número de factura");
+    // }
+
+    // if (bodega && !bodega.value) {
+    //     camposFaltantes.push("Bodega");
+    // }
+
+    // if (camposFaltantes.length > 0) {
+    //     e.preventDefault();  // Detener el envío del formulario
+    //     alert("Debe completar los campos: " + camposFaltantes.join(", "));
+    // }
+
+
+
+    
+    // if (confirm("¿Estás seguro de que deseas confirmar esta compra? Esto afectará el inventario.")) {
+    //     window.location.href = `comprar_orden/${ordenId}/`;
+    // }
+
+
+
+    // }
+
+//     function confirmarCompra(button) {
+//     const ordenId = button.getAttribute('data-orden-id');
+    
+//     const fecha = document.querySelector("[name='fechaCompra']");
+//     const factura = document.querySelector("[name='numFActura']");
+//     const bodega = document.querySelector("[name='bodega_id']");
+
+//     let camposFaltantes = [];
+
+//     if (fecha && !fecha.value) {
+//         camposFaltantes.push("Fecha de compra");
+//     }
+
+//     if (factura && !factura.value.trim()) {
+//         camposFaltantes.push("Número de factura");
+//     }
+
+//     if (bodega && !bodega.value) {
+//         camposFaltantes.push("Bodega");
+//     }
+
+//     // 🛑 Si hay campos faltantes, mostrar alerta y salir
+//     if (camposFaltantes.length > 0) {
+//         alert("Debe completar los campos: " + camposFaltantes.join(", "));
+//         return; // Evita seguir con el proceso
+//     }
+
+//     // ✅ Si todo está completo, pedir confirmación
+//     if (confirm("¿Estás seguro de que deseas confirmar esta compra? Esto afectará el inventario.")) {
+//         // En lugar de redirigir con window.location.href (que usa GET y rompe tu lógica),
+//         // simplemente envía el formulario de forma normal
+//         const form = button.closest("form");
+//         if (form) {
+//             form.submit();
+//         }
+//     }
+// }
+
+
+
+
+
+// function actualizarTotalGeneral() {
+
+//     let total = 0;
+
+//     // Recorre todos los inputs ocultos con el subtotal real
+//     document.querySelectorAll('input.subtotal-hidden').forEach(input => {
+//         const valor = parseFloat(input.value) || 0;
+//         total += valor;
+//     });
+
+//     // Formatear el total como moneda colombiana
+//     const totalFormateado = total.toLocaleString('es-CO', {
+//         style: 'currency',
+//         currency: 'COP',
+//         minimumFractionDigits: 0
+//     });
+
+//     // Actualizar el contenido visible
+//     const totalTd = document.getElementById('totalOrden');
+//     if (totalTd) {
+//         totalTd.textContent = totalFormateado;
+//     }
+
+//     // Actualizar el input oculto para enviar al backend
+//     const inputTotal = document.getElementById('inputTotalOrden');
+//     if (inputTotal) {
+//         inputTotal.value = total.toFixed(2);  // Sin formato
+//     }
+
+//     console.log('Total actualizado:', total);
+// }
+
+
+
+
+
+</script>
+{% endblock %}
+
+{% endblock %}
+
+

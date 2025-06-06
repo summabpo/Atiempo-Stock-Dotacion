@@ -13,9 +13,9 @@ const dataTableOptions = {
     ],
     pageLength: 10,
     destroy: true,
-    dom: 'Bfrtip',
+    dom: 'Blfrtip',
     buttons: [
-        'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+        'excel', 'pdf', 'colvis'
     ],
     
     // ✅ Traducción al español
@@ -40,8 +40,7 @@ const dataTableOptions = {
             sortDescending: ": Activar para ordenar de forma descendente"
         },
         buttons: {
-            copy: "Copiar",
-            colvis: "Visibilidad"
+           colvis: "Visibilidad"
         }
     }
 };

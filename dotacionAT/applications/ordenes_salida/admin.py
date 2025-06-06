@@ -20,7 +20,7 @@ class SalidaAdmin(admin.ModelAdmin):
     ordering = ['-fecha_creacion']
     fieldsets = (
         ('Información General', {
-            'fields': ('tipo_documento',  'cliente', 'bodega', 'estado')
+            'fields': ('tipo_documento',  'cliente', 'bodegaSalida', 'bodegaEntrada', 'estado')
         }),
         ('Detalle Financiero', {
             'fields': ('total', 'observaciones')
@@ -30,7 +30,7 @@ class SalidaAdmin(admin.ModelAdmin):
 
 @admin.register(ItemSalida)
 class ItemSalidaAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'salida', 'cantidad', 'precio_unitario', 'subtotal_formateado', 'tipo_documento']
+    list_display = ['producto', 'cantidad', 'precio_unitario', 'bodega_salida', 'bodega_entrada', 'subtotal_formateado', 'tipo_documento']
     # list_filter = ['salida__tipo_documento']
     search_fields = ['producto__nombre']
     readonly_fields = ['subtotal_formateado']
@@ -38,3 +38,11 @@ class ItemSalidaAdmin(admin.ModelAdmin):
     def tipo_documento(self, obj):
         return obj.salida.get_tipo_documento_display()
     tipo_documento.short_description = 'Tipo de Documento'
+    
+    def bodega_salida(self, obj):
+        return obj.salida.bodegaSalida
+    bodega_salida.short_description = 'Bodega Salida'
+
+    def bodega_entrada(self, obj):
+        return obj.salida.bodegaEntrada
+    bodega_entrada.short_description = 'Bodega Entrada'
