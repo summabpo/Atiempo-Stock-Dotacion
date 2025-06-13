@@ -6,15 +6,18 @@ class detalleOrdenInline(admin.TabularInline):
 
 @admin.register(OrdenCompra)
 class OrdenCompraAdmin(admin.ModelAdmin):
-    list_display = ('id', 'proveedor', 'estado', 'tipo_documento', 'total', 'fecha_creacion')
+    list_display = ('id', 'proveedor', 'estado', 'tipo_documento', 'total', 'usuario_creador', 'fecha_creacion')
     list_filter = ('estado', 'fecha_creacion')
     search_fields = ('proveedor__nombre',)
     inlines = [detalleOrdenInline]
 
 @admin.register(ItemOrdenCompra)
 class ItemOrdenCompraAdmin(admin.ModelAdmin):
-    list_display = ('orden', 'producto', 'cantidad', 'tipo_documento', 'precio_unitario')
-    
+    list_display = ('orden', 'producto', 'cantidad', 'tipo_documento', 'precio_unitario', 'usuario_orden')
+
+    def usuario_orden(self, obj):
+        return obj.orden.usuario_creador  # 👈 accede al usuario de la orden
+    usuario_orden.short_description = 'Usuario Creador'
     
 class ItemCompraInline(admin.TabularInline):
     model = ItemCompra
@@ -23,7 +26,7 @@ class ItemCompraInline(admin.TabularInline):
 
 @admin.register(Compra)
 class CompraAdmin(admin.ModelAdmin):
-    list_display = ('id', 'orden_compra', 'tipo_documento', 'proveedor', 'total', 'bodega', 'estado', 'numero_factura', 'fecha_creacion', 'fecha_compra', 'observaciones')
+    list_display = ('id', 'orden_compra', 'tipo_documento', 'proveedor', 'total', 'bodega', 'estado', 'numero_factura', 'fecha_creacion', 'fecha_compra', 'usuario_creador', 'observaciones')
     search_fields = ('orden_compra__id', 'orden_compra__proveedor__nombre', 'numero_factura')
     inlines = [ItemCompraInline]
     readonly_fields = ('fecha_creacion',)
@@ -50,6 +53,7 @@ class ItemCompraAdmin(admin.ModelAdmin):
     def fecha_compra(self, obj):
         return obj.compra.fecha_compra
     fecha_compra.short_description = 'Fecha de Compra'
+    
     
     @admin.display(description='ID Producto')
     def producto_id_display(self, obj):

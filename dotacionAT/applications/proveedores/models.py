@@ -6,13 +6,14 @@ from applications.ciudades.models import Ciudad # Suponiendo que tienes un model
 class Proveedor(models.Model):
     id_proveedor = models.AutoField(primary_key=True)  
     nombre = models.CharField(max_length=255)
-    ciudad = models.ForeignKey(Ciudad, on_delete=models.CASCADE)  # Relación con Ciudad
+    ciudad = models.ForeignKey(Ciudad, on_delete=models.CASCADE)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(max_length=255, blank=True, null=True)
     direccion = models.CharField(max_length=255, blank=True, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
-    usuario_creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True) # Relación con User
+    usuario_creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    usuario_editor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='proveedores_editados')  # <- NUEVO
     activo = models.BooleanField(default=True, verbose_name="Activo/Inactivo")
 
     def __str__(self):

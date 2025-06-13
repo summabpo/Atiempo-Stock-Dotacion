@@ -6,7 +6,7 @@ from .models import Cliente
 @admin.register(Cliente)
 class ClienteAdmin(admin.ModelAdmin):
     # Especifica los campos que aparecerán en la lista de clientes
-    list_display = ('id_cliente', 'nombre', 'telefono', 'email', 'fecha_creacion', 'fecha_actualizacion', 'usuario_creador', 'ciudad')
+    list_display = ('id_cliente', 'nombre', 'telefono', 'email', 'fecha_creacion', 'fecha_actualizacion', 'usuario_creador', 'usuario_editor', 'ciudad')
 
     # Especifica los campos por los cuales se puede buscar
     search_fields = ('nombre', 'direccion', 'ciudad__nombre', 'telefono', 'email')  # Ahora puedes buscar por el nombre de la ciudad también

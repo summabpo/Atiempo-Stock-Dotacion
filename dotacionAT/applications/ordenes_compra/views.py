@@ -11,6 +11,7 @@ from django.contrib import messages
 from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, IntegrityError
+from django.contrib.auth.decorators import login_required
 
 import json
 
@@ -21,6 +22,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
+@login_required(login_url='login_usuario')
 def mi_vista(request):
     inicio = time.time()
     
@@ -80,7 +82,7 @@ def mi_vista(request):
 
 #     return JsonResponse(data)
 
-
+@login_required(login_url='login_usuario')
 def list_orden_y_compra(request):
     ordenes = OrdenCompra.objects.select_related('proveedor')
     compras = Compra.objects.select_related('orden_compra__proveedor')
@@ -117,7 +119,7 @@ def list_orden_y_compra(request):
 
     return JsonResponse({'ordenes_compras': data})
 
-
+@login_required(login_url='login_usuario')
 def ordenes_compra(request):
     ordenes_compra = OrdenCompra.objects.all()
     return render (request, 'ordenesCompra.html', {
@@ -273,7 +275,8 @@ def crear_orden_compra(request):
         orden = OrdenCompra.objects.create(
             proveedor=proveedor,
             observaciones=observaciones,
-            total=total_orden_decimal
+            total=total_orden_decimal,
+            usuario_creador=request.user
         )
 
         # Ahora crea los ítems de la orden con los productos válidos
@@ -297,6 +300,7 @@ def crear_orden_compra(request):
 #         'comprar_orden': comprar_orden
 #     })
 
+@login_required(login_url='login_usuario')
 def comprar_orden_vista(request, orden_id):
     orden = get_object_or_404(OrdenCompra, id=orden_id)
 
@@ -318,7 +322,8 @@ def comprar_orden_vista(request, orden_id):
         'items': items,
     })
     
-    
+   
+@login_required(login_url='login_usuario')    
 def detalle_comprar(request, id):
     detalle_comprar = get_object_or_404(Compra, id=id) 
     items = detalle_comprar.items.all()
@@ -534,7 +539,8 @@ def comprar_orden(request, id):
             fecha_compra = fecha_compra,
             proveedor=proveedor,
             bodega_id=bodega if bodega else None,
-            numero_factura=numero_factura
+            numero_factura=numero_factura,
+            usuario_creador=request.user
         )
 
         # Crear los ítems de la compra

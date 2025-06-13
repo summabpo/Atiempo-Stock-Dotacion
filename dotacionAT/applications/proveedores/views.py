@@ -4,7 +4,9 @@ from .models import Proveedor
 from django.urls import reverse
 from .forms import ProveedorForm
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
+@login_required(login_url='login_usuario')
 def proveedor(request):
     #ciudades = list(Ciudad.objects.values())
     proveedor = Proveedor.objects.all()
@@ -13,7 +15,7 @@ def proveedor(request):
     })
 
 
-
+@login_required(login_url='login_usuario')
 def list_proveedores(request):
     proveedores =list(Proveedor.objects.values())
     data={'proveedores':proveedores}
@@ -40,19 +42,23 @@ def list_proveedores(_request):
     }
     return JsonResponse(data) 
     
+@login_required(login_url='login_usuario')    
 def crear_proveedor(request):
     if request.method == 'POST':
         form = ProveedorForm(request.POST)
         if form.is_valid():
-            form.save()  # Guardar el nuevo proveedor
-            messages.success(request, "Proveedor Actualizada Correctamente. ! ")
-            return redirect('proveedores')  # Redirigir después de guardar
+            proveedor = form.save(commit=False)
+            proveedor.usuario_creador = request.user  # Asignar el usuario que crea
+            proveedor.save()
+            messages.success(request, "Proveedor creado correctamente. ¡")
+            return redirect('proveedores')
     else:
         form = ProveedorForm()
 
     return render(request, 'crear_proveedor.html', {'form': form})
 
 
+@login_required(login_url='login_usuario')
 def proveedor_detalle(request, id):
     ##ciudad = Ciudad.objects.get(id_ciudad=id)
     proveedor =  get_object_or_404(Proveedor, id_proveedor=id)
@@ -63,27 +69,22 @@ def proveedor_detalle(request, id):
                   })    
     
     
-
+@login_required(login_url='login_usuario')
 def modificar_proveedor(request, id):
-    
-    proveedor =  get_object_or_404(Proveedor, id_proveedor=id)
-    # print(ciudad)
-    # return render(request, 'ciudadDetalle.html',
-    #               {
-    #                   'ciudad':ciudad
-    #               })
+    proveedor = get_object_or_404(Proveedor, id_proveedor=id)
     
     data = {
         'form': ProveedorForm(instance=proveedor)
     }
-    
-    
+
     if request.method == 'POST':
         formulario = ProveedorForm(data=request.POST, instance=proveedor)
         if formulario.is_valid():
-            formulario.save()
-            messages.success(request, "Proveedor Actualizada Correctamente. ! ")
+            proveedor = formulario.save(commit=False)
+            proveedor.usuario_editor = request.user
+            proveedor.save()
+            messages.success(request, "Proveedor Actualizado Correctamente. ! ")
             return redirect(to='proveedores')
         data['form'] = formulario
-            
-    return render(request, 'editarProveedor.html', data)  
+
+    return render(request, 'editarProveedor.html', data) 

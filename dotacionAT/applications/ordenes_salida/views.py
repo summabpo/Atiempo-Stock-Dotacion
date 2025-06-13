@@ -12,17 +12,19 @@ from django.contrib import messages
 from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, IntegrityError
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
-
+@login_required(login_url='login_usuario')
 def ordenes_salida(request):
     ordenes_salida = Salida.objects.all()
     return render (request, 'ordenesSalida.html', {
         'ordenes_salida': ordenes_salida
     })
     
-    
+   
+@login_required(login_url='login_usuario')    
 def list_orden_salida(request):
     
     salidas = Salida.objects.select_related('bodegaEntrada', 'bodegaSalida', 'cliente')
@@ -120,7 +122,8 @@ def crear_salida(request):
             cliente=cliente,  # Si es el proveedor que corresponde a 'cliente', asignalo así
             total= 0,
             bodegaSalida = bodegaSalida,
-            bodegaEntrada = bodegaEntrada
+            bodegaEntrada = bodegaEntrada,
+            usuario_creador=request.user
             #observaciones=observaciones,
             # Aquí puedes agregar cualquier otro campo necesario, como tipo_documento, bodega, etc.
         )

@@ -4,18 +4,22 @@ from .models import Bodega
 from django.urls import reverse
 from .forms import BodegaNueva
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
-
+@login_required(login_url='login_usuario')
 def hello(request):
     return HttpResponse("Hola, bienvenido a Bodegas!")
 
+
+@login_required(login_url='login_usuario')
 def bodegas(request):
     #Bodegaes = list(Bodega.objects.values())
     bodega = Bodega.objects.all()
     return render(request, 'bodegas.html', {
         'bodegas': bodega
     })
-    
+
+@login_required(login_url='login_usuario')    
 def list_bodegas(_request):
     # bodegas =list(Bodega.objects.values())
     # data={'bodegas':bodegas}
@@ -36,21 +40,27 @@ def list_bodegas(_request):
     }
     return JsonResponse(data)    
 
+
+
+@login_required(login_url='login_usuario')
 def crear_bodega(request):
     if request.method == 'POST':
-        # Crear la bodega usando el formulario
         form = BodegaNueva(request.POST)
         if form.is_valid():
-            form.save()  # Esto guarda la nueva bodega, incluyendo todos los campos, como id_Bodega
-            messages.success(request, "Bodega Actualizada Correctamente. ! ")
-            return redirect('bodegas')  # Redirige a la lista de bodegas
+            nueva_bodega = form.save(commit=False)
+            nueva_bodega.id_usuario_creador = request.user  # ← asigna el usuario que crea
+            nueva_bodega.save()
+            messages.success(request, "Bodega Creada Correctamente. ! ")
+            return redirect('bodegas')
         else:
-            print(form.errors)  # Imprime los errores del formulario en la consola para depurar
+            print(form.errors)
     else:
         form = BodegaNueva()
 
     return render(request, 'crear_bodega.html', {'form': form})
 
+
+@login_required(login_url='login_usuario')
 def bodegas(request):
     #ciudades = list(Ciudad.objects.values())
     bodegas = Bodega.objects.all()
@@ -58,6 +68,8 @@ def bodegas(request):
         'bodegas': bodegas
     })
     
+    
+@login_required(login_url='login_usuario')    
 def bodega_detalle(request, id):
     ##ciudad = Ciudad.objects.get(id_ciudad=id)
     bodega =  get_object_or_404(Bodega, id_bodega=id)
@@ -91,27 +103,21 @@ def bodega_detalle(request, id):
 
 #     return render(request, 'bodegas/crear_bodega.html', {'form': form})    
 
-
+@login_required(login_url='login_usuario')
 def modificar_bodega(request, id):
-    
-    bodega =  get_object_or_404(Bodega, id_bodega=id)
-    # print(ciudad)
-    # return render(request, 'ciudadDetalle.html',
-    #               {
-    #                   'ciudad':ciudad
-    #               })
-    
+    bodega = get_object_or_404(Bodega, id_bodega=id)
     data = {
         'form': BodegaNueva(instance=bodega)
     }
-    
 
     if request.method == 'POST':
         formulario = BodegaNueva(data=request.POST, instance=bodega)
         if formulario.is_valid():
-            formulario.save()
+            bodega_actualizada = formulario.save(commit=False)
+            bodega_actualizada.id_usuario_editor = request.user  # ← asigna el usuario que edita
+            bodega_actualizada.save()
             messages.success(request, "Bodega Actualizada Correctamente. ! ")
-            return redirect(to='bodegas')
+            return redirect('bodegas')
         data['form'] = formulario
-            
+
     return render(request, 'editarBodega.html', data)

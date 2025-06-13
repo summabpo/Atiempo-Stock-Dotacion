@@ -96,12 +96,29 @@
 
       <!-- Right navbar links -->
       <ul class="navbar-nav ml-auto">
+           <div class="d-flex align-items-center justify-content-end gap-3">
+  <!-- Info del usuario -->
+  <div class="text-end me-3">
+    <strong style="color: white;">{{ request.user.get_full_name|default:request.user.username|capfirst }}</strong><br>
+    <small class="text-muted" style="color: white">{{ request.user.rol|capfirst }}</small>
+  <br>
+  </div>
+
+  <!-- Botón de logout -->
+  <form action="{% url 'logout' %}" method="post" class="d-inline">
+    {% csrf_token %}
+    <button style="margin-left: 10px;" type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center">
+      <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
+    </button>
+  </form>
+</div>
         <!-- Notifications Dropdown Menu -->
         <li class="nav-item">
           <a class="nav-link" data-widget="fullscreen" href="#" role="button">
             <i class="fas fa-expand-arrows-alt"></i>
           </a>
         </li>
+
       </ul>
     </nav>
     <!-- /.navbar -->
@@ -257,6 +274,7 @@
                 <p>Clientes</p>
               </a>
             </li>
+
           </ul>
         </nav>
         <!-- /.sidebar-menu -->

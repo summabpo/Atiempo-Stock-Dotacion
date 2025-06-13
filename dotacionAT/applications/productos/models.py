@@ -5,18 +5,47 @@ from ..data.choices import CATEGORIAS
 from ..data.choices import unidadMedida
 from django.shortcuts import get_object_or_404
 
+# class Categoria(models.Model):
+#     id_categoria = models.AutoField(primary_key=True)
+#     nombre = models.CharField(max_length=100, unique=True)  # Nombre único de la categoría
+#     activo = models.BooleanField(default=True, verbose_name="Activo/Inactivo")
+    
+
+#     def __str__(self):
+#         return self.nombre
+
+#     class Meta:
+#         verbose_name = "Categoría"
+#         verbose_name_plural = "Categorías"
+        
+        
 class Categoria(models.Model):
     id_categoria = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=100, unique=True)  # Nombre único de la categoría
+    nombre = models.CharField(max_length=100, unique=True)
     activo = models.BooleanField(default=True, verbose_name="Activo/Inactivo")
-    
+
+    id_usuario_creador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='categorias_creadas',
+        verbose_name="Usuario Creador"
+    )
+    id_usuario_editor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='categorias_editadas',
+        verbose_name="Usuario Editor"
+    )
 
     def __str__(self):
         return self.nombre
 
     class Meta:
         verbose_name = "Categoría"
-        verbose_name_plural = "Categorías"
+        verbose_name_plural = "Categorías"        
+        
 
 class Producto(models.Model):
     id_producto = models.AutoField(primary_key=True)
@@ -44,10 +73,4 @@ class Producto(models.Model):
         # Aquí puedes ajustar la inicialización si es necesario    
         
     def save(self, *args, **kwargs):
-        if self.pk:  # Si es una actualización
-            try:
-                # Intentamos obtener el usuario con id=1, o asignamos None si no existe
-                self.usuario_edita = get_object_or_404(settings.AUTH_USER_MODEL, id=1)
-            except:
-                self.usuario_edita = None  # O puedes asignar un valor por defecto aquí si lo prefieres
         super().save(*args, **kwargs)    

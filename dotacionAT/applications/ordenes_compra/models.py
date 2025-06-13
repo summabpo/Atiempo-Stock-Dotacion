@@ -4,6 +4,7 @@ from applications.productos.models import Producto
 from applications.bodegas.models import Bodega
 from django.utils.html import format_html
 from decimal import Decimal
+from django.conf import settings
 # Create your models here.
 
 
@@ -22,6 +23,14 @@ class OrdenCompra(models.Model):
     observaciones = models.TextField(blank=True)
     
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    
+    usuario_creador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ordenes_creadas'
+    )
 
     def __str__(self):
         return str(self.id)
@@ -73,6 +82,12 @@ class Compra(models.Model):
     bodega = models.ForeignKey(Bodega, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
     numero_factura = models.CharField(max_length=50, blank=True, verbose_name="Número de Factura")
     proveedor = models.ForeignKey(Proveedor, null=True, on_delete=models.CASCADE)
+       
+    usuario_creador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True, related_name="compras_creadas")
     
 
     def __str__(self):

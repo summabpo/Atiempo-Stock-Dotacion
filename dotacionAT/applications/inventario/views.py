@@ -2,8 +2,10 @@ from django.shortcuts import render
 from .models import InventarioBodega
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
+@login_required(login_url='login_usuario')
 def inventario_bodega_list(request):
     inventario = InventarioBodega.objects.select_related('bodega', 'producto').all()
     return render(request, 'inventario.html', {
@@ -33,6 +35,7 @@ def inventario_bodega_list(request):
 
 #     return JsonResponse(data)
 
+@login_required(login_url='login_usuario')
 def inventario_bodega_json(request):
     bodega_id = request.GET.get('bodega')
     inventarios = InventarioBodega.objects.all()

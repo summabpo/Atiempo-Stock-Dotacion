@@ -16,13 +16,14 @@ from .models import Ciudad
 from .forms import CiudadNueva, CiudadActualizaForm
 # from django.http import HttpResponseNotAllowed
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
-
+@login_required(login_url='login_usuario')
 def hello(request, username):
    
     return HttpResponse("<h1>Hola Ciudades %s</h1>" %username)
 
-
+@login_required(login_url='login_usuario')
 def index(request):
     title = 'Ciudades Bodegas'
     return render(request, 'index.html', {
@@ -31,7 +32,7 @@ def index(request):
 
 #def index(request):
 #    return HttpResponse('index.html')
-
+@login_required(login_url='login_usuario')
 def list_ciudades(_request):
     # ciudades =list(Ciudad.objects.values())
     # data={'ciudades':ciudades}
@@ -49,7 +50,7 @@ def list_ciudades(_request):
     }
     return JsonResponse(data)
     
-
+@login_required(login_url='login_usuario')
 def ciudades(request):
     #ciudades = list(Ciudad.objects.values())
     ciudades = Ciudad.objects.all().order_by('id_ciudad')
@@ -57,11 +58,13 @@ def ciudades(request):
         'ciudades': ciudades
     })
 
+@login_required(login_url='login_usuario')
 def ciudad(request, id):
     #ciudad = Ciudad.objects.get(id_ciudad=id)
     ciudad = get_object_or_404(Ciudad, id_ciudad=id)
     return HttpResponse('ciudad: %s' % ciudad.nombre)
 
+@login_required(login_url='login_usuario')
 def crear_ciudad(request):
     if request.method == 'GET':
         # show interface
@@ -89,7 +92,7 @@ def crear_ciudad(request):
     
 #     return render(request, 'crear_ciudad.html', data)
     
-    
+@login_required(login_url='login_usuario')    
 def ciudad_detalle(request, id):
     ##ciudad = Ciudad.objects.get(id_ciudad=id)
     ciudad =  get_object_or_404(Ciudad, id_ciudad=id)
@@ -125,6 +128,8 @@ def ciudad_detalle(request, id):
 #         return HttpResponseNotAllowed("Ciudad no encontrada.")
 
 
+
+@login_required(login_url='login_usuario')
 def modificar_ciudad(request, id):
     
     ciudad =  get_object_or_404(Ciudad, id_ciudad=id)
@@ -142,7 +147,9 @@ def modificar_ciudad(request, id):
     if request.method == 'POST':
         formulario = CiudadActualizaForm(data=request.POST, instance=ciudad)
         if formulario.is_valid():
-            formulario.save()
+            ciudad_actualizada = formulario.save(commit=False)
+            ciudad_actualizada.id_usuario_update = request.user  # ← aquí actualizas el campo
+            ciudad_actualizada.save()
             messages.success(request, "Ciudad Actualizada Correctamente. ! ")
             return redirect(to='ciudades')
         data['form'] = formulario

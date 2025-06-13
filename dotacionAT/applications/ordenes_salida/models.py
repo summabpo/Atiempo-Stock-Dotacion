@@ -4,7 +4,7 @@ from applications.productos.models import Producto
 from applications.bodegas.models import Bodega
 from django.utils.html import format_html
 from decimal import Decimal
-
+from django.conf import settings
 
 # Create your models here.
 
@@ -26,6 +26,12 @@ class Salida(models.Model):
     bodegaSalida = models.ForeignKey(Bodega, on_delete=models.SET_NULL, null=True, blank=True, related_name='salida')
     bodegaEntrada = models.ForeignKey(Bodega, on_delete=models.SET_NULL, null=True, blank=True, related_name='entrada')
     cliente = models.ForeignKey(Cliente, null=True, on_delete=models.CASCADE)
+    
+    usuario_creador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True, related_name="salidas_creadas")
 
     def __str__(self):
         return f"{self.get_tipo_documento_display()} - {self.id}"

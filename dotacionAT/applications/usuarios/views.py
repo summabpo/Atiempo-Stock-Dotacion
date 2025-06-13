@@ -16,11 +16,11 @@ def dashboard_redirect(request):
 # Retorna el nombre de la URL según el rol del usuario
 def redirect_por_rol(user):
     if user.rol == 'admin':
-        return 'admin_dashboard'  # Asegúrate de tener esta ruta definida
+        return 'index'  # Asegúrate de tener esta ruta definida
     elif user.rol == 'gerente':
-        return 'gerente_dashboard'
+        return 'index'
     elif user.rol == 'empleado':
-        return 'empleado_dashboard'
+        return 'index'
     return 'login'  # fallback por si no tiene rol
 
 # Vista de login
@@ -37,6 +37,17 @@ def login_usuario(request):
         if user is not None:
             if user.estado == 'activo':  # Validación personalizada de tu modelo
                 login(request, user)
+
+                # 🔍 Imprimir datos del usuario en consola
+                print("=== Usuario autenticado ===")
+                print(f"ID: {user.id}")
+                print(f"Username: {user.username}")
+                print(f"Nombre completo: {user.get_full_name()}")
+                print(f"Rol: {user.rol}")
+                print(f"Estado: {user.estado}")
+                print(f"Es activo (Django): {user.is_active}")
+                print("===========================")
+
                 return redirect(redirect_por_rol(user))
             else:
                 messages.error(request, 'Usuario inactivo.')
