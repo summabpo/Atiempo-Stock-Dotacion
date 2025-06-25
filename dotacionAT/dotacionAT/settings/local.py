@@ -7,6 +7,10 @@ ALLOWED_HOSTS = []
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
+
+# App de Debug Toolbar
+INSTALLED_APPS += ['debug_toolbar']
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -36,6 +40,11 @@ DATABASES = {
 
 STATIC_URL = 'static/'
 
+# Middleware de Debug Toolbar
+MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+
+# Solo permitir IPs locales
+INTERNAL_IPS = ['127.0.0.1']
 
 # Asegúrate de que Django puede acceder a los archivos estáticos de todas las aplicaciones
 STATICFILES_DIRS = [

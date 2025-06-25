@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'django_select2',
     
     
+    
     'applications.ciudades',
     'applications.usuarios',
     'applications.bodegas',
@@ -59,7 +60,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'dotacionAT.middleware.CurrentUserMiddleware',
 ]
+
+
+
 
 ROOT_URLCONF = 'dotacionAT.urls'
 

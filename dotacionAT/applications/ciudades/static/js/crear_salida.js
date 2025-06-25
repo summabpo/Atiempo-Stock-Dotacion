@@ -1,11 +1,3 @@
-// document.querySelector('form').addEventListener('submit', function(e) {
-//     console.log("Proveedor:", document.querySelector('input[name="proveedor"]').value);
-//     console.log("Productos:", [...document.querySelectorAll('input[name="productos[]"]')].map(i => i.value));
-//     console.log("Cantidades:", [...document.querySelectorAll('input[name="cantidades[]"]')].map(i => i.value));
-//     console.log("Precios:", [...document.querySelectorAll('input[name="precios[]"]')].map(i => i.value));
-//     console.log("Total:", document.getElementById('inputTotalOrden').value);
-// });
-
 
 console.log("Hola Crear Salida");
 
@@ -90,19 +82,6 @@ const cargarProveedores = async () => {
     }
 };
 
-// function seleccionarProveedor(id, nombre) {
-//     // Setear valores ocultos
-//     document.getElementById('listaProveedor').value = id;
-
-//     // Insertar nombre visualmente en el div
-//     const divProveedor = document.querySelector('.nuevoProveedor');
-//     divProveedor.innerHTML = `
-//         <label class="col-sm-4 col-form-label">Proveedor seleccionado:</label>
-//         <div class="col-sm-8">
-//             <input type="text" class="form-control" value="${nombre}" readonly>
-//         </div>
-//     `;
-// }
 
 function seleccionarProveedor(id, nombre, ciudad, telefono) {
     // Prevenir múltiples selecciones
@@ -112,7 +91,7 @@ function seleccionarProveedor(id, nombre, ciudad, telefono) {
     const fila = document.createElement("tr");
     fila.setAttribute("data-id", id);
     fila.innerHTML = `
-        <td>${nombre}<input type="hidden" name="proveedor" value="${id}"></td>
+        <td>${nombre}<input type="hidden" id="nombre" name="proveedor" value="${id}"></td>
         <td>${ciudad}<input type="hidden" value="${ciudad}"></td>
         <td>${telefono}<input type="hidden" value="${telefono}"></td>
         <td>
@@ -179,55 +158,6 @@ const dataTableOptionsOrden = {
 
 
 
-
-// ✅ Tabla de Productos
-// const initDataTableProductos = async () => {
-//     if (productosInitialized) {
-//         dataTableProductos.destroy();
-//     }
-
-//     await cargarProductos();
-
-//     const table = document.getElementById('datatableProductosOrden');
-//     if (table) {
-//         dataTableProductos = $('#datatableProductosOrden').DataTable(dataTableOptionsOrden);
-//         productosInitialized = true;
-//     }
-// };
-
-// const cargarProductos = async () => {
-//     try {
-//         const response = await fetch('/inventario_bodega_json/');
-//         const data = await response.json();
-//         const tableBody = document.getElementById('tableBody_productosOrden');
-
-//         if (tableBody) {
-//             let content = ``;
-//             data.inventarios.forEach(producto => {
-//                 const activo = producto.activo === "True" || producto.activo === true;
-//                 content += `
-//                     <tr class="text-center">
-//                         <td>${producto.id_producto}</td>
-//                         <td>${producto.nombre}</td>
-//                         <td>
-                            
-//                                   <button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.nombre}', '0')">
-//         Agregar
-//     </button>
-//                         </td>
-//                     </tr>
-//                 `;
-//             });
-//             tableBody.innerHTML = content;
-//         }
-
-//     } catch (error) {
-//         alert("Error al obtener productos.");
-//         console.error("Error al obtener productos:", error);
-//     }
-// };
-
-
 $(document).ready(function() {
     // Cargar productos inicialmente si ya hay una bodega seleccionada
   
@@ -246,80 +176,109 @@ document.head.appendChild(style);
 
 
     // Ejecutar al cambiar el select de bodega
-$('#selectBodegaSalida').on('change', function() {
+// $('#selectBodegaSalida').on('change', function() {
         
-console.log("Hola");
+// console.log("Hola");
+
+// const salidaSelect = document.getElementById('selectBodegaSalida');
+//     const entradaSelect = document.getElementById('selectBodegaEntrada');
+//     const entradaContainer = document.getElementById('bodegaDestinoContainer');
+
+//   const salidaSeleccionada = salidaSelect.value;
+
+//   console.log(salidaSeleccionada);
+
+//         if (salidaSeleccionada) {
+//             entradaSelect.innerHTML = '<option value="">Seleccione Bodega Entrada</option>';
+
+//             const bodegasFiltradas = bodegas.filter(b => String(b.id_bodega) !== salidaSeleccionada);
+
+//             console.log(bodegasFiltradas);
+
+//             bodegasFiltradas.forEach(bodega => {
+//                 const option = document.createElement('option');
+//                 option.value = bodega.id_bodega;
+//                 option.textContent = `${bodega.nombre} - ${bodega.ciudad}`;
+//                 entradaSelect.appendChild(option);
+//             });
+
+//             entradaContainer.style.display = 'block';
+//         } else {
+//             entradaContainer.style.display = 'none';
+//             entradaSelect.innerHTML = '<option value="">Seleccione Bodega Entrada</option>';
+//         }
+   
 
 
-const cargarProductos = async () => {
-    try {
-        const filtroBodega = document.getElementById('selectBodegaSalida').value;
+// const cargarProductos = async () => {
+//     try {
+//         const filtroBodega = document.getElementById('selectBodegaSalida').value;
 
-        const response = await fetch('/inventario_bodega_json/');
-        const data = await response.json();
-        const tableBody = document.getElementById('tableBody_productosOrden');
+//         const response = await fetch('/inventario_bodega_json/');
+//         const data = await response.json();
+//         const tableBody = document.getElementById('tableBody_productosOrden');
 
-        if (tableBody) {
-            // Destruye el DataTable si ya está inicializado
-            if ($.fn.DataTable.isDataTable('#datatableProductosOrden')) {
-                $('#datatableProductosOrden').DataTable().destroy();
-            }
+//         if (tableBody) {
+//             // Destruye el DataTable si ya está inicializado
+//             if ($.fn.DataTable.isDataTable('#datatableProductosOrden')) {
+//                 $('#datatableProductosOrden').DataTable().destroy();
+//             }
 
-    let content = ``;
-const inventariosFiltrados = filtroBodega
-    ? data.inventarios.filter(p => p.bodega_id == filtroBodega)
-    : data.inventarios;
+//     let content = ``;
+// const inventariosFiltrados = filtroBodega
+//     ? data.inventarios.filter(p => p.bodega_id == filtroBodega)
+//     : data.inventarios;
 
-inventariosFiltrados.forEach(producto => {
-    let colorClass = '';
+// inventariosFiltrados.forEach(producto => {
+//     let colorClass = '';
 
-    if (producto.stock < 10) {
-        colorClass = 'bg-danger text-white fw-bold rounded px-2 py-1'; // rojo
-    } else if (producto.stock < 20) {
-        colorClass = 'bg-warning-custom'; // naranja
-    } else {
-        colorClass = 'bg-success text-white fw-bold rounded px-2 py-1'; // verde
-    }
+//     if (producto.stock < 10) {
+//         colorClass = 'bg-danger text-white fw-bold rounded px-2 py-1'; // rojo
+//     } else if (producto.stock < 20) {
+//         colorClass = 'bg-warning-custom'; // naranja
+//     } else {
+//         colorClass = 'bg-success text-white fw-bold rounded px-2 py-1'; // verde
+//     }
 
     
 
-    content += `
-        <tr class="text-center">
-            <td>${producto.id_producto}</td>
-            <td>${producto.producto}</td>
-            <td><span class="${colorClass}">${producto.stock}</span></td>
-             <td>
-                ${producto.stock > 0
-                    ? `<button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.producto}', '${producto.stock}')">
-                        Agregar
-                       </button>`
-                    : `<span class="text-muted">Sin stock</span>`
-                }
-            </td>
-        </tr>
-    `;
-});
+//     content += `
+//         <tr class="text-center">
+//             <td>${producto.id_producto}</td>
+//             <td>${producto.producto}</td>
+//             <td><span class="${colorClass}">${producto.stock}</span></td>
+//              <td>
+//                 ${producto.stock > 0
+//                     ? `<button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.producto}', '${producto.stock}')">
+//                         Agregar
+//                        </button>`
+//                     : `<span class="text-muted">Sin stock</span>`
+//                 }
+//             </td>
+//         </tr>
+//     `;
+// });
 
-            tableBody.innerHTML = content;
+//             tableBody.innerHTML = content;
 
-            // Reinicializa el DataTable
-            $('#datatableProductosOrden').DataTable({
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.5/i18n/es-ES.json'
-                }
-            });
-        }
+//             // Reinicializa el DataTable
+//             $('#datatableProductosOrden').DataTable({
+//                 language: {
+//                     url: '//cdn.datatables.net/plug-ins/1.13.5/i18n/es-ES.json'
+//                 }
+//             });
+//         }
 
-    } catch (error) {
-        alert("Error al obtener productos.");
-        console.error("Error al obtener productos:", error);
-    }
-}
+//     } catch (error) {
+//         alert("Error al obtener productos.");
+//         console.error("Error al obtener productos:", error);
+//     }
+// }
 
 
-    // 👉 Llamada a la función que definiste arriba
-    cargarProductos()
-    })
+//     // 👉 Llamada a la función que definiste arriba
+//     cargarProductos()
+//     })
 })
 
 
@@ -398,22 +357,6 @@ function quitarProducto(id, btn) {
     actualizarTotalGeneral();
 }
 
-// function actualizarSubtotal(elemento) {
-//     const fila = elemento.closest("tr");
-//     const cantidad = parseFloat(fila.querySelector('input[name="cantidades[]"]').value) || 0;
-//      console.log("Tipo:", typeof cantidad);
-//     const precio = parseFloat(fila.querySelector('input[name="precios[]"]').value) || 0;
-//     console.log("Tipo:", typeof precio);
-//     const subtotal = (cantidad * precio);
-//     fila.querySelector(".subtotal").innerText = subtotal;
-
-//     console.log(cantidad);
-//     console.log(precio);
-//     console.log(subtotal);
-    
-// }
-
-
 function parsePrecioColombiano(valorRaw) {
     const soloNumeros = valorRaw.replace(/[^0-9.,]/g, '');  // limpia símbolos
     const tieneComaDecimal = soloNumeros.includes(',');
@@ -469,8 +412,6 @@ function actualizarSubtotal(input) {
 }
 
 
-
-
 function agregarProveedorAOrden(id, nombre) {
     // Evitar duplicados
     if (productosAgregados.includes(id)) {
@@ -484,14 +425,25 @@ function agregarProveedorAOrden(id, nombre) {
     const fila = document.createElement("tr");
     fila.setAttribute("data-id", id);
 
+    if(nombre == 'Atiempo SAS' ){
+estado = 'Traslado';
+tipo_doc = 'TR';
+    }else{
+estado = 'Salida';
+tipo_doc = 'SI';
+    }
+    
+
     fila.innerHTML = `
         <td>${nombre}<input type="hidden" name="proveedor[]" value="${id}"></td>
         <td>${proveedor.id_ciudad}</td>
         <td>${proveedor.telefono}</td>
+      
         <td>
             <button type="button" class="btn btn-danger btn-sm" onclick="quitarProducto(${id}, this)">
                 <i class="fa fa-times"></i>
             </button>
+            
         </td>
     `;
 
@@ -499,6 +451,7 @@ function agregarProveedorAOrden(id, nombre) {
     tbody.appendChild(fila);
     
 }
+
 
 function actualizarTotalGeneral() {
     let total = 0;
@@ -519,26 +472,6 @@ function actualizarTotalGeneral() {
     // Actualizar el campo oculto para enviar al backend
     document.getElementById('inputTotalOrden').value = total.toFixed(2); // Valor limpio, sin formato
 }
-
-// function validarCantidad(input) {
-//     input.value = input.value.replace(/[^0-9]/g, ''); // solo números enteros positivos
-//     if (input.value === '' || parseInt(input.value) < 1) {
-//         input.value = 1;
-//     }
-// }
-
-// function validarPrecio(input) {
-//     // Elimina caracteres no permitidos excepto el punto
-//     input.value = input.value.replace(/[^0-9.]/g, '');
-
-//     // Limita a 2 decimales
-//     let valor = parseFloat(input.value);
-//     if (isNaN(valor) || valor < 0) {
-//         input.value = '00000000.00';
-//     } else {
-//         input.value = valor.toFixed(2);
-//     }
-// }
 
 document.querySelector('form').addEventListener('submit', function() {
     document.querySelectorAll('input[name="precios[]"]').forEach(input => {
@@ -562,47 +495,120 @@ $(document).ready(function() {
 });
 
 
+let bodegas = [];
 
-document.addEventListener('DOMContentLoaded', function () {
-    fetch('/list_bodegas/')
-    .then(response => response.json())
-    .then(data => {
-        const select = document.getElementById('selectBodegaSalida');
-        select.innerHTML = '<option value="">Bodega Salida</option>';
+// 🔁 Cargar bodegas desde el servidor
+async function cargarBodegas() {
+    try {
+        const response = await fetch('/list_bodegas/');
+        const data = await response.json();
+        bodegas = data.bodegas || [];
 
-        data.bodegas.forEach(bodega => {  // <-- ¡Aquí va data.bodegas!
+        const salidaSelect = document.getElementById('selectBodegaSalida');
+        salidaSelect.innerHTML = '<option value="">Seleccione Bodega Salida</option>';
+
+        bodegas.forEach(bodega => {
             const option = document.createElement('option');
             option.value = bodega.id_bodega;
-            option.textContent = bodega.nombre + ' - ' + bodega.ciudad;
-            select.appendChild(option);
+            option.textContent = `${bodega.nombre} - ${bodega.ciudad}`;
+            salidaSelect.appendChild(option);
         });
-    })
-    .catch(error => {
-        console.error('Error al cargar las bodegas:', error);
-        const select = document.getElementById('selectBodegaSalida');
-        select.innerHTML = '<option value="">Error al cargar</option>';
-    })
-});
+    } catch (error) {
+        console.error('❌ Error al cargar las bodegas:', error);
+    }
+}
 
-document.addEventListener('DOMContentLoaded', function () {
-    fetch('/list_bodegas/')
-    .then(response => response.json())
-    .then(data => {
-        const select = document.getElementById('selectBodegaEntrada');
-        select.innerHTML = '<option value="">Bodega Entrega</option>';
+// 📦 Cargar productos por bodega
+async function cargarProductos(bodegaId) {
+    try {
+        const response = await fetch('/inventario_bodega_json/');
+        const data = await response.json();
+        const tableBody = document.getElementById('tableBody_productosOrden');
 
-        data.bodegas.forEach(bodega => {  // <-- ¡Aquí va data.bodegas!
-            const option = document.createElement('option');
-            option.value = bodega.id_bodega;
-            option.textContent = bodega.nombre + ' - ' + bodega.ciudad;
-            select.appendChild(option);
+        if (!tableBody) return;
+
+        // Destruir DataTable si ya existe
+        if ($.fn.DataTable.isDataTable('#datatableProductosOrden')) {
+            $('#datatableProductosOrden').DataTable().destroy();
+        }
+
+        let content = '';
+        const inventariosFiltrados = data.inventarios.filter(p => p.bodega_id == bodegaId);
+
+        inventariosFiltrados.forEach(producto => {
+            let colorClass = '';
+            if (producto.stock < 10) {
+                colorClass = 'bg-danger text-white fw-bold rounded px-2 py-1';
+            } else if (producto.stock < 20) {
+                colorClass = 'bg-warning-custom';
+            } else {
+                colorClass = 'bg-success text-white fw-bold rounded px-2 py-1';
+            }
+
+            content += `
+                <tr class="text-center">
+                    <td>${producto.id_producto}</td>
+                    <td>${producto.producto}</td>
+                    <td><span class="${colorClass}">${producto.stock}</span></td>
+                    <td>
+                        ${producto.stock > 0
+                            ? `<button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.producto}', '${producto.stock}')">Agregar</button>`
+                            : `<span class="text-muted">Sin stock</span>`}
+                    </td>
+                </tr>
+            `;
         });
-    })
-    .catch(error => {
-        console.error('Error al cargar las bodegas:', error);
-        const select = document.getElementById('selectBodegaEntrada');
-        select.innerHTML = '<option value="">Error al cargar</option>';
-    })
+
+        tableBody.innerHTML = content;
+
+        $('#datatableProductosOrden').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.5/i18n/es-ES.json'
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error al cargar productos:', error);
+        alert('Error al obtener productos.');
+    }
+}
+
+// 🔁 Evento al cambiar la bodega de salida
+function configurarEventoBodegaSalida() {
+    $('#selectBodegaSalida').on('change', function () {
+        const salidaId = this.value;
+        const entradaSelect = document.getElementById('selectBodegaEntrada');
+        const entradaContainer = document.getElementById('bodegaDestinoContainer');
+         const nombreProveedor = document.getElementById('nombre');
+
+        if (salidaId) {
+            // Filtrar bodegas destino distintas
+            entradaSelect.innerHTML = '<option value="">Seleccione Bodega Entrada</option>';
+            const bodegasFiltradas = bodegas.filter(b => String(b.id_bodega) !== salidaId);
+
+            bodegasFiltradas.forEach(bodega => {
+                const option = document.createElement('option');
+                option.value = bodega.id_bodega;
+                option.textContent = `${bodega.nombre} - ${bodega.ciudad}`;
+                entradaSelect.appendChild(option);
+            });
+
+            // entradaContainer.style.display = 'block';
+
+            // ✅ Cargar productos disponibles en la bodega seleccionada
+            cargarProductos(salidaId);
+
+        } else {
+            // entradaContainer.style.display = 'none';
+            // entradaSelect.innerHTML = '<option value="">Seleccione Bodega Entrada</option>';
+        }
+    });
+}
+
+// 🚀 Inicializar todo al cargar la página
+document.addEventListener('DOMContentLoaded', async function () {
+    await cargarBodegas();
+    configurarEventoBodegaSalida();
 });
 
 

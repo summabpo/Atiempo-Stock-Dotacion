@@ -133,8 +133,8 @@ const OrdenSalida = async () => {
 
              if (item.cliente == 'Atiempo SAS' ) {
                 estado = `Traslado a Bodega - ${item.bodegaSalida}`;
-            }else{
-                estado ='';
+            }else if (item.cliente != 'Atiempo SAS' ){
+                estado =`Salida Cliente`;
             }
         
             content += `

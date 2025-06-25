@@ -9,14 +9,13 @@ from django.conf import settings
 # Create your models here.
 
 class Salida(models.Model):
-    TIPO_DOCUMENTO_CHOICES = [
-        ('TR', 'Traslado'),
-        ('SI', 'Salida'),
-    ]
+    # TIPO_DOCUMENTO_CHOICES = [
+    #     ('TR', 'Traslado'),
+    #     ('SI', 'Salida'),
+    # ]
 
     tipo_documento = models.CharField(
         max_length=2,
-        choices=TIPO_DOCUMENTO_CHOICES,
         verbose_name="Tipo de Documento"
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
@@ -33,9 +32,7 @@ class Salida(models.Model):
         null=True,
         blank=True, related_name="salidas_creadas")
 
-    def __str__(self):
-        return f"{self.get_tipo_documento_display()} - {self.id}"
- 
+     
 
 class ItemSalida(models.Model):
     salida = models.ForeignKey(Salida, on_delete=models.CASCADE, related_name='items')

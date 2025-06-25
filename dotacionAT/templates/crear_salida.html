@@ -123,17 +123,19 @@
     <input type="hidden" placeholder="Observacion Orden compra">
     
     <br>
-    <div class="col-lg-3">
-    <select id="selectBodegaSalida" name="bodegaSalida" id="selectBodegaSalida" class="form-control" required>
-        
-    </select>
-    </div>
-    <div  class="col-lg-3" id="bodegaDestinoContainer" style="display: none;">
+  <div class="col-lg-4">
+  <select id="selectBodegaSalida" name="bodegaSalida" class="form-control" required>
+    <option value="">Seleccione Bodega Salida</option>
+  </select>
+</div>
 
-    <select id="selectBodegaEntrada" name="bodegaEntrada" id="selectBodegaEntrada" class="form-control">
-        
-    </select>
-    </div> 
+<div class="col-lg-4" id="bodegaDestinoContainer" style="display: none;">
+  <select id="selectBodegaEntrada" name="bodegaEntrada" class="form-control">
+    <option value="">Seleccione Bodega Entrada</option>
+  </select>
+</div>
+  <input type="hidden" name="tipoDoc[]" value="" id="tipo_Doc">
+        <input type="hidden" name="estado[]" value="" id="estado">
 </div>
   
 <button type="submit" class="btn btn-success">Guardar Orden</button>        

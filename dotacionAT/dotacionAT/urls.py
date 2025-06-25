@@ -18,8 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
-# from . import views
-##from applications.ciudades import views
+#from . import views
+#from applications.ciudades import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -38,6 +38,13 @@ urlpatterns = [
     # path('export/<id>/<iva>', views.export_pdf_view, name="ExportPDF" )     
 ]
 
+from django.conf import settings
 
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] 
 
 # urlpatterns+= static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

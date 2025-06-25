@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Salida, ItemSalida
 from django.urls import reverse
@@ -54,6 +53,8 @@ def crear_salida(request):
         productos = request.POST.getlist('productosNew[]')
         cantidades = request.POST.getlist('cantidades[]')
         #precios = request.POST.getlist('precios[]')
+        # tipo_documento = request.POST.getlist('tipoDoc[]')
+        # estado = request.POST.getlist('estado[]')
         precios = 0
         bodegaSalida = request.POST.get('bodegaSalida')
         bodegaEntrada = request.POST.get('bodegaEntrada')
@@ -86,6 +87,14 @@ def crear_salida(request):
                 bodegaEntrada = Bodega.objects.get(id_bodega=bodegaEntrada)
             else:
                 bodegaEntrada = None
+            
+            if cliente.nombre.lower() == 'atiempo sas' or cliente.id_cliente == 1:
+                tipo_documento = 'TR'
+                estado = 'Traslado'
+            else:
+                tipo_documento = 'SI'
+                estado = 'salida'    
+       
         except Cliente.DoesNotExist:
             messages.error(request, "Cliente no válido.")
             return redirect('crear_salida')
@@ -119,6 +128,8 @@ def crear_salida(request):
 
         # Crear la salida principal
         salida = Salida.objects.create(
+            tipo_documento = tipo_documento,
+            estado = estado, 
             cliente=cliente,  # Si es el proveedor que corresponde a 'cliente', asignalo así
             total= 0,
             bodegaSalida = bodegaSalida,
@@ -143,6 +154,10 @@ def crear_salida(request):
     productos = Producto.objects.all()
     return render(request, 'crear_salida.html', {'productos': productos})
 
+
+
+
+
 def detalle_salida(request, id):
     detalle_salida = get_object_or_404(Salida, id=id) 
     items = detalle_salida.items.all()
@@ -150,3 +165,4 @@ def detalle_salida(request, id):
         'detalle_salida': detalle_salida,
         'items': items,
     })
+

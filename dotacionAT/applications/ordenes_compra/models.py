@@ -72,7 +72,14 @@ class ItemOrdenCompra(models.Model):
 #         return "OR"
 
 class Compra(models.Model):
-    orden_compra = models.OneToOneField(OrdenCompra, on_delete=models.CASCADE, related_name='compra')
+    # orden_compra = models.OneToOneField(OrdenCompra, on_delete=models.CASCADE, related_name='compra')
+    orden_compra = models.OneToOneField(
+        OrdenCompra,
+        on_delete=models.CASCADE,
+        related_name='compra',
+        null=True,       # 👈 importante
+        blank=True       # 👈 importante
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_compra = models.DateField(auto_now_add=True)
     observaciones = models.TextField(blank=True)
@@ -91,11 +98,15 @@ class Compra(models.Model):
     
 
     def __str__(self):
-        return f"Compra de orden #{self.orden_compra.id}"
+        if self.orden_compra:
+            return f"Compra de orden #{self.orden_compra.id}"
+        return f"Compra sin orden asociada #{self.id}"
 
     @property
     def tipo_documento(self):
-        return "OR"
+        if self.orden_compra:
+            return "CP"  # Orden Regular
+        return "TR" 
 
 
 class ItemCompra(models.Model):

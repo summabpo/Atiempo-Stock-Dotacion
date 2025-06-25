@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -13,3 +13,12 @@ urlpatterns = [
     path('list_productos/', views.list_productos, name='list_productos'),  # Aquí debe estar 'productos'
 
 ]
+
+# from django.conf import settings
+
+
+# if settings.DEBUG:
+#     import debug_toolbar
+#     urlpatterns += [
+#         path('__debug__/', include(debug_toolbar.urls)),
+#     ] 

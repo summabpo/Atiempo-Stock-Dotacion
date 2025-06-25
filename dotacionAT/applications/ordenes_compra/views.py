@@ -85,7 +85,7 @@ def mi_vista(request):
 @login_required(login_url='login_usuario')
 def list_orden_y_compra(request):
     ordenes = OrdenCompra.objects.select_related('proveedor')
-    compras = Compra.objects.select_related('orden_compra__proveedor')
+    compras = Compra.objects.select_related('orden_compra', 'proveedor')  # agregamos proveedor por si lo usas directo
 
     data = []
 
@@ -93,9 +93,9 @@ def list_orden_y_compra(request):
     for orden in ordenes:
         data.append({
             'id': orden.id,
-            'proveedor': orden.proveedor.nombre,
-            'fecha': orden.fecha_creacion.strftime('%Y-%m-%d'),
-            'tipo_documento': orden.tipo_documento,
+            'proveedor': orden.proveedor.nombre if orden.proveedor else 'Sin proveedor',
+            'fecha': orden.fecha_creacion.strftime('%Y-%m-%d') if orden.fecha_creacion else '',
+            'tipo_documento': orden.tipo_documento if hasattr(orden, 'tipo_documento') else '',
             'total': orden.total,
             'numero_factura': '',
             'estado': orden.estado,
@@ -105,19 +105,64 @@ def list_orden_y_compra(request):
 
     # Añadir compras
     for compra in compras:
+        # Obtener proveedor desde orden_compra o directamente desde compra
+        proveedor_nombre = 'Sin proveedor'
+        if compra.orden_compra and compra.orden_compra.proveedor:
+            proveedor_nombre = compra.orden_compra.proveedor.nombre
+        elif compra.proveedor:
+            proveedor_nombre = compra.proveedor.nombre
+
         data.append({
             'id': compra.id,
-            'proveedor': compra.orden_compra.proveedor.nombre,
-            'fecha': compra.fecha_compra.strftime('%Y-%m-%d'),
-            'tipo_documento': compra.tipo_documento,
+            'proveedor': proveedor_nombre,
+            'fecha': compra.fecha_compra.strftime('%Y-%m-%d') if compra.fecha_compra else '',
+            'tipo_documento': getattr(compra, 'tipo_documento', ''),  # usa getattr por si no existe el campo
             'total': compra.total,
-            'numero_factura': compra.numero_factura,
+            'numero_factura': compra.numero_factura or '',
             'estado': compra.estado,
             'url_editar': f'/detalle_comprar/{compra.id}/',
-            'url_cancelar':''
+            'url_cancelar': ''
         })
 
     return JsonResponse({'ordenes_compras': data})
+
+#El codigo que tenia 
+# @login_required(login_url='login_usuario')
+# def list_orden_y_compra(request):
+#     ordenes = OrdenCompra.objects.select_related('proveedor')
+#     compras = Compra.objects.select_related('orden_compra__proveedor')
+
+#     data = []
+
+#     # Añadir órdenes
+#     for orden in ordenes:
+#         data.append({
+#             'id': orden.id,
+#             'proveedor': orden.proveedor.nombre,
+#             'fecha': orden.fecha_creacion.strftime('%Y-%m-%d'),
+#             'tipo_documento': orden.tipo_documento,
+#             'total': orden.total,
+#             'numero_factura': '',
+#             'estado': orden.estado,
+#             'url_editar': f'/comprar_orden/{orden.id}/',
+#             'url_cancelar': f'/cambiar_estado_orden/{orden.id}/'
+#         })
+
+#     # Añadir compras
+#     for compra in compras:
+#         data.append({
+#             'id': compra.id,
+#             'proveedor': compra.orden_compra.proveedor.nombre,
+#             'fecha': compra.fecha_compra.strftime('%Y-%m-%d'),
+#             'tipo_documento': compra.tipo_documento,
+#             'total': compra.total,
+#             'numero_factura': compra.numero_factura,
+#             'estado': compra.estado,
+#             'url_editar': f'/detalle_comprar/{compra.id}/',
+#             'url_cancelar':''
+#         })
+
+#     return JsonResponse({'ordenes_compras': data})
 
 @login_required(login_url='login_usuario')
 def ordenes_compra(request):

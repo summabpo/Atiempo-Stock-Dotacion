@@ -174,6 +174,11 @@ const OrdenCompras = async () => {
                 `;
             }
         
+            // if(item.proveedor == ){
+
+
+            // }
+
             content += `
                 <tr class="text-center">
                     <td>${idTipoDoc}</td>

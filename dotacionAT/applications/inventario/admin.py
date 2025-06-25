@@ -5,7 +5,7 @@ from .models import InventarioBodega
 
 @admin.register(InventarioBodega)
 class InventarioBodegaAdmin(admin.ModelAdmin):
-    list_display = ('bodega', 'producto', 'producto_id_display', 'entradas', 'salidas', 'stock', 'ultima_entrada', 'ultima_salida')
+    list_display = ('bodega', 'producto', 'producto_id_display', 'entradas', 'salidas', 'stock', 'ultima_entrada', 'ultima_salida', 'usuario_ultima_salida', 'usuario_ultima_entrada')
     search_fields = ('bodega__nombre', 'producto__nombre')
     list_filter = ('bodega',)
 

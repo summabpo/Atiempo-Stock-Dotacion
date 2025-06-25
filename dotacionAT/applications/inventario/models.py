@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from applications.productos.models import Producto
 from applications.bodegas.models import Bodega
-
+from django.conf import settings
 
 # Create your models here.
 
@@ -17,6 +17,23 @@ class InventarioBodega(models.Model):
 
     ultima_entrada = models.DateTimeField(null=True, blank=True)
     ultima_salida = models.DateTimeField(null=True, blank=True)
+    
+    usuario_ultima_entrada = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='entradas_inventario',
+        verbose_name="Usuario última entrada"
+    )
+    usuario_ultima_salida = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='salidas_inventario',
+        verbose_name="Usuario última salida"
+    )
 
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
