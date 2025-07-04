@@ -32,6 +32,7 @@ urlpatterns = [
     path('', include('applications.clientes.urls')),
     path('', include('applications.ordenes_salida.urls')),
     path('', include('applications.usuarios.urls')),
+    path('', include('applications.dotacion_empleado.urls')),
     path('select2/', include('django_select2.urls')),
     # path('add_venta/',views.add_ventas.as_view(), name='AddVenta'),
     # path('export/', views.export_pdf_view, name="ExportPDF" ),

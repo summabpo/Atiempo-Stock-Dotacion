@@ -1,0 +1,43 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+{% load static %}
+
+{% load humanize %}
+
+
+  <div class="card shadow">
+    <div class="card-header bg-dark text-white">
+      <h4 class="mb-0">Subir archivo de dotación de empleados</h4>
+    </div>
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <div class="text-danger small">
+                {{ field.errors }}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <button type="submit" class="btn btn-success">📤 Subir archivo</button>
+      </form>
+    </div>
+
+
+{% if 'error' in message.tags %}
+  <p style="color: red;">{{ message }}</p>
+{% else %}
+  <p style="color: green;">{{ message }}</p>
+{% endif %}
+
+
+
+{% endblock %}

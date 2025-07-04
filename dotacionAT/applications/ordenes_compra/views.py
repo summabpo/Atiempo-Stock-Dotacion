@@ -12,6 +12,8 @@ from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, IntegrityError
 from django.contrib.auth.decorators import login_required
+from datetime import datetime
+from django.utils.timezone import localtime, is_naive, make_aware
 
 import json
 
@@ -85,16 +87,24 @@ def mi_vista(request):
 @login_required(login_url='login_usuario')
 def list_orden_y_compra(request):
     ordenes = OrdenCompra.objects.select_related('proveedor')
-    compras = Compra.objects.select_related('orden_compra', 'proveedor')  # agregamos proveedor por si lo usas directo
+    compras = Compra.objects.select_related('orden_compra', 'proveedor')
 
     data = []
 
     # Añadir órdenes
     for orden in ordenes:
+        if orden.fecha_creacion:
+            fecha_dt = orden.fecha_creacion
+            if is_naive(fecha_dt):
+                fecha_dt = make_aware(fecha_dt)
+            fecha_str = localtime(fecha_dt).strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            fecha_str = ''
+
         data.append({
             'id': orden.id,
             'proveedor': orden.proveedor.nombre if orden.proveedor else 'Sin proveedor',
-            'fecha': orden.fecha_creacion.strftime('%Y-%m-%d') if orden.fecha_creacion else '',
+            'fecha': fecha_str,
             'tipo_documento': orden.tipo_documento if hasattr(orden, 'tipo_documento') else '',
             'total': orden.total,
             'numero_factura': '',
@@ -105,18 +115,25 @@ def list_orden_y_compra(request):
 
     # Añadir compras
     for compra in compras:
-        # Obtener proveedor desde orden_compra o directamente desde compra
         proveedor_nombre = 'Sin proveedor'
         if compra.orden_compra and compra.orden_compra.proveedor:
             proveedor_nombre = compra.orden_compra.proveedor.nombre
         elif compra.proveedor:
             proveedor_nombre = compra.proveedor.nombre
 
+        if compra.fecha_compra:
+            fecha_datetime = datetime.combine(compra.fecha_compra, datetime.min.time())
+            if is_naive(fecha_datetime):
+                fecha_datetime = make_aware(fecha_datetime)
+            fecha_str = localtime(fecha_datetime).strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            fecha_str = ''
+
         data.append({
             'id': compra.id,
             'proveedor': proveedor_nombre,
-            'fecha': compra.fecha_compra.strftime('%Y-%m-%d') if compra.fecha_compra else '',
-            'tipo_documento': getattr(compra, 'tipo_documento', ''),  # usa getattr por si no existe el campo
+            'fecha': fecha_str,
+            'tipo_documento': getattr(compra, 'tipo_documento', ''),
             'total': compra.total,
             'numero_factura': compra.numero_factura or '',
             'estado': compra.estado,

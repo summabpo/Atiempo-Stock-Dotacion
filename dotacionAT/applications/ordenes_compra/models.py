@@ -81,7 +81,7 @@ class Compra(models.Model):
         blank=True       # 👈 importante
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_compra = models.DateField(auto_now_add=True)
+    fecha_compra = models.DateTimeField(auto_now_add=True)
     observaciones = models.TextField(blank=True)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     estado = models.CharField(max_length=20, default='Compra')

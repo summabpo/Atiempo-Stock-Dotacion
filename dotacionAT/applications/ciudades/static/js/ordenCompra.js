@@ -12,9 +12,7 @@ function formatearFecha(fechaISO) {
     return fecha.toLocaleString('es-ES', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        year: 'numeric'
     });
 }
 
@@ -141,10 +139,14 @@ const OrdenCompras = async () => {
             if(item.tipo_documento == 'OC'){
 
                 idTipoDoc =   item.id+' - '+item.tipo_documento;
-            }else if(item.tipo_documento == 'OR'){
+            }else if(item.tipo_documento == 'CP'){
 
                idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
-            } 
+
+            }else if(item.tipo_documento == 'TR'){
+
+               idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+            }  
                 
            
 
@@ -152,7 +154,13 @@ const OrdenCompras = async () => {
                 
                 estadoId = item.estado+' # '+item.numero_factura;
                                                 
-            }else{
+            }
+            else if(item.tipo_documento == 'TR'){
+                
+                 estadoId = 'Traslado Bodega';
+
+            }
+            else{
                 
                 estadoId = item.estado;
 
