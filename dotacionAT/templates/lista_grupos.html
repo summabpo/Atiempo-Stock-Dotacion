@@ -1,0 +1,63 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block content %}
+<br><br>
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="mb-4">📦 Grupos de Dotación Registrados</h2>
+      <a href="{% url 'crear_grupo_dotacion' %}">
+        <button class="btn btn-success">Crear Grupo</button>
+      </a>
+    </div>
+    <hr>
+
+    <table class="table table-bordered table-striped align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Cargo</th>
+          <th>Cliente</th>
+          <th>Ciudad</th>
+          <th>Género</th>
+          <th>Fecha de Creación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for grupo in grupos %}
+        <tr>
+          <td>{{ grupo.id }}</td>
+          <td>{{ grupo.cargo.nombre }}</td>
+          <td>{{ grupo.cliente.nombre }}</td>
+          <td>{{ grupo.ciudad.nombre }}</td>
+          <td>{{ grupo.genero }}</td>
+          <td>{{ grupo.fecha_creacion|date:"Y-m-d H:i" }}</td>
+          <td>
+            <a href="#" class="btn btn-sm btn-primary">Editar</a>
+            <a href="#" class="btn btn-sm btn-danger">Eliminar</a>
+          </td>
+        </tr>
+        <tr class="table-light">
+          <td colspan="7">
+            <strong>Productos:</strong>
+            <ul class="mb-0">
+              {% for item in grupo.productos.all %}
+                <li>{{ item.producto.nombre }} - Cantidad: {{ item.cantidad }}</li>
+              {% empty %}
+                <li><em>Sin productos asociados.</em></li>
+              {% endfor %}
+            </ul>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center">No hay grupos registrados.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

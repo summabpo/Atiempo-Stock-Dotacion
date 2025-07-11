@@ -1,6 +1,17 @@
 (function () {
 console.log("empleados");
 
+function formatearFecha(fechaISO) {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
 let dataTable;
 let dataTableIsInitialized = false;
 
@@ -84,7 +95,9 @@ const empleadoDotacion = async () => {
                         <td>${item.cliente}</td>
                         <td>${item.centro_costo}</td>
                         <td>${item.sexo}</td>
-                        <td>${item.talla_camisa}</td>
+                        <td>${item.fecha_ingreso}</td>
+                        <td>${formatearFecha(item.fecha_registro)}</td>
+
                                     
                         
                     </tr>

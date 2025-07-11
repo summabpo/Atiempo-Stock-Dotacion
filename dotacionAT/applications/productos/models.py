@@ -62,7 +62,7 @@ class Producto(models.Model):
     costo = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre}"
 
     class Meta:
         verbose_name = "Producto"
