@@ -1,43 +1,49 @@
 {% extends 'layouts/base.html' %}
 
 {% block content %}
-
 {% load static %}
-
 {% load humanize %}
 
+<div class="card shadow">
+  <div class="card-header bg-dark text-white">
+    <h4 class="mb-0">Subir archivo de dotación de empleados</h4>
+  </div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div class="text-danger small">
+              {{ field.errors }}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-success">📤 Subir archivo</button>
+    </form>
+  </div>
 
-  <div class="card shadow">
-    <div class="card-header bg-dark text-white">
-      <h4 class="mb-0">Subir archivo de dotación de empleados</h4>
-    </div>
-    <div class="card-body">
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
 
-        {% for field in form %}
-          <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-              <div class="text-danger small">
-                {{ field.errors }}
-              </div>
-            {% endif %}
-          </div>
+  {% if empleados_sin_entrega %}
+    <div class="alert alert-warning mt-4">
+      <strong>⚠️ No se generaron entregas para los siguientes empleados:</strong>
+      <ul>
+        {% for motivo in empleados_sin_entrega %}
+          <li>{{ motivo }}</li>
         {% endfor %}
-
-        <button type="submit" class="btn btn-success">📤 Subir archivo</button>
-      </form>
+      </ul>
     </div>
-
-
-{% if 'error' in message.tags %}
-  <p style="color: red;">{{ message }}</p>
-{% else %}
-  <p style="color: green;">{{ message }}</p>
-{% endif %}
-
-
+  {% endif %}
+</div>
 
 {% endblock %}

@@ -18,21 +18,26 @@ class Cargo(models.Model):
         return self.nombre
 
 class GrupoDotacion(models.Model):
-    cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE)
+    cargos = models.ManyToManyField(Cargo)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    ciudad = models.ForeignKey(Ciudad, on_delete=models.CASCADE)
+    ciudades = models.ManyToManyField(Ciudad)
     genero = models.CharField(max_length=10, choices=[('MASCULINO', 'Masculino'), ('FEMENINO', 'Femenino')])
     creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.cargo} - {self.cliente} - {self.ciudad} - {self.genero}"
+        cargos = ', '.join([str(c) for c in self.cargos.all()])
+        ciudades = ', '.join([str(c) for c in self.ciudades.all()])
+        return f"{cargos} - {self.cliente} - {ciudades} - {self.genero}"
 
 class GrupoDotacionProducto(models.Model):
     grupo = models.ForeignKey(GrupoDotacion, on_delete=models.CASCADE, related_name='productos')
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
+    activo = models.BooleanField(default=True)  # <- añade esto si lo necesitas
 
     def __str__(self):
-        estado = "Activo" if self.producto.activo else "Inactivo"
-        return f"{self.estado} - {estado} x {self.cantidad} en {self.grupo}"
+        estado = "Activo" if self.activo else "Inactivo"
+        return f"{self.producto.nombre} - {estado} x{self.cantidad} en {self.grupo}"
+    
+    

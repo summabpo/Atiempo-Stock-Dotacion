@@ -39,16 +39,22 @@ from django.forms.models import inlineformset_factory, BaseInlineFormSet
 from .models import GrupoDotacion, GrupoDotacionProducto, Cargo
 from applications.productos.models import Producto
 from applications.clientes.models import Cliente
+from applications.ciudades.models import Ciudad
 
 class GrupoDotacionForm(forms.ModelForm):
     class Meta:
         model = GrupoDotacion
-        fields = ['cargo', 'cliente', 'ciudad', 'genero']
+        fields = ['cargos', 'cliente', 'ciudades', 'genero']
+        widgets = {
+            'cargos': forms.SelectMultiple(attrs={'class': 'select2'}),
+            'ciudades': forms.SelectMultiple(attrs={'class': 'select2'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['cliente'].queryset = Cliente.objects.filter(activo=True).order_by('nombre')
-        self.fields['cargo'].queryset = Cargo.objects.filter(activo=True).order_by('nombre')
+        self.fields['cargos'].queryset = Cargo.objects.filter(activo=True).order_by('nombre')
+        self.fields['ciudades'].queryset = Ciudad.objects.all().order_by('nombre')
 
 class GrupoDotacionProductoForm(forms.ModelForm):
     class Meta:

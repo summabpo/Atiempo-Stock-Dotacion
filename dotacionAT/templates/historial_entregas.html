@@ -1,0 +1,64 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+<div class="card shadow">
+  <div class="card-header bg-primary text-white">
+    <h4 class="mb-0">📋 Historial de Entregas de Dotación</h4>
+  </div>
+  <div class="card-body">
+    {% if entregas %}
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Empleado</th>
+            <th>Cédula</th>
+            <th>Ciudad</th>
+            <th>Cargo</th>
+            <th>Cliente</th>
+            <th>Sexo</th>
+            <th>Fecha Generado</th>
+            <th>🧥 Prendas Entregadas</th>
+          </tr>
+        </thead>
+            <tbody>
+          {% for entrega in entregas %}
+            <tr>
+              <td>{{ entrega.empleado.nombre }}</td>
+              <td>{{ entrega.empleado.cedula }}</td>
+              <td>{{ entrega.empleado.ciudad }}</td>
+              <td>{{ entrega.empleado.cargo }}</td>
+              <td>{{ entrega.empleado.cliente }}</td>
+              <td>{{ entrega.empleado.sexo }}</td>
+              <td>{{ entrega.fecha_entrega|date:"Y-m-d H:i" }}</td>
+              <td>
+                <div class="d-flex flex-wrap gap-2">
+                  {% for detalle in entrega.detalles.all %}
+                    <span 
+                      class="badge badge-pill badge-info" 
+                      data-toggle="tooltip" 
+                      title="{{ detalle.producto.descripcion|default:detalle.producto.nombre }}">
+                      👕 {{ detalle.producto.nombre }} x{{ detalle.cantidad }}
+                    </span>
+                  {% empty %}
+                    <span class="text-muted">Sin prendas</span>
+                  {% endfor %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="alert alert-info">
+        No se han registrado entregas de dotación.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Activar tooltips de Bootstrap
+  document.addEventListener("DOMContentLoaded", function () {
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
+{% endblock %}

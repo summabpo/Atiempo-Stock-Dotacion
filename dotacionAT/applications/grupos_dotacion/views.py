@@ -14,8 +14,8 @@ from django.contrib import messages
 @login_required
 def listar_grupos_dotacion(request):
     grupos = GrupoDotacion.objects.all() \
-        .select_related('cargo', 'cliente', 'ciudad') \
-        .prefetch_related('productos__producto')  # Prefetch los productos y el producto asociado
+        .select_related('cliente', 'creado_por') \
+        .prefetch_related('cargos', 'ciudades', 'productos__producto')
     return render(request, 'lista_grupos.html', {'grupos': grupos})
 
 
@@ -24,12 +24,14 @@ def listar_grupos_dotacion(request):
 def crear_grupo_dotacion(request):
     if request.method == 'POST':
         form = GrupoDotacionForm(request.POST)
-        formset = GrupoDotacionProductoFormSet(request.POST, prefix='productos')  # 👈 Usa el prefix igual que en el template
+        formset = GrupoDotacionProductoFormSet(request.POST, prefix='productos')
 
         if form.is_valid() and formset.is_valid():
             grupo = form.save(commit=False)
             grupo.creado_por = request.user
             grupo.save()
+
+            form.save_m2m()  # ← ESTO ES CLAVE para guardar ManyToMany como cargos y ciudades
 
             formset.instance = grupo
             formset.save()
@@ -37,7 +39,7 @@ def crear_grupo_dotacion(request):
             return redirect('listar_grupos_dotacion')
     else:
         form = GrupoDotacionForm()
-        formset = GrupoDotacionProductoFormSet(prefix='productos')  # 👈 Mismo prefix que en el template
+        formset = GrupoDotacionProductoFormSet(prefix='productos')
 
     return render(request, 'crear_grupo.html', {
         'form': form,

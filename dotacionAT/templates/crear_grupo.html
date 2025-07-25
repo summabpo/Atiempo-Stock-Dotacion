@@ -15,9 +15,9 @@
      <div class="card-body">
   <div class="row">
     <div class="col-md-6 mb-3">
-      {{ form.cargo.label_tag }} {{ form.cargo }}
-      {% if form.cargo.errors %}
-        <div class="text-danger">{{ form.cargo.errors }}</div>
+      {{ form.cargos.label_tag }} {{ form.cargos }}
+      {% if form.cargos.errors %}
+        <div class="text-danger">{{ form.cargos.errors }}</div>
       {% endif %}
     </div>
 
@@ -29,9 +29,9 @@
     </div>
 
     <div class="col-md-6 mb-3">
-      {{ form.ciudad.label_tag }} {{ form.ciudad }}
-      {% if form.ciudad.errors %}
-        <div class="text-danger">{{ form.ciudad.errors }}</div>
+      {{ form.ciudades.label_tag }} {{ form.ciudades }}
+      {% if form.ciudades.errors %}
+        <div class="text-danger">{{ form.ciudades.errors }}</div>
       {% endif %}
     </div>
 
@@ -89,6 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
       allowClear: true
     });
   }
+
+  $(document).ready(function () {
+  $('select.select2').select2({
+    width: '100%',
+    theme: 'classic',
+    placeholder: 'Seleccione una o varias opciones',
+    allowClear: true
+    });
+  });
+
+
 
   aplicarSelect2();
 

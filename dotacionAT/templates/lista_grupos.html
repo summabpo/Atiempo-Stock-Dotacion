@@ -29,9 +29,17 @@
         {% for grupo in grupos %}
         <tr>
           <td>{{ grupo.id }}</td>
-          <td>{{ grupo.cargo.nombre }}</td>
+          <td>
+  {% for cargo in grupo.cargos.all %}
+    {{ cargo.nombre }}{% if not forloop.last %}, {% endif %}
+  {% endfor %}
+</td>
           <td>{{ grupo.cliente.nombre }}</td>
-          <td>{{ grupo.ciudad.nombre }}</td>
+          <td>
+  {% for ciudad in grupo.ciudades.all %}
+    {{ ciudad.nombre }}{% if not forloop.last %}, {% endif %}
+  {% endfor %}
+</td>
           <td>{{ grupo.genero }}</td>
           <td>{{ grupo.fecha_creacion|date:"Y-m-d H:i" }}</td>
           <td>
