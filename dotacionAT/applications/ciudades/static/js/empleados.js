@@ -83,7 +83,7 @@ const empleadoDotacion = async () => {
             console.log("Hola P");
             
             let content = ``;
-            data.empleadoDotacion.forEach((item, index) => {
+            data.empleado.forEach((item, index) => {
 
               
                 content += `

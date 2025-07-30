@@ -6,6 +6,7 @@ urlpatterns = [
     path('empleadodotacion/', views.empleadodotacion, name='empleadodotacion'),
     path('list_empleados/', views.list_empleados, name='list_empleados'),
     path('historial-entregas/', views.historial_entregas, name='historial_entregas'),
+    path('entregas/pdf/todas/', views.generar_formato_entrega_pdf, name='generar_formato_entrega_pdf'),
 ]
 
 
