@@ -40,10 +40,19 @@ def generar_formato_entrega_pdf(request):
 
     for entrega in entregas:
         empleado = entrega.empleado
+        
+        parrafo_estilo = ParagraphStyle(
+        name="TablaWrap",
+        fontSize=9,
+        leading=10,  # Espaciado entre líneas
+        wordWrap='CJK',  # Permite cortar palabras largas
+        alignment=1,  # Centrado
+        fontName='Helvetica-Bold'
+    )
 
         # --- Encabezado tipo tabla organizado como en el Word ---
         encabezado_data = [
-            ['Código: FOR-GC-007', 'FORMATO DE ENTREGA ELEMENTOS DE TRABAJO', ''],
+            ['Código: FOR-GC-007', Paragraph('FORMATO DE ENTREGA ELEMENTOS DE TRABAJO', parrafo_estilo), ''],
             ['Versión: 02', '', ''],
             ['Fecha vigencia: 02/04/2019', '', '']
         ]
@@ -165,33 +174,75 @@ def generar_formato_entrega_pdf(request):
         elements.append(tabla)
         elements.append(Spacer(1, 0.5 * cm))
 
-        # --- Observaciones ---
+        # --- Observaciones con recuadro y espacio para escribir ---
+        # --- Cuadro de observaciones ---
         observacion = entrega.observaciones or " "
-        elements.append(Paragraph("<b>OBSERVACIONES:</b> " + observacion, styles['Normal']))
-        elements.append(Spacer(1, 0.5 * cm))
+        observacion_table = Table([
+            [Paragraph("<b>OBSERVACIONES:</b> Espacio para reportar novedades en la entrega de los elementos que sea relevante mencionar:", styles['Normal'])],
+            [Paragraph(observacion, styles['Normal'])]
+        ], colWidths=[17*cm])
+
+        observacion_table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (0, 0), 4),
+            ('BOTTOMPADDING', (0, 0), (0, 0), 4),
+            ('TOPPADDING', (0, 1), (0, 1), 20),  # Espacio para escribir
+            ('BOTTOMPADDING', (0, 1), (0, 1), 20),
+        ]))
+        elements.append(observacion_table)
+        elements.append(Spacer(1, 0.4 * cm))
 
         # --- Declaración del trabajador ---
-        elements.append(Paragraph(
+        declaracion_estilo = ParagraphStyle(
+            name="DeclaracionEstilo",
+            fontSize=9,
+            leading=11,
+            spaceAfter=6,
+        )
+
+        # Texto de la declaración
+        declaracion_parrafo = Paragraph(
             "El trabajador manifiesta:<br/>"
             "He recibido los elementos de trabajo anteriormente relacionados en buen estado físico y de funcionamiento. "
             "Me comprometo a cumplir con las especificaciones dadas por Seguridad y Salud en el Trabajo, a ejercer la debida custodia "
             "y cuidado como bienes de la empresa, puestos bajo mi responsabilidad. A la terminación del contrato o en cualquier momento que la empresa me lo solicite, "
             "igualmente me comprometo a devolverlos en buen estado de funcionamiento.",
-            styles['Normal']
-        ))
-        elements.append(Spacer(1, 0.8 * cm))
+            declaracion_estilo
+        )
 
-        # --- Firmas ---
-        firma_table = Table([
-            ['Entregado por:', 'Recibido por:'],
-            ['C.C. N°', 'El Trabajador en misión']
-        ], colWidths=[9*cm, 7*cm])
-        firma_table.setStyle(TableStyle([
-            ('LINEABOVE', (0,0), (0,0), 0.5, colors.black),
-            ('LINEABOVE', (1,0), (1,0), 0.5, colors.black),
-            ('TOPPADDING', (0,0), (-1,-1), 12),
+        # Tabla final que incluye declaración + firmas en un solo recuadro
+        tabla_final = Table([
+            [declaracion_parrafo],
+            [  # Fila firmas
+                Table([
+                    ['Entregado por:', 'Recibido por:'],
+                    ['_______________', '_______________'],
+                    ['Gestión Humana', 'C.C. N°'],
+                    ['', 'El Trabajador en misión']
+                ], colWidths=[8.5*cm, 8.5*cm], hAlign='CENTER')
+            ]
+        ], colWidths=[17*cm])
+
+        tabla_final.setStyle(TableStyle([
+            # Borde general externo
+            ('GRID', (0, 0), (-1, -1), 0.7, colors.black),
+
+            # Espaciado dentro del recuadro general
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+
+            # Fuente interna (tabla de firmas)
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
         ]))
-        elements.append(firma_table)
+
+        elements.append(tabla_final)
 
         elements.append(PageBreak())
 
