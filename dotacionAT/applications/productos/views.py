@@ -6,11 +6,30 @@ from pathlib import Path
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.utils.html import escape
+import unicodedata
+
 
 # Importar las categorías desde el archivo choices_categoria.py
 from ..data.choices import CATEGORIAS
 
 # Create your views here.
+
+def normalizar_nombre_producto(nombre):
+    nombre = unicodedata.normalize('NFKD', nombre).encode('ASCII', 'ignore').decode('utf-8')
+    nombre = nombre.lower().strip().replace(" ", "")
+    return nombre
+
+def normalizar_nombre_categoria(nombre):
+    # 1. Quitar tildes
+    nombre = unicodedata.normalize('NFKD', nombre).encode('ASCII', 'ignore').decode('utf-8')
+    # 2. Convertir a minúsculas y eliminar espacios
+    nombre = nombre.lower().strip().replace(" ", "")
+    # 3. Convertir a singular (regla básica)
+    if nombre.endswith('s') and not nombre.endswith('es'):
+        nombre = nombre[:-1]
+    return nombre
+
 
 @login_required(login_url='login_usuario')
 def list_productos(_request):
@@ -59,8 +78,19 @@ def crear_productos(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST)
         if form.is_valid():
+            nombre_ingresado = form.cleaned_data['nombre']
+            nombre_normalizado = normalizar_nombre_producto(nombre_ingresado)
+
+            for p in Producto.objects.all():
+                if normalizar_nombre_producto(p.nombre) == nombre_normalizado:
+                    messages.error(
+                        request,
+                        f"⚠️ El producto {escape(nombre_ingresado)} ya está registrado como {p.nombre}."
+                    )
+                    return render(request, 'crear_productos.html', {'form': form})
+
             producto = form.save(commit=False)
-            producto.id_usuario = request.user  # ← Guardar creador
+            producto.id_usuario = request.user
             producto.save()
             messages.success(request, "Producto creado correctamente.")
             return redirect('productos')
@@ -68,6 +98,19 @@ def crear_productos(request):
         form = ProductoForm()
 
     return render(request, 'crear_productos.html', {'form': form})
+# def crear_productos(request):
+#     if request.method == 'POST':
+#         form = ProductoForm(request.POST)
+#         if form.is_valid():
+#             producto = form.save(commit=False)
+#             producto.id_usuario = request.user  # ← Guardar creador
+#             producto.save()
+#             messages.success(request, "Producto creado correctamente.")
+#             return redirect('productos')
+#     else:
+#         form = ProductoForm()
+
+#     return render(request, 'crear_productos.html', {'form': form})
 
 
 @login_required(login_url='login_usuario')
@@ -157,13 +200,39 @@ def crear_categoria(request):
             'form': CategoriaNueva()
         })
     else:
+        nombre = request.POST['nombre'].strip().title()
+        nombre_normalizado = normalizar_nombre_categoria(nombre)
+
+        # Comparamos con todas las categorías existentes
+        categorias = Categoria.objects.all()
+        for c in categorias:
+            if normalizar_nombre_categoria(c.nombre) == nombre_normalizado:
+                messages.error(request, f"La categoría  {escape(nombre)}  ya existe como  {c.nombre} .")
+                return render(request, 'crear_categoria.html', {
+                    'form': CategoriaNueva(request.POST)
+                })
+
         categoria = Categoria(
-            nombre=request.POST['nombre'],
-            id_usuario_creador=request.user  # ← guardar quién la crea
+            nombre=nombre,
+            id_usuario_creador=request.user
         )
         categoria.save()
-        messages.success(request, "Categoría Creada Correctamente. ! ")
+        messages.success(request, "¡Categoría creada correctamente!")
         return redirect('categorias')
+
+# def crear_categoria(request):
+#     if request.method == 'GET':
+#         return render(request, 'crear_categoria.html', {
+#             'form': CategoriaNueva()
+#         })
+#     else:
+#         categoria = Categoria(
+#             nombre=request.POST['nombre'],
+#             id_usuario_creador=request.user  # ← guardar quién la crea
+#         )
+#         categoria.save()
+#         messages.success(request, "Categoría Creada Correctamente. ! ")
+#         return redirect('categorias')
     
 @login_required(login_url='login_usuario')
 def modificar_categoria(request, id):

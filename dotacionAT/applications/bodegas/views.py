@@ -43,14 +43,37 @@ def list_bodegas(_request):
 
 
 @login_required(login_url='login_usuario')
+# def crear_bodega(request):
+#     if request.method == 'POST':
+#         form = BodegaNueva(request.POST)
+#         if form.is_valid():
+#             nueva_bodega = form.save(commit=False)
+#             nueva_bodega.id_usuario_creador = request.user  # ← asigna el usuario que crea
+#             nueva_bodega.save()
+#             messages.success(request, "Bodega Creada Correctamente. ! ")
+#             return redirect('bodegas')
+#         else:
+#             print(form.errors)
+#     else:
+#         form = BodegaNueva()
+
+#     return render(request, 'crear_bodega.html', {'form': form})
 def crear_bodega(request):
     if request.method == 'POST':
         form = BodegaNueva(request.POST)
         if form.is_valid():
             nueva_bodega = form.save(commit=False)
-            nueva_bodega.id_usuario_creador = request.user  # ← asigna el usuario que crea
+            nombre = nueva_bodega.nombre
+            ciudad = nueva_bodega.id_ciudad
+
+            # Verificar si ya existe una bodega con ese nombre en la misma ciudad
+            if Bodega.objects.filter(nombre__iexact=nombre, id_ciudad=ciudad).exists():
+                messages.warning(request, "⚠️ Ya existe una bodega con ese nombre en esa ciudad.")
+                return render(request, 'crear_bodega.html', {'form': form})
+
+            nueva_bodega.id_usuario_creador = request.user
             nueva_bodega.save()
-            messages.success(request, "Bodega Creada Correctamente. ! ")
+            messages.success(request, "✅ Bodega creada correctamente.")
             return redirect('bodegas')
         else:
             print(form.errors)

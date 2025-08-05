@@ -5,9 +5,16 @@ from django.urls import reverse
 from .forms import ClienteForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+import unicodedata
+from django.utils.html import escape
 
 # Create your views here.
 
+
+def normalizar_nombre(nombre):
+    nombre = unicodedata.normalize('NFKD', nombre).encode('ASCII', 'ignore').decode('utf-8')
+    nombre = nombre.lower().strip().replace(" ", "")
+    return nombre
 
 @login_required(login_url='login_usuario')
 def cliente(request):
@@ -46,10 +53,21 @@ def crear_cliente(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
         if form.is_valid():
+            nombre_ingresado = form.cleaned_data['nombre']
+            nombre_normalizado = normalizar_nombre(nombre_ingresado)
+
+            for c in Cliente.objects.all():
+                if normalizar_nombre(c.nombre) == nombre_normalizado:
+                    messages.error(
+                        request,
+                        f"⚠️ El cliente {escape(nombre_ingresado)} ya está registrado como {c.nombre}."
+                    )
+                    return render(request, 'crear_cliente.html', {'form': form})
+
             cliente = form.save(commit=False)
-            cliente.usuario_creador = request.user  # 🧠 Asigna el usuario logueado
+            cliente.usuario_creador = request.user
             cliente.save()
-            messages.success(request, "Cliente Creado Correctamente. ! ")
+            messages.success(request, "Cliente Creado Correctamente. ¡")
             return redirect('cliente')
     else:
         form = ClienteForm()

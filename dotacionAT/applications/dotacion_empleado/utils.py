@@ -11,6 +11,10 @@ from django.http import FileResponse
 from .models import EntregaDotacion, DetalleEntregaDotacion
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import LETTER
+from reportlab.platypus import Image
+import os
+from django.conf import settings
+from reportlab.platypus import Image
 
 def safe_str(value):
     try:
@@ -27,6 +31,9 @@ def safe_int(value):
 
 
 def generar_formato_entrega_pdf(request):
+    
+    ruta_logo = os.path.join(settings.BASE_DIR, 'applications', 'ciudades', 'static', 'index', 'img', 'logoAtiempo.png')
+    logo = Image(ruta_logo, width=80, height=40) if os.path.exists(ruta_logo) else ''
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
     elements = []
@@ -52,12 +59,12 @@ def generar_formato_entrega_pdf(request):
 
         # --- Encabezado tipo tabla organizado como en el Word ---
         encabezado_data = [
-            ['Código: FOR-GC-007', Paragraph('FORMATO DE ENTREGA ELEMENTOS DE TRABAJO', parrafo_estilo), ''],
+            ['Código: FOR-GC-007', Paragraph('FORMATO DE ENTREGA ELEMENTOS DE TRABAJO', parrafo_estilo), logo],
             ['Versión: 02', '', ''],
             ['Fecha vigencia: 02/04/2019', '', '']
         ]
 
-        encabezado_table = Table(encabezado_data, colWidths=[5.5*cm, 8*cm, 3.5*cm])
+        encabezado_table = Table(encabezado_data, colWidths=[4.8*cm, 8.7*cm, 3.5*cm])
         encabezado_table.setStyle(TableStyle([
             # Unir verticalmente columnas para título y logo
             ('SPAN', (1, 0), (1, 2)),
@@ -97,7 +104,7 @@ def generar_formato_entrega_pdf(request):
 
         # === Tabla con información del trabajador ===
         datos_trabajador = [
-        ['Nombre Trabajador', Paragraph(empleado.nombre, parrafo_estilo), 'No. CC', str(empleado.cedula)],
+        ['Nombre Trabajador', Paragraph(empleado.nombre, parrafo_estilo), 'N.° ID', str(empleado.cedula)],
         ['Empresa', Paragraph(str(empleado.cliente), parrafo_estilo), 'Cargo', Paragraph(str(empleado.cargo), parrafo_estilo)],
         ['Fecha Ingreso',
         empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
@@ -166,7 +173,7 @@ def generar_formato_entrega_pdf(request):
             ('GRID', (0,0), (-1,-1), 0.8, colors.black),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
             ('FONTSIZE', (0,0), (-1,-1), 10),
-            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
             ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('BOTTOMPADDING', (0,0), (-1,-1), 6),
             ('TOPPADDING', (0,0), (-1,-1), 6),

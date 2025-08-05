@@ -5,6 +5,16 @@ from django.urls import reverse
 from .forms import ProveedorForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+import unicodedata
+from django.utils.html import escape
+
+
+def normalizar_nombre_proveedor(nombre):
+    nombre = unicodedata.normalize('NFKD', nombre).encode('ASCII', 'ignore').decode('utf-8')
+    nombre = nombre.lower().strip().replace(" ", "")
+    return nombre
+
+
 
 @login_required(login_url='login_usuario')
 def proveedor(request):
@@ -47,8 +57,19 @@ def crear_proveedor(request):
     if request.method == 'POST':
         form = ProveedorForm(request.POST)
         if form.is_valid():
+            nombre_ingresado = form.cleaned_data['nombre']
+            nombre_normalizado = normalizar_nombre_proveedor(nombre_ingresado)
+
+            for p in Proveedor.objects.all():
+                if normalizar_nombre_proveedor(p.nombre) == nombre_normalizado:
+                    messages.error(
+                        request,
+                        f"⚠️ El proveedor {escape(nombre_ingresado)} ya está registrado como {p.nombre}."
+                    )
+                    return render(request, 'crear_proveedor.html', {'form': form})
+
             proveedor = form.save(commit=False)
-            proveedor.usuario_creador = request.user  # Asignar el usuario que crea
+            proveedor.usuario_creador = request.user
             proveedor.save()
             messages.success(request, "Proveedor creado correctamente. ¡")
             return redirect('proveedores')
@@ -56,6 +77,21 @@ def crear_proveedor(request):
         form = ProveedorForm()
 
     return render(request, 'crear_proveedor.html', {'form': form})
+
+
+# def crear_proveedor(request):
+#     if request.method == 'POST':
+#         form = ProveedorForm(request.POST)
+#         if form.is_valid():
+#             proveedor = form.save(commit=False)
+#             proveedor.usuario_creador = request.user  # Asignar el usuario que crea
+#             proveedor.save()
+#             messages.success(request, "Proveedor creado correctamente. ¡")
+#             return redirect('proveedores')
+#     else:
+#         form = ProveedorForm()
+
+#     return render(request, 'crear_proveedor.html', {'form': form})
 
 
 @login_required(login_url='login_usuario')
