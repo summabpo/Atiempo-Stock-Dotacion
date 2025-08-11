@@ -37,6 +37,6 @@ class GrupoDotacionAdmin(admin.ModelAdmin):
     
 @admin.register(GrupoDotacionProducto)
 class GrupoDotacionProductoAdmin(admin.ModelAdmin):
-    list_display = ('grupo', 'producto', 'cantidad')
-    list_filter = ('grupo', 'producto')
-    autocomplete_fields = ('grupo', 'producto')
+    list_display = ('grupo', 'categoria', 'cantidad')
+    list_filter = ('grupo', 'categoria')
+    autocomplete_fields = ('grupo', 'categoria')

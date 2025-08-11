@@ -6,7 +6,7 @@ from applications.ciudades.models import Ciudad # Suponiendo que tienes un model
 class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True)  
     nombre = models.CharField(max_length=255)
-    ciudad = models.ForeignKey(Ciudad, on_delete=models.CASCADE)  # Relación con Ciudad
+    ciudad = models.ForeignKey(Ciudad, on_delete=models.CASCADE, null=True)  # Relación con Ciudad
     telefono = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(max_length=255, blank=True, null=True)
     direccion = models.CharField(max_length=255, blank=True, null=True)

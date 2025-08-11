@@ -51,8 +51,8 @@
           <td colspan="7">
             <strong>Productos:</strong>
             <ul class="mb-0">
-              {% for item in grupo.productos.all %}
-                <li>{{ item.producto.nombre }} - Cantidad: {{ item.cantidad }}</li>
+              {% for item in grupo.categorias.all %}
+                <li>{{ item.categoria.nombre }} - Cantidad: {{ item.cantidad }}</li>
               {% empty %}
                 <li><em>Sin productos asociados.</em></li>
               {% endfor %}

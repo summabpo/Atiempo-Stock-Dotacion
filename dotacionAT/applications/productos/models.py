@@ -24,13 +24,15 @@ class Categoria(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     activo = models.BooleanField(default=True, verbose_name="Activo/Inactivo")
 
-    id_usuario_creador = models.ForeignKey(
+    id_usuario = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='categorias_creadas',
         verbose_name="Usuario Creador"
     )
+    
+      
     id_usuario_editor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

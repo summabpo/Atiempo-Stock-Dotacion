@@ -27,8 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'widget_tweaks',
     'django_select2',
-    
-    
+     
     
     'applications.ciudades',
     'applications.usuarios',

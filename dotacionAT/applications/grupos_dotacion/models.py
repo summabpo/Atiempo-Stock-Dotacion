@@ -1,7 +1,7 @@
 from django.db import models
 from applications.ciudades.models import Ciudad
 from applications.clientes.models import Cliente # Asumiendo que ya tienes esta app
-from applications.productos.models import Producto
+from applications.productos.models import Producto, Categoria
 from django.conf import settings  # O tu modelo de usuario
 
 # Create your models here.
@@ -31,13 +31,23 @@ class GrupoDotacion(models.Model):
         return f"{cargos} - {self.cliente} - {ciudades} - {self.genero}"
 
 class GrupoDotacionProducto(models.Model):
-    grupo = models.ForeignKey(GrupoDotacion, on_delete=models.CASCADE, related_name='productos')
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    grupo = models.ForeignKey(GrupoDotacion, on_delete=models.CASCADE, related_name='categorias')
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, null=True, blank=True)  # <- ¡Así está bien!
     cantidad = models.PositiveIntegerField(default=1)
-    activo = models.BooleanField(default=True)  # <- añade esto si lo necesitas
+    activo = models.BooleanField(default=True)
 
     def __str__(self):
         estado = "Activo" if self.activo else "Inactivo"
-        return f"{self.producto.nombre} - {estado} x{self.cantidad} en {self.grupo}"
+        return f"{self.categoria.nombre} - {estado} x{self.cantidad} en {self.grupo}"
+
+# class GrupoDotacionProducto(models.Model):
+#     grupo = models.ForeignKey(GrupoDotacion, on_delete=models.CASCADE, related_name='productos')
+#     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+#     cantidad = models.PositiveIntegerField(default=1)
+#     activo = models.BooleanField(default=True)  # <- añade esto si lo necesitas
+
+#     def __str__(self):
+#         estado = "Activo" if self.activo else "Inactivo"
+#         return f"{self.producto.nombre} - {estado} x{self.cantidad} en {self.grupo}"
     
     

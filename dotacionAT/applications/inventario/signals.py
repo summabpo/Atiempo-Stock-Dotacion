@@ -572,7 +572,7 @@ from applications.ordenes_compra.models import ItemCompra, Compra, Proveedor
 from applications.ordenes_salida.models import ItemSalida
 from applications.productos.models import Producto
 from dotacionAT.middleware import get_current_user
-
+#from crum import get_current_user
 
 # ✅ Entrada por compra
 @receiver(post_save, sender=ItemCompra)

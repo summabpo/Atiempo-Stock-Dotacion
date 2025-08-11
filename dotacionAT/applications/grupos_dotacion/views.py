@@ -15,7 +15,7 @@ from django.contrib import messages
 def listar_grupos_dotacion(request):
     grupos = GrupoDotacion.objects.all() \
         .select_related('cliente', 'creado_por') \
-        .prefetch_related('cargos', 'ciudades', 'productos__producto')
+        .prefetch_related('cargos', 'ciudades', 'categorias__categoria')
     return render(request, 'lista_grupos.html', {'grupos': grupos})
 
 

@@ -9,11 +9,12 @@ from applications.clientes.models import Cliente
 class EmpleadoDotacion(models.Model):
     cedula = models.CharField(max_length=20)
     nombre = models.CharField(max_length=100)
-    ciudad = models.CharField(max_length=50)
-    fecha_ingreso = models.DateField()
+    #ciudad = models.ForeignKey(Ciudad, on_delete=models.PROTECT, default=1)
+    ciudad = models.CharField(max_length=50, null=True)
+    fecha_ingreso = models.DateField(null=True, blank=True)
     cargo = models.CharField(max_length=100)
-    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
-    #cliente = models.CharField(max_length=255)
+    #cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
+    cliente = models.CharField(max_length=255)
     centro_costo = models.CharField(max_length=100)
     sexo = models.CharField(max_length=20)
 
