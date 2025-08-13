@@ -109,7 +109,7 @@ def generar_formato_entrega_pdf(request):
         ['Fecha Ingreso',
         empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
         'Fecha de entrega',
-        f"{entrega.fecha_entrega.strftime('%d/%m/%Y')}  |  Periodo: "]
+        f"{entrega.fecha_entrega.strftime('%m/%Y')}  |  Periodo: " f"{entrega.periodo}"  ]
     ]
         tabla_datos = Table(datos_trabajador, colWidths=[3.5*cm, 5*cm, 3.5*cm, 5*cm])
         tabla_datos.setStyle(TableStyle([
@@ -256,3 +256,144 @@ def generar_formato_entrega_pdf(request):
     doc.build(elements)
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='entregas_dotacion.pdf')
+
+
+
+
+def generar_pdf_entregas(entregas):
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+    )
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    from io import BytesIO
+    import os
+
+    # === Inicialización general ===
+    ruta_logo = os.path.join(settings.BASE_DIR, 'applications', 'ciudades', 'static', 'index', 'img', 'logoAtiempo.png')
+    logo = Image(ruta_logo, width=80, height=40) if os.path.exists(ruta_logo) else ''
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        rightMargin=2 * cm, leftMargin=2 * cm,
+        topMargin=2 * cm, bottomMargin=2 * cm
+    )
+
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Estilos personalizados
+    parrafo_estilo = ParagraphStyle(
+        name="TablaWrap",
+        fontSize=9,
+        leading=10,
+        wordWrap='CJK'
+    )
+
+    # === Recorrer entregas y armar contenido ===
+    for entrega in entregas:
+        empleado = entrega.empleado
+
+        # --- Encabezado ---
+        encabezado_data = [
+            ['Código: FOR-GC-007', Paragraph('FORMATO DE ENTREGA ELEMENTOS DE TRABAJO', parrafo_estilo), logo],
+            ['Versión: 02', '', ''],
+            ['Fecha vigencia: 02/04/2019', '', '']
+        ]
+        encabezado_table = Table(encabezado_data, colWidths=[4.8 * cm, 8.7 * cm, 3.5 * cm])
+        encabezado_table.setStyle(TableStyle([
+            ('SPAN', (1, 0), (1, 2)),
+            ('SPAN', (2, 0), (2, 2)),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+            ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+            ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
+        ]))
+        elements.append(encabezado_table)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # --- Datos trabajador ---
+        datos_trabajador = [
+            ['Nombre Trabajador', Paragraph(empleado.nombre, parrafo_estilo), 'N.° ID', str(empleado.cedula)],
+            ['Empresa', Paragraph(str(empleado.cliente), parrafo_estilo), 'Cargo', Paragraph(str(empleado.cargo), parrafo_estilo)],
+            ['Fecha Ingreso',
+             empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
+             'Fecha de entrega',
+             f"{entrega.fecha_entrega.strftime('%m/%Y')} | Periodo: {entrega.periodo}"]
+        ]
+        tabla_datos = Table(datos_trabajador, colWidths=[3.5 * cm, 5 * cm, 3.5 * cm, 5 * cm])
+        tabla_datos.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('WORDWRAP', (0, 0), (-1, -1), 'CJK'),
+        ]))
+        elements.append(tabla_datos)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # --- Checkbox ---
+        checkbox_texto = Paragraph("Se hace entrega de los siguientes elementos de trabajo:", styles['Normal'])
+        checkboxes_data = [
+            [checkbox_texto, '', '', ''],
+            ['[X] DOTACIÓN', '[ ] EPP', '[ ] HERRAMIENTAS', '[ ] OTROS']
+        ]
+        tabla_checkbox = Table(checkboxes_data, colWidths=[3.5 * cm, 5 * cm, 3.5 * cm, 5 * cm])
+        tabla_checkbox.setStyle(TableStyle([
+            ('SPAN', (0, 0), (3, 0)),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ]))
+        elements.append(tabla_checkbox)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # --- Detalles ---
+        tabla_data = [['ARTÍCULO', 'CANTIDAD']]
+        for detalle in entrega.detalles.all():
+            tabla_data.append([detalle.producto.nombre, str(detalle.cantidad)])
+        tabla = Table(tabla_data, colWidths=[12 * cm, 5 * cm])
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('GRID', (0, 0), (-1, -1), 0.8, colors.black),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ]))
+        elements.append(tabla)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # --- Observaciones ---
+        observacion = entrega.observaciones or " "
+        observacion_table = Table([
+            [Paragraph("<b>OBSERVACIONES:</b> Espacio para reportar novedades en la entrega:", styles['Normal'])],
+            [Paragraph(observacion, styles['Normal'])]
+        ], colWidths=[17 * cm])
+        observacion_table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ]))
+        elements.append(observacion_table)
+        elements.append(Spacer(1, 0.4 * cm))
+
+        # --- Declaración y firmas ---
+        declaracion_parrafo = Paragraph(
+            "El trabajador manifiesta:<br/>"
+            "He recibido los elementos en buen estado y me comprometo a cuidarlos...",
+            ParagraphStyle(name="DeclaracionEstilo", fontSize=9, leading=11)
+        )
+        tabla_final = Table([
+            [declaracion_parrafo],
+            [['Entregado por:', 'Recibido por:']],
+        ], colWidths=[17 * cm])
+        tabla_final.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.7, colors.black),
+        ]))
+        elements.append(tabla_final)
+
+        # Salto de página
+        elements.append(PageBreak())
+
+    # === Generar el PDF ===
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer

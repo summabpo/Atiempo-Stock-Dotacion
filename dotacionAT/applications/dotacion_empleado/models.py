@@ -4,6 +4,8 @@ from applications.grupos_dotacion.models import GrupoDotacion  # ajusta el impor
 from applications.productos.models import Producto
 from applications.clientes.models import Cliente
 
+from django.core.exceptions import ValidationError
+import re
 # Create your models here.
 
 class EmpleadoDotacion(models.Model):
@@ -42,13 +44,18 @@ class EmpleadoDotacion(models.Model):
         
     class Meta:
         ordering = ['-fecha_registro']
-    
-    
+def validar_periodo(valor):
+    """Valida que el periodo tenga el formato MM/YYYY"""
+    if not re.match(r'^(0[1-9]|1[0-2])/\d{4}$', valor):
+        raise ValidationError('El periodo debe tener el formato MM/YYYY')
+
 class EntregaDotacion(models.Model):
     empleado = models.ForeignKey(EmpleadoDotacion, on_delete=models.CASCADE, related_name='entregas')
     grupo = models.ForeignKey(GrupoDotacion, on_delete=models.SET_NULL, null=True, blank=True)
     fecha_entrega = models.DateTimeField(auto_now_add=True)
     observaciones = models.TextField(blank=True, null=True)
+    periodo = models.CharField(max_length=10, null=True, blank=True)
+
 
     def __str__(self):
         return f"Entrega {self.id} - {self.empleado.nombre if self.empleado else 'Sin empleado'}"

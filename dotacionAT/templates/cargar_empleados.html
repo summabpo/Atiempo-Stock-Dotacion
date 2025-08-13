@@ -47,3 +47,24 @@
 </div>
 
 {% endblock %}
+
+{% block extra_js %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const inputPeriodo = document.getElementById('id_periodo');
+
+    inputPeriodo.addEventListener('input', function (e) {
+        let valor = e.target.value.replace(/\D/g, ''); // Quita cualquier caracter que no sea número
+
+        // Inserta la barra automáticamente después de 2 dígitos
+        if (valor.length > 2) {
+            valor = valor.substring(0, 2) + '/' + valor.substring(2, 6);
+        }
+
+        e.target.value = valor;
+    });
+});
+</script>
+
+{% endblock %}

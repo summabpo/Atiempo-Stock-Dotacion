@@ -68,18 +68,20 @@ class DetalleEntregaDotacionInline(admin.TabularInline):
 @admin.register(EntregaDotacion)
 class EntregaDotacionAdmin(admin.ModelAdmin):
     list_display = (
+        'id',
         'empleado_nombre',
         'empleado_cedula',
         'empleado_ciudad',
         'empleado_cargo',
+        'periodo',
         'empleado_cliente',
         'empleado_sexo',
         'grupo',
         'fecha_entrega',
         'productos_entregados',
     )
-    list_filter = ('fecha_entrega', )
-    search_fields = ('empleado__nombre', 'empleado__cedula', 'grupo__cliente__nombre')
+    list_filter = ('fecha_entrega',)
+    search_fields = ('id', 'empleado__nombre', 'empleado__cedula', 'grupo__cliente__nombre')
     inlines = [DetalleEntregaDotacionInline]
     date_hierarchy = 'fecha_entrega'
 

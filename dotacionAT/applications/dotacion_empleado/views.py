@@ -52,8 +52,8 @@
 from applications.inventario.models import  InventarioBodega
 from django.utils import timezone
 from decimal import Decimal
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.contrib import messages
 from django.utils import timezone
 import pandas as pd
@@ -82,7 +82,24 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from datetime import datetime
 from decimal import Decimal
-
+from django.db.models import Count, Sum
+from applications.dotacion_empleado.utils import generar_pdf_entregas
+from urllib.parse import unquote
+from django.db.models import F, Func, Value
+from django.db.models.functions import Replace, Upper
+from django.db.models import CharField, Value
+from django.db.models.functions import Concat
+from django.template.loader import render_to_string
+import pdfkit  # o WeasyPrint, xhtml2pdf, etc.
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import cm
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import A4
+import os
+from django.conf import settings
+from reportlab.platypus import Image
 
 def get_or_none(modelo, **filtros):
     try:
@@ -92,9 +109,38 @@ def get_or_none(modelo, **filtros):
 
 @login_required
 def historial_entregas(request):
+    periodo = request.GET.get('periodo', '')
+    cliente = request.GET.get('cliente', '').strip()
+
+    entregas = EntregaDotacion.objects.select_related('empleado', 'grupo') \
+        .prefetch_related('detalles__producto')
+
+    if periodo:
+        try:
+            mes, anio = periodo.split('/')
+            entregas = entregas.filter(fecha_entrega__month=int(mes), fecha_entrega__year=int(anio))
+        except ValueError:
+            pass
+
+    if cliente:
+        entregas = entregas.filter(empleado__cliente__icontains=cliente)
+
+    entregas = entregas.order_by('-fecha_entrega')
+
+    return render(request, 'historial_entregas.html', {
+        'entregas': entregas,
+        'periodo': periodo,
+        'cliente': cliente
+    })
+    
+    
+    
+    
+    
+def historial_entregas2(request):
     entregas = EntregaDotacion.objects.select_related('empleado', 'grupo') \
         .order_by('-fecha_entrega')
-    return render(request, 'historial_entregas.html', {'entregas': entregas})
+    return render(request, 'historial_entregas2.html', {'entregas': entregas})
 
 
 @login_required(login_url='login_usuario')
@@ -119,7 +165,7 @@ def list_empleados(_request):
                 'nombre': c.nombre,
                 'ciudad': c.ciudad,
                 'cargo': c.cargo,
-                'cliente': c.cliente.nombre if c.cliente else '',
+                'cliente': c.cliente,
                 'centro_costo': c.centro_costo,  # <-- corregido
                 'Genero': c.sexo,
                 'fecha_ingreso': c.fecha_ingreso,
@@ -891,6 +937,8 @@ def cargar_empleados_desde_excel(request):
         if form.is_valid():
             archivo = request.FILES['archivo']
             print("📂 Archivo recibido:", archivo.name)
+            periodo = form.cleaned_data['periodo']
+            print("📅 Periodo recibido:", periodo)
             try:
                 df = pd.read_excel(archivo)  # ← Leemos el archivo
                 df.columns = [col.strip().upper().replace(" ", "_") for col in df.columns]  # ← Normalizamos las columnas
@@ -984,68 +1032,104 @@ def cargar_empleados_desde_excel(request):
                         cliente__nombre__icontains=empleado.cliente,
                         genero__iexact=empleado.sexo
                     ).distinct()
+                    
+                    # Si NO hay grupos, guardamos en errores y continuamos
+                    if not grupos.exists():
+                        errores = []
+                        if not GrupoDotacion.objects.filter(cargos=cargo_obj).exists():
+                            errores.append(f"Cargo: '{cargo_obj.nombre}'")
+                        if not GrupoDotacion.objects.filter(cliente__nombre__icontains=empleado.cliente).exists():
+                            errores.append(f"Cliente: '{empleado.cliente}'")
+                        if not GrupoDotacion.objects.filter(ciudades__nombre__iexact=empleado.ciudad).exists():
+                            errores.append(f"Ciudad: '{empleado.ciudad}'")
+                        if not GrupoDotacion.objects.filter(genero__iexact=empleado.sexo).exists():
+                            errores.append(f"Genero: '{empleado.sexo}'")
+
+                        motivo = ', '.join(errores) or "Sin coincidencia en grupo"
+                        empleados_sin_entrega.append(
+                            f"{empleado.nombre} ({empleado.cedula}) - Sin grupo para: {motivo}"
+                        )
+                        continue
+
+                    # Si sí hay grupos, seguimos con la lógica
+                    grupo = grupos.first()
+
 
                     genero = safe_str(fila['SEXO']).upper()
+                    
+                    
 
                     if grupos.exists():
                         grupo = grupos.first()
                         productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
 
                         productos_sin_stock = []
-                        productos_entregados = []
+                        productos_para_entregar = []
 
                         for producto_grupo in productos:
                             talla = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
-
                             try:
                                 producto = Producto.objects.get(nombre__icontains=talla, categoria=producto_grupo.categoria)
                                 inventario = InventarioBodega.objects.get(bodega=bodega_dotacion, producto=producto)
 
                                 if inventario.stock < producto_grupo.cantidad:
-                                    productos_sin_stock.append(producto.nombre)
-                                    continue
-
-                                entrega = EntregaDotacion.objects.get_or_create(empleado=empleado, grupo=grupo)[0]
-                                detalle = DetalleEntregaDotacion.objects.create(
-                                    entrega=entrega,
-                                    producto=producto,
-                                    cantidad=producto_grupo.cantidad
-                                )
-                                productos_entregados.append(detalle)
+                                    productos_sin_stock.append(f"Sin stock: {producto.nombre}")
+                                else:
+                                    productos_para_entregar.append((producto, producto_grupo.cantidad))
 
                             except Producto.DoesNotExist:
                                 productos_sin_stock.append(f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}")
                             except InventarioBodega.DoesNotExist:
                                 productos_sin_stock.append(f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}")
-                                
-                               
-                        
-                        print("Tipo de usuario recibido: linea 963", type(request.user))
-                        if productos_entregados:
-                            print("Tipo de usuario recibido:linea 965", type(request.user))
-                            generar_salida_por_entrega(entrega, productos_entregados, request.user)
-                            entregas += 1
 
-                        if productos_sin_stock:
+                        # ✅ Solo creamos la entrega si no faltó nada
+                        if not productos_sin_stock:
+                            entrega = EntregaDotacion.objects.get_or_create(empleado=empleado, grupo=grupo, defaults={'periodo': periodo})[0]
+                            productos_entregados = []
+                            for producto, cantidad in productos_para_entregar:
+                                detalle = DetalleEntregaDotacion.objects.create(
+                                    entrega=entrega,
+                                    producto=producto,
+                                    cantidad=cantidad
+                                )
+                                productos_entregados.append(detalle)
+
+                            if productos_entregados:
+                                generar_salida_por_entrega(entrega, productos_entregados, request.user)
+                                entregas += 1
+                        else:
                             empleados_sin_entrega.append(
                                 f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
                             )
+                                
+                               
+                        
+                    #     print("Tipo de usuario recibido: linea 963", type(request.user))
+                    #     if productos_entregados:
+                    #         print("Tipo de usuario recibido:linea 965", type(request.user))
+                    #         generar_salida_por_entrega(entrega, productos_entregados, request.user)
+                    #         entregas += 1
 
-                    else:
-                        errores = []
-                        if not GrupoDotacion.objects.filter(cargos=cargo).exists():
-                            errores.append(f"Cargo: '{cargo.nombre}'")
-                        if not GrupoDotacion.objects.filter(cliente=cliente).exists():
-                            errores.append(f"Cliente: '{cliente.nombre}'")
-                        if not GrupoDotacion.objects.filter(ciudades=ciudad).exists():
-                            errores.append(f"Ciudad: '{ciudad.nombre}'")
-                        if not GrupoDotacion.objects.filter(genero=genero).exists():
-                            errores.append(f"Genero: '{genero}'")
+                    #     if productos_sin_stock:
+                    #         empleados_sin_entrega.append(
+                    #             f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
+                    #         )
 
-                        motivo = ', '.join(errores)
-                        empleados_sin_entrega.append(
-                            f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
-                        )
+                    # else:
+                    #     errores = []
+                    #     if not GrupoDotacion.objects.filter(cargos=cargo).exists():
+                    #         errores.append(f"Cargo: '{cargo.nombre}'")
+                    #     if not GrupoDotacion.objects.filter(cliente=cliente).exists():
+                    #         errores.append(f"Cliente: '{cliente.nombre}'")
+                    #     if not GrupoDotacion.objects.filter(ciudades=ciudad).exists():
+                    #         errores.append(f"Ciudad: '{ciudad.nombre}'")
+                    #     if not GrupoDotacion.objects.filter(genero=genero).exists():
+                    #         errores.append(f"Genero: '{genero}'")
+
+                    #     motivo = ', '.join(errores)
+                    #     empleados_sin_entrega.append(
+                    #         f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
+                    #     )
 
                 if contador > 0:
                     mensaje = f"✅ Se cargaron {contador} empleados y se generaron {entregas} entregas."
@@ -1243,3 +1327,176 @@ def descargar_pdf_entrega(request, entrega_id):
     entrega = get_object_or_404(EntregaDotacion, pk=entrega_id)
     return generar_formato_entrega_pdf(entrega)
 
+
+def vista_consolidado(request):
+    consolidado = (
+        EntregaDotacion.objects
+        .values(
+            'empleado__cliente',  # nombre directo
+            'periodo'
+        )
+        .annotate(total_entregas=Count('id'))
+        .order_by('empleado__cliente', 'periodo')
+    )
+    return render(request, 'consolidado.html', {'consolidado': consolidado})
+
+
+
+# Función para reemplazar caracteres en DB
+class Replace(Func):
+    function = 'REPLACE'
+    arity = 3
+
+def generar_pdf_por_periodo(request):
+    # Obtener periodo del query string (ejemplo: ?periodo=08/2025)
+    periodo = request.GET.get('periodo')
+    if not periodo:
+        return HttpResponse("Debe especificar un periodo.", status=400)
+
+    try:
+        mes, anio = map(int, periodo.split('/'))
+    except ValueError:
+        return HttpResponse("Formato de periodo incorrecto. Use MM/YYYY.", status=400)
+
+    # Filtrar entregas por periodo
+    entregas = EntregaDotacion.objects.select_related('empleado', 'grupo') \
+        .prefetch_related('detalles__producto') \
+        .filter(fecha_entrega__month=mes, fecha_entrega__year=anio)
+
+    if not entregas.exists():
+        return HttpResponse("No hay entregas para este periodo.", status=404)
+
+    # Aquí tu código existente para generar PDF...
+    buffer = generar_pdf_entregas(entregas)
+    return FileResponse(buffer, as_attachment=True, filename=f'entregas_{periodo}.pdf')
+
+
+def generar_pdf_por_entrega(request, entrega_id):
+    entrega = get_object_or_404(
+        EntregaDotacion.objects.select_related('empleado', 'grupo').prefetch_related('detalles__producto'),
+        id=entrega_id
+    )
+    empleado = entrega.empleado
+
+    ruta_logo = os.path.join(settings.BASE_DIR, 'applications', 'ciudades', 'static', 'index', 'img', 'logoAtiempo.png')
+    logo = Image(ruta_logo, width=80, height=40) if os.path.exists(ruta_logo) else ''
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # --- Estilos personalizados ---
+    parrafo_estilo = ParagraphStyle(
+        name="TablaWrap",
+        fontSize=9,
+        leading=10,
+        wordWrap='CJK',
+        alignment=1,
+        fontName='Helvetica-Bold'
+    )
+
+    # --- Encabezado ---
+    encabezado_data = [
+        ['Código: FOR-GC-007', Paragraph('FORMATO DE ENTREGA ELEMENTOS DE TRABAJO', parrafo_estilo), logo],
+        ['Versión: 02', '', ''],
+        ['Fecha vigencia: 02/04/2019', '', '']
+    ]
+    encabezado_table = Table(encabezado_data, colWidths=[4.8*cm, 8.7*cm, 3.5*cm])
+    encabezado_table.setStyle(TableStyle([
+        ('SPAN', (1, 0), (1, 2)),
+        ('SPAN', (2, 0), (2, 2)),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
+    ]))
+    elements.append(encabezado_table)
+    elements.append(Spacer(1, 0.5 * cm))
+
+    # === Datos del trabajador ===
+    datos_trabajador = [
+        ['Nombre Trabajador', Paragraph(empleado.nombre, styles['Normal']), 'N.° ID', str(empleado.cedula)],
+        ['Empresa', Paragraph(str(empleado.cliente), styles['Normal']), 'Cargo', Paragraph(str(empleado.cargo), styles['Normal'])],
+        ['Fecha Ingreso',
+         empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
+         'Fecha de entrega',
+         f"{entrega.fecha_entrega.strftime('%m/%Y')}  |  Periodo: {entrega.periodo}"]
+    ]
+    tabla_datos = Table(datos_trabajador, colWidths=[3.5*cm, 5*cm, 3.5*cm, 5*cm])
+    tabla_datos.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+    ]))
+    elements.append(tabla_datos)
+    elements.append(Spacer(1, 0.5 * cm))
+
+    # === Checkboxes ===
+    checkbox_texto = Paragraph("Se hace entrega de los siguientes elementos de trabajo:", styles['Normal'])
+    checkboxes_data = [
+        [checkbox_texto, '', '', ''],
+        ['[X] DOTACIÓN', '[ ] EPP', '[ ] HERRAMIENTAS', '[ ] OTROS']
+    ]
+    tabla_checkbox = Table(checkboxes_data, colWidths=[3.5*cm, 5*cm, 3.5*cm, 5*cm])
+    tabla_checkbox.setStyle(TableStyle([
+        ('SPAN', (0, 0), (3, 0)),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+    ]))
+    elements.append(tabla_checkbox)
+    elements.append(Spacer(1, 0.5 * cm))
+
+    # === Tabla artículos ===
+    tabla_data = [['ARTÍCULO', 'CANTIDAD']]
+    for detalle in entrega.detalles.all():
+        tabla_data.append([detalle.producto.nombre, str(detalle.cantidad)])
+    tabla = Table(tabla_data, colWidths=[12*cm, 5*cm])
+    tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('GRID', (0,0), (-1,-1), 0.8, colors.black),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+    ]))
+    elements.append(tabla)
+    elements.append(Spacer(1, 0.5 * cm))
+
+    # === Observaciones ===
+    observacion = entrega.observaciones or " "
+    observacion_table = Table([
+        [Paragraph("<b>OBSERVACIONES:</b>", styles['Normal'])],
+        [Paragraph(observacion, styles['Normal'])]
+    ], colWidths=[17*cm])
+    observacion_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('TOPPADDING', (0, 1), (0, 1), 20),
+        ('BOTTOMPADDING', (0, 1), (0, 1), 20),
+    ]))
+    elements.append(observacion_table)
+    elements.append(Spacer(1, 0.4 * cm))
+
+    # === Declaración y firmas ===
+    declaracion_parrafo = Paragraph(
+        "El trabajador manifiesta: He recibido los elementos de trabajo anteriormente relacionados en buen estado físico y de funcionamiento..."
+        , styles['Normal']
+    )
+    tabla_final = Table([
+        [declaracion_parrafo],
+        [Table([
+            ['Entregado por:', 'Recibido por:'],
+            ['_______________', '_______________'],
+            ['Gestión Humana', 'C.C. N°'],
+            ['', 'El Trabajador en misión']
+        ], colWidths=[8.5*cm, 8.5*cm])]
+    ], colWidths=[17*cm])
+    tabla_final.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.7, colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER')
+    ]))
+    elements.append(tabla_final)
+
+    doc.build(elements)
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f'entrega_{entrega.id}.pdf')
