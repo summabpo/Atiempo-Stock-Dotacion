@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'widget_tweaks',
     'django_select2',
-     
+    'crum',
     
     'applications.ciudades',
     'applications.usuarios',
@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'dotacionAT.middleware.CurrentUserMiddleware',
+    'crum.CurrentRequestUserMiddleware',
 ]
 
 
