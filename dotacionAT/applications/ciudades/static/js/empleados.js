@@ -94,7 +94,7 @@ const empleadoDotacion = async () => {
                         <td>${item.cargo}</td>
                         <td>${item.cliente}</td>
                         <td>${item.centro_costo}</td>
-                        <td>${item.sexo}</td>
+                        <td>${item.Genero}</td>
                         <td>${item.fecha_ingreso}</td>
                         <td>${formatearFecha(item.fecha_registro)}</td>
 

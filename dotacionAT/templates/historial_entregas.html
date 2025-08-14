@@ -18,7 +18,7 @@
   </div>
   <div class="card-body">
     <div class="table-responsive">
-      <table id="historial_table" class="table table-striped table-hover">
+      <table id="historial_table" class="table table-striped table-hover text-center">
         <thead class="thead-dark">
           <tr>
             <th>Empleado</th>
@@ -39,7 +39,7 @@
               <td>{{ entrega.empleado.cedula }}</td>
               <td>{{ entrega.empleado.ciudad }}</td>
               <td>{{ entrega.empleado.cargo }}</td>
-              <td>{{ entrega.empleado.cliente.nombre }}</td>
+              <td>{{ entrega.empleado.cliente }}</td>
               <td>{{ entrega.empleado.sexo }}</td>
               <td>{{ entrega.fecha_entrega|date:"Y-m-d H:i" }}</td>
               <td>
