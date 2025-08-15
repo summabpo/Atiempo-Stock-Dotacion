@@ -932,19 +932,23 @@ def normalizar_talla(talla, categoria=None):
 
 def cargar_empleados_desde_excel(request):
     if request.method == 'POST':
-        set_current_user(request.user) 
+        set_current_user(request.user)
         form = CargarArchivoForm(request.POST, request.FILES)
+
         if form.is_valid():
             archivo = request.FILES['archivo']
             print("📂 Archivo recibido:", archivo.name)
             periodo = form.cleaned_data['periodo']
             print("📅 Periodo recibido:", periodo)
+
             try:
                 df = pd.read_excel(archivo)  # ← Leemos el archivo
-                df.columns = [col.strip().upper().replace(" ", "_") for col in df.columns]  # ← Normalizamos las columnas
+                # ← Normalizamos las columnas
                 
                 
-
+                df.columns = [col.strip().upper().replace(" ", "_") for col in df.columns]
+                
+            
                 df.rename(columns={
                     'NUMERO DE DO CUMENTO': 'NUMERO DE DOCUMENTO',
                     # 'CANTIDAD ': 'CANTIDAD_CAMISA',
@@ -952,19 +956,25 @@ def cargar_empleados_desde_excel(request):
                     'Unnamed: 0': 'IGNORAR_1',
                     'Unnamed: 15': 'IGNORAR_2',
                     'Unnamed: 21': 'IGNORAR_3',
-                    '   SUCURSAL': 'SUCURSAL'
+                    ' SUCURSAL': 'SUCURSAL'
                 }, inplace=True)
-                
-               
 
                 columnas_requeridas = [
-                    'NUMERO_DE_DOCUMENTO', 'NOMBRE_COMPLETO', 'CENTRO_TRABAJO', 'INGRESO', 'CARGO',
-                    'CLIENTE', 'C._COSTO', 'SEXO', 'TALLA_CAMISA', 'TALLA_PANTALON', 'TALLA_ZAPATOS'
+                    'NUMERO_DE_DOCUMENTO',
+                    'NOMBRE_COMPLETO',
+                    'CENTRO_TRABAJO',
+                    'INGRESO',
+                    'CARGO',
+                    'CLIENTE',
+                    'C._COSTO',
+                    'SEXO',
+                    'TALLA_CAMISA',
+                    'TALLA_PANTALON',
+                    'TALLA_ZAPATOS'
                 ]
-                
+
                 faltantes = [col for col in columnas_requeridas if col not in df.columns]
                 if faltantes:
-                   
                     messages.error(request, f"❌ Faltan columnas en el archivo: {faltantes}")
                     return render(request, 'cargar_empleados.html', {'form': form})
 
@@ -980,51 +990,49 @@ def cargar_empleados_desde_excel(request):
                 for _, fila in df.iterrows():
                     cedula = safe_str(fila['NUMERO_DE_DOCUMENTO']).strip()
                     print("\n🆕 Procesando fila:", cedula)
+
                     if EmpleadoDotacion.objects.filter(cedula=cedula).exists():
                         continue
-                    
-                                       
+
                     cliente, _ = Cliente.objects.get_or_create(nombre=safe_str(fila['CLIENTE']).strip())
                     ciudad, _ = Ciudad.objects.get_or_create(nombre=safe_str(fila['CENTRO_TRABAJO']).strip().title())
                     cargo, _ = Cargo.objects.get_or_create(nombre=safe_str(fila['CARGO']).strip())
                     centro_costo = safe_str(fila['C._COSTO']).strip()
-                    
-                    
-                    
+
                     fecha_ingreso = pd.to_datetime(fila['INGRESO'], errors='coerce')
                     if pd.isna(fecha_ingreso):
-                        fecha_ingreso = None  # o una fecha por defecto
+                        fecha_ingreso = None
                     else:
                         fecha_ingreso = fecha_ingreso.date()
-                    
+
                     talla_camisa = normalizar_talla(fila['TALLA_CAMISA'], categoria="CAMISA")
                     talla_pantalon = normalizar_talla(fila['TALLA_PANTALON'], categoria="PANTALON")
                     talla_zapatos = normalizar_talla(fila['TALLA_ZAPATOS'], categoria="BOTAS")
                     
+                    # if not cargo or not str(cargo).strip():
+                    #     continue
+                # if "NUMERO_DE_DOCUMENTO" in df.columns:
+                #     df = df[df["NUMERO_DE_DOCUMENTO"].notna() & (df["NUMERO_DE_DOCUMENTO"].astype(str).str.strip() != "")]
+
                     empleado = EmpleadoDotacion.objects.create(
-                    cedula=safe_str_number(fila['NUMERO_DE_DOCUMENTO']),
-                    nombre=safe_str(fila['NOMBRE_COMPLETO']),
-                    ciudad=safe_str(fila['CENTRO_TRABAJO']),  # Texto directo
-                    fecha_ingreso = fecha_ingreso,
-                    cargo=safe_str(fila['CARGO']),
-                    cliente=safe_str(fila['CLIENTE']),  # Texto directo
-                    centro_costo=safe_str(fila['C._COSTO']),
-                    sexo=safe_str(fila['SEXO']),
-                    #talla_camisa=safe_str(fila['TALLA_CAMISA']),
-                    talla_camisa=talla_camisa,
-                    cantidad_camisa=int(fila.get('CANTIDAD_CAMISA', 0) or 0),
-                    #talla_pantalon=safe_str(fila['TALLA_PANTALON']),
-                    talla_pantalon=talla_pantalon,
-                    cantidad_pantalon=int(fila.get('CANTIDAD_PANTALON', 0) or 0),
-                    #talla_zapatos=safe_str(fila['TALLA_ZAPATOS']),
-                    talla_zapatos=talla_zapatos,
-                    cantidad_zapatos=int(fila.get('CANTIDAD_ZAPATOS', 0) or 0),
-                    cantidad_botas_caucho=int(fila.get('BOTAS_CAUCHO', 0) or 0),
-                )
-                    
+                        cedula=safe_str_number(fila['NUMERO_DE_DOCUMENTO']),
+                        nombre=safe_str(fila['NOMBRE_COMPLETO']),
+                        ciudad=safe_str(fila['CENTRO_TRABAJO']),  # Texto directo
+                        fecha_ingreso=fecha_ingreso,
+                        cargo=safe_str(fila['CARGO']),
+                        cliente=safe_str(fila['CLIENTE']),  # Texto directo
+                        centro_costo=safe_str(fila['C._COSTO']),
+                        sexo=safe_str(fila['SEXO']),
+                        talla_camisa=talla_camisa,
+                        cantidad_camisa=int(fila.get('CANTIDAD_CAMISA', 0) or 0),
+                        talla_pantalon=talla_pantalon,
+                        cantidad_pantalon=int(fila.get('CANTIDAD_PANTALON', 0) or 0),
+                        talla_zapatos=talla_zapatos,
+                        cantidad_zapatos=int(fila.get('CANTIDAD_ZAPATOS', 0) or 0),
+                        cantidad_botas_caucho=int(fila.get('BOTAS_CAUCHO', 0) or 0),
+                    )
                     contador += 1
 
-                              
                     cargo_obj = Cargo.objects.get(nombre__iexact=empleado.cargo)
                     grupos = GrupoDotacion.objects.filter(
                         cargos=cargo_obj,
@@ -1032,110 +1040,87 @@ def cargar_empleados_desde_excel(request):
                         cliente__nombre__icontains=empleado.cliente,
                         genero__iexact=empleado.sexo
                     ).distinct()
-                    
-                    # Si NO hay grupos, guardamos en errores y continuamos
-                    if not grupos.exists():
-                        errores = []
-                        if not GrupoDotacion.objects.filter(cargos=cargo_obj).exists():
-                            errores.append(f"Cargo: '{cargo_obj.nombre}'")
-                        if not GrupoDotacion.objects.filter(cliente__nombre__icontains=empleado.cliente).exists():
-                            errores.append(f"Cliente: '{empleado.cliente}'")
-                        if not GrupoDotacion.objects.filter(ciudades__nombre__iexact=empleado.ciudad).exists():
-                            errores.append(f"Ciudad: '{empleado.ciudad}'")
-                        if not GrupoDotacion.objects.filter(genero__iexact=empleado.sexo).exists():
-                            errores.append(f"Genero: '{empleado.sexo}'")
-
-                        motivo = ', '.join(errores) or "Sin coincidencia en grupo"
-                        empleados_sin_entrega.append(
-                            f"{empleado.nombre} ({empleado.cedula}) - Sin grupo para: {motivo}"
-                        )
-                        continue
-
-                    # Si sí hay grupos, seguimos con la lógica
-                    grupo = grupos.first()
-
 
                     genero = safe_str(fila['SEXO']).upper()
-                    
-                    
 
                     if grupos.exists():
                         grupo = grupos.first()
                         productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
 
                         productos_sin_stock = []
-                        productos_para_entregar = []
+                        productos_entregados = []
 
                         for producto_grupo in productos:
                             talla = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
                             try:
-                                producto = Producto.objects.get(nombre__icontains=talla, categoria=producto_grupo.categoria)
-                                inventario = InventarioBodega.objects.get(bodega=bodega_dotacion, producto=producto)
+                                producto = Producto.objects.get(
+                                    nombre__icontains=talla,
+                                    categoria=producto_grupo.categoria
+                                )
+                                inventario = InventarioBodega.objects.get(
+                                    bodega=bodega_dotacion,
+                                    producto=producto
+                                )
 
                                 if inventario.stock < producto_grupo.cantidad:
-                                    productos_sin_stock.append(f"Sin stock: {producto.nombre}")
-                                else:
-                                    productos_para_entregar.append((producto, producto_grupo.cantidad))
+                                    productos_sin_stock.append(producto.nombre)
+                                    continue
 
-                            except Producto.DoesNotExist:
-                                productos_sin_stock.append(f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}")
-                            except InventarioBodega.DoesNotExist:
-                                productos_sin_stock.append(f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}")
+                                entrega = EntregaDotacion.objects.get_or_create(
+                                    empleado=empleado,
+                                    grupo=grupo,
+                                    defaults={'periodo': periodo}
+                                )[0]
 
-                        # ✅ Solo creamos la entrega si no faltó nada
-                        if not productos_sin_stock:
-                            entrega = EntregaDotacion.objects.get_or_create(empleado=empleado, grupo=grupo, defaults={'periodo': periodo})[0]
-                            productos_entregados = []
-                            for producto, cantidad in productos_para_entregar:
                                 detalle = DetalleEntregaDotacion.objects.create(
                                     entrega=entrega,
                                     producto=producto,
-                                    cantidad=cantidad
+                                    cantidad=producto_grupo.cantidad
                                 )
                                 productos_entregados.append(detalle)
 
-                            if productos_entregados:
-                                generar_salida_por_entrega(entrega, productos_entregados, request.user)
-                                entregas += 1
-                        else:
+                            except Producto.DoesNotExist:
+                                productos_sin_stock.append(
+                                    f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}"
+                                )
+                            except InventarioBodega.DoesNotExist:
+                                productos_sin_stock.append(
+                                    f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}"
+                                )
+
+                        print("Tipo de usuario recibido: linea 963", type(request.user))
+
+                        if productos_entregados:
+                            print("Tipo de usuario recibido: linea 965", type(request.user))
+                            generar_salida_por_entrega(entrega, productos_entregados, request.user)
+                            entregas += 1
+
+                        if productos_sin_stock:
                             empleados_sin_entrega.append(
                                 f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
                             )
-                                
-                               
-                        
-                    #     print("Tipo de usuario recibido: linea 963", type(request.user))
-                    #     if productos_entregados:
-                    #         print("Tipo de usuario recibido:linea 965", type(request.user))
-                    #         generar_salida_por_entrega(entrega, productos_entregados, request.user)
-                    #         entregas += 1
 
-                    #     if productos_sin_stock:
-                    #         empleados_sin_entrega.append(
-                    #             f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
-                    #         )
+                    else:
+                        errores = []
+                        if not GrupoDotacion.objects.filter(cargos=cargo).exists():
+                            errores.append(f"Cargo: '{cargo.nombre}'")
+                        if not GrupoDotacion.objects.filter(cliente=cliente).exists():
+                            errores.append(f"Cliente: '{cliente.nombre}'")
+                        if not GrupoDotacion.objects.filter(ciudades=ciudad).exists():
+                            errores.append(f"Ciudad: '{ciudad.nombre}'")
+                        if not GrupoDotacion.objects.filter(genero=genero).exists():
+                            errores.append(f"Genero: '{genero}'")
 
-                    # else:
-                    #     errores = []
-                    #     if not GrupoDotacion.objects.filter(cargos=cargo).exists():
-                    #         errores.append(f"Cargo: '{cargo.nombre}'")
-                    #     if not GrupoDotacion.objects.filter(cliente=cliente).exists():
-                    #         errores.append(f"Cliente: '{cliente.nombre}'")
-                    #     if not GrupoDotacion.objects.filter(ciudades=ciudad).exists():
-                    #         errores.append(f"Ciudad: '{ciudad.nombre}'")
-                    #     if not GrupoDotacion.objects.filter(genero=genero).exists():
-                    #         errores.append(f"Genero: '{genero}'")
-
-                    #     motivo = ', '.join(errores)
-                    #     empleados_sin_entrega.append(
-                    #         f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
-                    #     )
+                        motivo = ', '.join(errores)
+                        empleados_sin_entrega.append(
+                            f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
+                        )
 
                 if contador > 0:
                     mensaje = f"✅ Se cargaron {contador} empleados y se generaron {entregas} entregas."
                     if empleados_sin_entrega:
                         mensaje += f" ⚠️ Sin entrega para {len(empleados_sin_entrega)} empleados."
-                        request.session['empleados_sin_entrega'] = empleados_sin_entrega
+                    request.session['empleados_sin_entrega'] = empleados_sin_entrega
                     messages.success(request, mensaje)
                 else:
                     messages.warning(request, "⚠️ No se cargó ningún empleado nuevo.")
@@ -1144,12 +1129,11 @@ def cargar_empleados_desde_excel(request):
 
             except Exception as e:
                 print("Tipo del objeto recibido como usuario: linea 1002", type(request))
-               
                 messages.error(request, f"❌ Error al procesar el archivo: {str(e)}")
+
     else:
         form = CargarArchivoForm()
-
-    empleados_sin_entrega = request.session.pop('empleados_sin_entrega', [])
+        empleados_sin_entrega = request.session.pop('empleados_sin_entrega', [])
 
     return render(request, 'cargar_empleados.html', {
         'form': form,
