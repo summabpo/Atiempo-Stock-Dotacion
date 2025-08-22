@@ -28,6 +28,7 @@
         <tr>
             <th>Cliente</th>
             <th>Periodo</th>
+            <th>Tipo Entrega</th>
             <th>Total Entregas</th>
             <th>Acción</th>
         </tr>
@@ -37,6 +38,7 @@
         <tr>
             <td>{{ item.empleado__cliente }}</td>
             <td>{{ item.periodo }}</td>
+            <td>{{ item.tipo_entrega }}</td>
             <td>{{ item.total_entregas }}</td>
             <td>
               <a href="{% url 'generar_formato_entrega_pdf' %}?periodo={{ item.periodo }}&cliente={{ item.empleado__cliente|urlencode }}"

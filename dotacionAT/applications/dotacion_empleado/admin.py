@@ -74,6 +74,7 @@ class EntregaDotacionAdmin(admin.ModelAdmin):
         'empleado_ciudad',
         'empleado_cargo',
         'periodo',
+        'tipo_entrega',
         'empleado_cliente',
         'empleado_sexo',
         'grupo',

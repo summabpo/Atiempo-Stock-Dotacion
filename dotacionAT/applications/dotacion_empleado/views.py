@@ -49,6 +49,7 @@
 # from .forms import CargarArchivoForm
 # from .models import EmpleadoDotacion
 # from django.contrib.auth.decorators import login_required
+import threading
 from applications.inventario.models import  InventarioBodega
 from django.utils import timezone
 from decimal import Decimal
@@ -100,6 +101,10 @@ from reportlab.lib.pagesizes import A4
 import os
 from django.conf import settings
 from reportlab.platypus import Image
+from django.views.decorators.csrf import csrf_exempt
+from django.core.cache import cache
+
+
 
 def get_or_none(modelo, **filtros):
     try:
@@ -928,9 +933,16 @@ def normalizar_talla(talla, categoria=None):
             return talla.upper().replace(" ", "")
     return talla.upper()    
     
+
+# Variable global para progreso (luego la puedes llevar a cache si quieres)
+PROGRESO_CARGA = {"total": 0, "actual": 0}
     
 
 def cargar_empleados_desde_excel(request):
+    
+    empleados_sin_entrega = []
+    global PROGRESO_CARGA
+    
     if request.method == 'POST':
         set_current_user(request.user)
         form = CargarArchivoForm(request.POST, request.FILES)
@@ -939,12 +951,19 @@ def cargar_empleados_desde_excel(request):
             archivo = request.FILES['archivo']
             print("📂 Archivo recibido:", archivo.name)
             periodo = form.cleaned_data['periodo']
+            tipo_entrega = form.cleaned_data['tipo_entrega']
             print("📅 Periodo recibido:", periodo)
 
             try:
                 df = pd.read_excel(archivo)  # ← Leemos el archivo
-                # ← Normalizamos las columnas
+                # reiniciamos progreso en cache
+                total = len(df)
+                cache.set('progreso_carga', {"total": total, "actual": 0}, timeout=600)
+
                 
+                # eliminar filas donde la columna 'Cedula' esté vacía o nula
+                df = df.dropna(subset=['NUMERO DE DOCUMENTO'])
+                df = df[df['NUMERO DE DOCUMENTO'].astype(str).str.strip() != '']
                 
                 df.columns = [col.strip().upper().replace(" ", "_") for col in df.columns]
                 
@@ -979,19 +998,25 @@ def cargar_empleados_desde_excel(request):
                     return render(request, 'cargar_empleados.html', {'form': form})
 
                 contador, entregas = 0, 0
-                empleados_sin_entrega = []
+                
 
                 try:
                     bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
                 except Bodega.DoesNotExist:
                     messages.error(request, "❌ No se encontró la bodega 'Principal'.")
                     return render(request, 'cargar_empleados.html', {'form': form})
+                
+                
+                
 
                 for _, fila in df.iterrows():
                     cedula = safe_str(fila['NUMERO_DE_DOCUMENTO']).strip()
                     print("\n🆕 Procesando fila:", cedula)
 
                     if EmpleadoDotacion.objects.filter(cedula=cedula).exists():
+                        progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+                        progreso["actual"] += 1
+                        cache.set('progreso_carga', progreso, timeout=600)
                         continue
 
                     cliente, _ = Cliente.objects.get_or_create(nombre=safe_str(fila['CLIENTE']).strip())
@@ -1032,6 +1057,11 @@ def cargar_empleados_desde_excel(request):
                         cantidad_botas_caucho=int(fila.get('BOTAS_CAUCHO', 0) or 0),
                     )
                     contador += 1
+                    
+                    # 🔹 cada fila que procesas → actualizas progreso
+                    progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+                    progreso["actual"] += 1
+                    cache.set('progreso_carga', progreso, timeout=600)
 
                     cargo_obj = Cargo.objects.get(nombre__iexact=empleado.cargo)
                     grupos = GrupoDotacion.objects.filter(
@@ -1069,7 +1099,13 @@ def cargar_empleados_desde_excel(request):
                                 entrega = EntregaDotacion.objects.get_or_create(
                                     empleado=empleado,
                                     grupo=grupo,
-                                    defaults={'periodo': periodo}
+                                    tipo_entrega=tipo_entrega,
+                                    periodo= periodo 
+                                    # defaults={
+                                    #     'tipo_entrega': tipo_entrega,
+                                    #     'periodo': periodo
+                                    # }
+                                    
                                 )[0]
 
                                 detalle = DetalleEntregaDotacion.objects.create(
@@ -1115,6 +1151,11 @@ def cargar_empleados_desde_excel(request):
                         empleados_sin_entrega.append(
                             f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
                         )
+                        
+                    # 🔹 actualizamos progreso
+                    PROGRESO_CARGA["actual"] += 1
+                        
+                       
 
                 if contador > 0:
                     mensaje = f"✅ Se cargaron {contador} empleados y se generaron {entregas} entregas."
@@ -1139,6 +1180,12 @@ def cargar_empleados_desde_excel(request):
         'form': form,
         'empleados_sin_entrega': empleados_sin_entrega
     })
+
+
+def progreso_carga(request):
+    progreso = cache.get('progreso_carga', {"total": 1, "actual": 0})
+    porcentaje = int((progreso["actual"] / progreso["total"]) * 100) if progreso["total"] > 0 else 0
+    return JsonResponse({"progreso": porcentaje})
 
 # Comentado era el codigo que servia
 
@@ -1317,7 +1364,8 @@ def vista_consolidado(request):
         EntregaDotacion.objects
         .values(
             'empleado__cliente',  # nombre directo
-            'periodo'
+            'periodo',
+            'tipo_entrega'
         )
         .annotate(total_entregas=Count('id'))
         .order_by('empleado__cliente', 'periodo')

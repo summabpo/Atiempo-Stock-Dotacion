@@ -11,6 +11,7 @@ urlpatterns = [
     path('consolidado/', views.vista_consolidado, name='vista_consolidado'),
     path('pdf/', views.generar_pdf_por_periodo, name='pdf_por_periodo'),
     path('entrega/pdf/<int:entrega_id>/', views.generar_pdf_por_entrega, name='generar_pdf_por_entrega'),
+    path("progreso-carga/", views.progreso_carga, name="progreso_carga"),
 ]
 
 

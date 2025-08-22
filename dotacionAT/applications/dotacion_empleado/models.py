@@ -50,11 +50,17 @@ def validar_periodo(valor):
         raise ValidationError('El periodo debe tener el formato MM/YYYY')
 
 class EntregaDotacion(models.Model):
+    TIPO_ENTREGA_CHOICES = [
+        ('ingreso', 'Por ingreso'),
+        ('ley', 'Por ley'),
+    ]
+    
     empleado = models.ForeignKey(EmpleadoDotacion, on_delete=models.CASCADE, related_name='entregas')
     grupo = models.ForeignKey(GrupoDotacion, on_delete=models.SET_NULL, null=True, blank=True)
     fecha_entrega = models.DateTimeField(auto_now_add=True)
     observaciones = models.TextField(blank=True, null=True)
     periodo = models.CharField(max_length=10, null=True, blank=True)
+    tipo_entrega = models.CharField(max_length=10, choices=TIPO_ENTREGA_CHOICES, null=True, blank=True)
 
 
     def __str__(self):
