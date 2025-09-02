@@ -3,7 +3,8 @@ from django.db import models
 from applications.grupos_dotacion.models import GrupoDotacion  # ajusta el import si es necesario
 from applications.productos.models import Producto
 from applications.clientes.models import Cliente
-
+from applications.ciudades.models import Ciudad
+from applications.grupos_dotacion.models import Cargo
 from django.core.exceptions import ValidationError
 import re
 # Create your models here.
@@ -12,11 +13,11 @@ class EmpleadoDotacion(models.Model):
     cedula = models.CharField(max_length=20)
     nombre = models.CharField(max_length=100)
     #ciudad = models.ForeignKey(Ciudad, on_delete=models.PROTECT, default=1)
-    ciudad = models.CharField(max_length=50, null=True)
+    ciudad = models.ForeignKey(Ciudad, on_delete=models.PROTECT, blank=True, null=True)
     fecha_ingreso = models.DateField(null=True, blank=True)
-    cargo = models.CharField(max_length=100)
+    cargo  = models.ForeignKey(Cargo, on_delete=models.PROTECT, blank=True, null=True)
     #cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
-    cliente = models.CharField(max_length=255)
+    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, blank=True, null=True)
     centro_costo = models.CharField(max_length=100)
     sexo = models.CharField(max_length=20)
 
@@ -35,7 +36,7 @@ class EmpleadoDotacion(models.Model):
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.nombre} ({self.cedula})'
+        return f'{self.nombre} ({self.cedula}) - {self.cargo or "Sin cargo"}'
     
     
     class Meta:
@@ -44,6 +45,8 @@ class EmpleadoDotacion(models.Model):
         
     class Meta:
         ordering = ['-fecha_registro']
+        
+        
 def validar_periodo(valor):
     """Valida que el periodo tenga el formato MM/YYYY"""
     if not re.match(r'^(0[1-9]|1[0-2])/\d{4}$', valor):
@@ -80,5 +83,20 @@ class DetalleEntregaDotacion(models.Model):
     
     
     
-    
-    
+
+class HistorialIngresoEmpleado(models.Model):
+    empleado = models.ForeignKey(
+        'EmpleadoDotacion',
+        on_delete=models.PROTECT,
+        related_name='historial_ingresos'
+    )
+    fecha_ingreso = models.DateField()
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Ingreso de {self.empleado.nombre} - {self.fecha_ingreso}"
+
+    class Meta:
+        verbose_name = "Historial de Ingreso"
+        verbose_name_plural = "Historial de Ingresos"
+        ordering = ['-fecha_ingreso']

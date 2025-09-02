@@ -1,13 +1,38 @@
 from django.contrib import admin
-from .models import EmpleadoDotacion, EntregaDotacion, EntregaDotacion, DetalleEntregaDotacion
+from .models import EmpleadoDotacion, EntregaDotacion, EntregaDotacion, DetalleEntregaDotacion, HistorialIngresoEmpleado
 from applications.grupos_dotacion.models import GrupoDotacion, GrupoDotacionProducto
 
 # Register your models here.
 
+# Inline para mostrar el historial dentro del empleado
+class HistorialIngresoEmpleadoInline(admin.TabularInline):  # puedes usar StackedInline si prefieres
+    model = HistorialIngresoEmpleado
+    extra = 1  # cuántos registros vacíos quieres que aparezcan listos para añadir
+    fields = ['fecha_ingreso']
+    ordering = ['-fecha_ingreso']
+
+# Admin de empleado con el inline
 @admin.register(EmpleadoDotacion)
 class EmpleadoDotacionAdmin(admin.ModelAdmin):
-    list_display = ('cedula', 'nombre', 'cliente', 'fecha_ingreso', 'fecha_registro')
-    search_fields = ('cedula', 'nombre', 'cliente')
+    list_display = ("cedula", "nombre", "cargo", "cliente", "ciudad", "fecha_ingreso")
+    search_fields = ("cedula", "nombre")
+    list_filter = ("cargo", "cliente", "ciudad", "sexo")
+    ordering = ['-fecha_registro']
+    inlines = [HistorialIngresoEmpleadoInline]
+
+# Admin del historial por si quieres gestionarlo independiente
+@admin.register(HistorialIngresoEmpleado)
+class HistorialIngresoEmpleadoAdmin(admin.ModelAdmin):
+    list_display = ('empleado', 'fecha_ingreso', 'fecha_registro')
+    search_fields = ('empleado__nombre', 'empleado__cedula')
+    list_filter = ('fecha_ingreso', 'empleado__cliente', 'empleado__ciudad')
+    ordering = ['-fecha_ingreso']
+
+
+# @admin.register(EmpleadoDotacion)
+# class EmpleadoDotacionAdmin(admin.ModelAdmin):
+#     list_display = ('cedula', 'nombre', 'cliente', 'fecha_ingreso', 'fecha_registro')
+#     search_fields = ('cedula', 'nombre', 'cliente')
     
 
 # @admin.register(EntregaDotacion)

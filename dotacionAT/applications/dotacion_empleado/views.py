@@ -1,54 +1,3 @@
-
-# import pandas as pd
-# from django.shortcuts import render, redirect
-# from django.contrib import messages
-# from .forms import CargarArchivoForm
-# from .models import EmpleadoDotacion
-# # Create your views here.
-
-
-# def cargar_empleados_desde_excel(request):
-#     if request.method == 'POST':
-#         form = CargarArchivoForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             archivo = request.FILES['archivo']
-
-#             try:
-#                 df = pd.read_excel(archivo)  # También puedes usar read_csv() si es .txt
-#                 for _, fila in df.iterrows():
-#                     EmpleadoDotacion.objects.create(
-#                         cedula=fila['NUMERO DE DOCUMENTO'],
-#                         nombre=fila['NOMBRE COMPLETO'],
-#                         ciudad=fila['SUCURSAL'],
-#                         fecha_ingreso=pd.to_datetime(fila['INGRESO'], errors='coerce'),
-#                         cargo=fila['CARGO'],
-#                         cliente=fila['CLIENTE'],
-#                         centro_costo=fila['C. COSTO'],
-#                         sexo=fila['SEXO'],
-#                         talla_camisa=fila['TALLA CAMISA'],
-#                         cantidad_camisa=int(fila['CANTIDAD']),
-#                         talla_pantalon=fila['TALLA PANTALON'],
-#                         cantidad_pantalon=int(fila['CANTIDAD.1']),
-#                         talla_zapatos=fila['TALLA ZAPATOS'],
-#                         cantidad_zapatos=int(fila['CANTIDAD.2']),
-#                         cantidad_botas_caucho=int(fila['BOTA CAUCHO'])
-#                     )
-#                 messages.success(request, "Empleados cargados correctamente.")
-#                 return redirect('cargar_empleados')  # ajusta con el nombre correcto de tu URL
-#             except Exception as e:
-#                 messages.error(request, f"Error al procesar el archivo: {e}")
-#     else:
-#         form = CargarArchivoForm()
-
-#     return render(request, 'cargar_empleados.html', {'form': form})
-
-# import pandas as pd
-# from django.shortcuts import render, redirect
-# from django.http import HttpResponse, JsonResponse
-# from django.contrib import messages
-# from .forms import CargarArchivoForm
-# from .models import EmpleadoDotacion
-# from django.contrib.auth.decorators import login_required
 import threading
 from applications.inventario.models import  InventarioBodega
 from django.utils import timezone
@@ -67,7 +16,7 @@ from applications.bodegas.models import Bodega
 from applications.ciudades.models import Ciudad
 from applications.grupos_dotacion.models import Cargo
 from .forms import CargarArchivoForm
-from .utils import safe_str, safe_int, generar_formato_entrega_pdf
+from .utils import safe_str, safe_int, generar_formato_entrega_pdf, limpiar_dataframe, obtener_o_crear_empleado, crear_entrega_dotacion
 from django.contrib.auth.decorators import login_required
 import openpyxl
 from django.db import transaction
@@ -168,9 +117,9 @@ def list_empleados(_request):
             {
                 'cedula': c.cedula,
                 'nombre': c.nombre,
-                'ciudad': c.ciudad,
-                'cargo': c.cargo,
-                'cliente': c.cliente,
+                'ciudad': c.ciudad.nombre,
+                'cargo': c.cargo.nombre,
+                'cliente': c.cliente.nombre,
                 'centro_costo': c.centro_costo,  # <-- corregido
                 'Genero': c.sexo,
                 'fecha_ingreso': c.fecha_ingreso,
@@ -937,249 +886,1134 @@ def normalizar_talla(talla, categoria=None):
 # Variable global para progreso (luego la puedes llevar a cache si quieres)
 PROGRESO_CARGA = {"total": 0, "actual": 0}
     
+#TODO:ESTOY HACIENDO ESTA FUNCION COMENTO ESTE CODIGO EL 29 DE AGOSTO 2025 ES EL QUE SIRVE
+# def cargar_empleados_desde_excel(request):
+    
+#     empleados_sin_entrega = []
+#     global PROGRESO_CARGA
+    
+#     if request.method == 'POST':
+#         set_current_user(request.user)
+#         form = CargarArchivoForm(request.POST, request.FILES)
+
+#         if form.is_valid():
+#             archivo = request.FILES['archivo']
+#             print("📂 Archivo recibido:", archivo.name)
+#             periodo = form.cleaned_data['periodo']
+#             tipo_entrega = form.cleaned_data['tipo_entrega']
+#             print("📅 Periodo recibido:", periodo)
+
+#             try:
+#                 df = pd.read_excel(archivo)  # ← Leemos el archivo
+#                 # reiniciamos progreso en cache
+#                 total = len(df)
+#                 cache.set('progreso_carga', {"total": total, "actual": 0}, timeout=600)
+
+                
+#                 # eliminar filas donde la columna 'Cedula' esté vacía o nula
+#                 df = df.dropna(subset=['NUMERO DE DOCUMENTO'])
+#                 df = df[df['NUMERO DE DOCUMENTO'].astype(str).str.strip() != '']
+                
+#                 df.columns = [col.strip().upper().replace(" ", "_") for col in df.columns]
+                
+            
+#                 df.rename(columns={
+#                     'NUMERO DE DO CUMENTO': 'NUMERO DE DOCUMENTO',
+#                     # 'CANTIDAD ': 'CANTIDAD_CAMISA',
+#                     # 'CANTIDAD': 'CANTIDAD_PANTALON',
+#                     'Unnamed: 0': 'IGNORAR_1',
+#                     'Unnamed: 15': 'IGNORAR_2',
+#                     'Unnamed: 21': 'IGNORAR_3',
+#                     ' SUCURSAL': 'SUCURSAL'
+#                 }, inplace=True)
+
+#                 columnas_requeridas = [
+#                     'NUMERO_DE_DOCUMENTO',
+#                     'NOMBRE_COMPLETO',
+#                     'CENTRO_TRABAJO',
+#                     'INGRESO',
+#                     'CARGO',
+#                     'CLIENTE',
+#                     'C._COSTO',
+#                     'SEXO',
+#                     'TALLA_CAMISA',
+#                     'TALLA_PANTALON',
+#                     'TALLA_ZAPATOS'
+#                 ]
+
+#                 faltantes = [col for col in columnas_requeridas if col not in df.columns]
+#                 if faltantes:
+#                     messages.error(request, f"❌ Faltan columnas en el archivo: {faltantes}")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 contador, entregas = 0, 0
+                
+
+#                 try:
+#                     bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
+#                 except Bodega.DoesNotExist:
+#                     messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+                
+                
+                
+
+#                 for _, fila in df.iterrows():
+#                     cedula = safe_str(fila['NUMERO_DE_DOCUMENTO']).strip()
+#                     print("\n🆕 Procesando fila:", cedula)
+                    
+                    
+
+#                     if EmpleadoDotacion.objects.filter(cedula=cedula).exists():
+#                         progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+#                         progreso["actual"] += 1
+#                         cache.set('progreso_carga', progreso, timeout=600)
+#                         continue
+
+#                     cliente, _ = Cliente.objects.get_or_create(nombre=safe_str(fila['CLIENTE']).strip())
+#                     ciudad, _ = Ciudad.objects.get_or_create(nombre=safe_str(fila['CENTRO_TRABAJO']).strip().title())
+#                     cargo, _ = Cargo.objects.get_or_create(nombre=safe_str(fila['CARGO']).strip())
+#                     centro_costo = safe_str(fila['C._COSTO']).strip()
+
+#                     fecha_ingreso = pd.to_datetime(fila['INGRESO'], errors='coerce')
+#                     if pd.isna(fecha_ingreso):
+#                         fecha_ingreso = None
+#                     else:
+#                         fecha_ingreso = fecha_ingreso.date()
+
+#                     talla_camisa = normalizar_talla(fila['TALLA_CAMISA'], categoria="CAMISA")
+#                     talla_pantalon = normalizar_talla(fila['TALLA_PANTALON'], categoria="PANTALON")
+#                     talla_zapatos = normalizar_talla(fila['TALLA_ZAPATOS'], categoria="BOTAS")
+                    
+#                     # if not cargo or not str(cargo).strip():
+#                     #     continue
+#                 # if "NUMERO_DE_DOCUMENTO" in df.columns:
+#                 #     df = df[df["NUMERO_DE_DOCUMENTO"].notna() & (df["NUMERO_DE_DOCUMENTO"].astype(str).str.strip() != "")]
+
+#                     empleado = EmpleadoDotacion.objects.create(
+#                         cedula=safe_str_number(fila['NUMERO_DE_DOCUMENTO']),
+#                         nombre=safe_str(fila['NOMBRE_COMPLETO']),
+#                         ciudad=safe_str(fila['CENTRO_TRABAJO']),  # Texto directo
+#                         fecha_ingreso=fecha_ingreso,
+#                         cargo=safe_str(fila['CARGO']),
+#                         cliente=safe_str(fila['CLIENTE']),  # Texto directo
+#                         centro_costo=safe_str(fila['C._COSTO']),
+#                         sexo=safe_str(fila['SEXO']),
+#                         talla_camisa=talla_camisa,
+#                         cantidad_camisa=int(fila.get('CANTIDAD_CAMISA', 0) or 0),
+#                         talla_pantalon=talla_pantalon,
+#                         cantidad_pantalon=int(fila.get('CANTIDAD_PANTALON', 0) or 0),
+#                         talla_zapatos=talla_zapatos,
+#                         cantidad_zapatos=int(fila.get('CANTIDAD_ZAPATOS', 0) or 0),
+#                         cantidad_botas_caucho=int(fila.get('BOTAS_CAUCHO', 0) or 0),
+#                     )
+#                     contador += 1
+                    
+#                     # 🔹 cada fila que procesas → actualizas progreso
+#                     progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+#                     progreso["actual"] += 1
+#                     cache.set('progreso_carga', progreso, timeout=600)
+
+#                     cargo_obj = Cargo.objects.get(nombre__iexact=empleado.cargo)
+#                     grupos = GrupoDotacion.objects.filter(
+#                         cargos=cargo_obj,
+#                         ciudades__nombre__iexact=empleado.ciudad,
+#                         cliente__nombre__icontains=empleado.cliente,
+#                         genero__iexact=empleado.sexo
+#                     ).distinct()
+
+#                     genero = safe_str(fila['SEXO']).upper()
+
+#                     if grupos.exists():
+#                         grupo = grupos.first()
+#                         productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
+
+#                         productos_sin_stock = []
+#                         productos_entregados = []
+
+#                         for producto_grupo in productos:
+#                             talla = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
+#                             try:
+#                                 producto = Producto.objects.get(
+#                                     nombre__icontains=talla,
+#                                     categoria=producto_grupo.categoria
+#                                 )
+#                                 inventario = InventarioBodega.objects.get(
+#                                     bodega=bodega_dotacion,
+#                                     producto=producto
+#                                 )
+
+#                                 if inventario.stock < producto_grupo.cantidad:
+#                                     productos_sin_stock.append(producto.nombre)
+#                                     continue
+
+#                                 entrega = EntregaDotacion.objects.get_or_create(
+#                                     empleado=empleado,
+#                                     grupo=grupo,
+#                                     tipo_entrega=tipo_entrega,
+#                                     periodo= periodo 
+#                                     # defaults={
+#                                     #     'tipo_entrega': tipo_entrega,
+#                                     #     'periodo': periodo
+#                                     # }
+                                    
+#                                 )[0]
+
+#                                 detalle = DetalleEntregaDotacion.objects.create(
+#                                     entrega=entrega,
+#                                     producto=producto,
+#                                     cantidad=producto_grupo.cantidad
+#                                 )
+#                                 productos_entregados.append(detalle)
+
+#                             except Producto.DoesNotExist:
+#                                 productos_sin_stock.append(
+#                                     f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}"
+#                                 )
+#                             except InventarioBodega.DoesNotExist:
+#                                 productos_sin_stock.append(
+#                                     f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}"
+#                                 )
+
+#                         print("Tipo de usuario recibido: linea 963", type(request.user))
+
+#                         if productos_entregados:
+#                             print("Tipo de usuario recibido: linea 965", type(request.user))
+#                             generar_salida_por_entrega(entrega, productos_entregados, request.user)
+#                             entregas += 1
+
+#                         if productos_sin_stock:
+#                             empleados_sin_entrega.append(
+#                                 f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
+#                             )
+
+#                     else:
+#                         errores = []
+#                         if not GrupoDotacion.objects.filter(cargos=cargo).exists():
+#                             errores.append(f"Cargo: '{cargo.nombre}'")
+#                         if not GrupoDotacion.objects.filter(cliente=cliente).exists():
+#                             errores.append(f"Cliente: '{cliente.nombre}'")
+#                         if not GrupoDotacion.objects.filter(ciudades=ciudad).exists():
+#                             errores.append(f"Ciudad: '{ciudad.nombre}'")
+#                         if not GrupoDotacion.objects.filter(genero=genero).exists():
+#                             errores.append(f"Genero: '{genero}'")
+
+#                         motivo = ', '.join(errores)
+#                         empleados_sin_entrega.append(
+#                             f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
+#                         )
+                        
+#                     # 🔹 actualizamos progreso
+#                     PROGRESO_CARGA["actual"] += 1
+                        
+                       
+
+#                 if contador > 0:
+#                     mensaje = f"✅ Se cargaron {contador} empleados y se generaron {entregas} entregas."
+#                     if empleados_sin_entrega:
+#                         mensaje += f" ⚠️ Sin entrega para {len(empleados_sin_entrega)} empleados."
+#                     request.session['empleados_sin_entrega'] = empleados_sin_entrega
+#                     messages.success(request, mensaje)
+#                 else:
+#                     messages.warning(request, "⚠️ No se cargó ningún empleado nuevo.")
+
+#                 return redirect('cargar_empleados')
+
+#             except Exception as e:
+#                 print("Tipo del objeto recibido como usuario: linea 1002", type(request))
+#                 messages.error(request, f"❌ Error al procesar el archivo: {str(e)}")
+
+#     else:
+#         form = CargarArchivoForm()
+#         empleados_sin_entrega = request.session.pop('empleados_sin_entrega', [])
+
+#     return render(request, 'cargar_empleados.html', {
+#         'form': form,
+#         'empleados_sin_entrega': empleados_sin_entrega
+#     })
+
+
+# def cargar_empleados_desde_excel(request):
+#     empleados_sin_entrega = []
+#     global PROGRESO_CARGA
+    
+#     if request.method == 'POST':
+#         set_current_user(request.user)
+#         form = CargarArchivoForm(request.POST, request.FILES)
+
+#         if form.is_valid():
+#             archivo = request.FILES['archivo']
+#             print("📂 Archivo recibido:", archivo.name)
+#             periodo = form.cleaned_data['periodo']
+#             tipo_entrega = form.cleaned_data['tipo_entrega']
+#             print("📅 Periodo recibido:", periodo)
+
+#             try:
+#                 # 🔹 1. Leemos el archivo Excel
+#                 df = pd.read_excel(archivo)
+
+#                 # reiniciamos progreso en cache
+#                 total = len(df)
+#                 cache.set('progreso_carga', {"total": total, "actual": 0}, timeout=600)
+                
+                
+#                 print("Antes de limpiar:")
+#                 print(df.head())
+
+#                 # 🔹 2. Aplicamos el helper de limpieza
+#                 df = limpiar_dataframe(df)
+                
+#                 print("Después de limpiar:")
+#                 print(df.head())
+
+
+#                 # 🔹 3. Validamos que venga la columna de documento (para evitar errores posteriores)
+#                 if "NUMERO_DE_DOCUMENTO" not in df.columns:
+#                     messages.error(request, "❌ El archivo no contiene la columna 'NUMERO DE DOCUMENTO'.")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 # 🔹 4. Eliminamos filas sin documento
+#                 df = df.dropna(subset=['NUMERO_DE_DOCUMENTO'])
+#                 df = df[df['NUMERO_DE_DOCUMENTO'].astype(str).str.strip() != '']
+
+#                 # 🔹 5. Normalizamos columnas que quieras renombrar
+#                 df.rename(columns={
+#                     'NUMERO DE DO CUMENTO': 'NUMERO_DE_DOCUMENTO',
+#                     'Unnamed: 0': 'IGNORAR_1',
+#                     'Unnamed: 15': 'IGNORAR_2',
+#                     'Unnamed: 21': 'IGNORAR_3',
+#                     ' SUCURSAL': 'SUCURSAL'
+#                 }, inplace=True)
+
+#                 # 🔹 6. Validamos columnas requeridas
+#                 columnas_requeridas = [
+#                     'NUMERO_DE_DOCUMENTO',
+#                     'NOMBRE_COMPLETO',
+#                     'CENTRO_TRABAJO',
+#                     'INGRESO',
+#                     'CARGO',
+#                     'CLIENTE',
+#                     'C._COSTO',
+#                     'SEXO',
+#                     'TALLA_CAMISA',
+#                     'TALLA_PANTALON',
+#                     'TALLA_ZAPATOS'
+#                 ]
+#                 faltantes = [col for col in columnas_requeridas if col not in df.columns]
+#                 if faltantes:
+#                     messages.error(request, f"❌ Faltan columnas en el archivo: {faltantes}")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 contador, entregas = 0, 0
+
+#                 try:
+#                     bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
+#                 except Bodega.DoesNotExist:
+#                     messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 # 🔹 7. Procesamos cada fila del DataFrame
+#                 for _, fila in df.iterrows():
+#                     cedula = safe_str(fila['NUMERO_DE_DOCUMENTO']).strip()
+#                     print("\n🆕 Procesando fila:", cedula)
+
+#                     if EmpleadoDotacion.objects.filter(cedula=cedula).exists():
+#                         progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+#                         progreso["actual"] += 1
+#                         cache.set('progreso_carga', progreso, timeout=600)
+#                         continue
+                    
+#                     empleado = obtener_o_crear_empleado(fila)
+
+#                     cliente, _ = Cliente.objects.get_or_create(nombre=safe_str(fila['CLIENTE']).strip())
+#                     ciudad, _ = Ciudad.objects.get_or_create(nombre=safe_str(fila['CENTRO_TRABAJO']).strip().title())
+#                     cargo, _ = Cargo.objects.get_or_create(nombre=safe_str(fila['CARGO']).strip())
+#                     centro_costo = safe_str(fila['C._COSTO']).strip()
+
+#                     # fecha_ingreso = pd.to_datetime(fila['INGRESO'], errors='coerce')
+#                     # if pd.isna(fecha_ingreso):
+#                     #     fecha_ingreso = None
+#                     # else:
+#                     #     fecha_ingreso = fecha_ingreso.date()
+
+#                     # talla_camisa = normalizar_talla(fila['TALLA_CAMISA'], categoria="CAMISA")
+#                     # talla_pantalon = normalizar_talla(fila['TALLA_PANTALON'], categoria="PANTALON")
+#                     # talla_zapatos = normalizar_talla(fila['TALLA_ZAPATOS'], categoria="BOTAS")
+
+#                     # empleado = EmpleadoDotacion.objects.create(
+#                     #     cedula=safe_str_number(fila['NUMERO_DE_DOCUMENTO']),
+#                     #     nombre=safe_str(fila['NOMBRE_COMPLETO']),
+#                     #     ciudad=safe_str(fila['CENTRO_TRABAJO']),  # Texto directo
+#                     #     fecha_ingreso=fecha_ingreso,
+#                     #     cargo=safe_str(fila['CARGO']),
+#                     #     cliente=safe_str(fila['CLIENTE']),  # Texto directo
+#                     #     centro_costo=safe_str(fila['C._COSTO']),
+#                     #     sexo=safe_str(fila['SEXO']),
+#                     #     talla_camisa=talla_camisa,
+#                     #     cantidad_camisa=int(fila.get('CANTIDAD_CAMISA', 0) or 0),
+#                     #     talla_pantalon=talla_pantalon,
+#                     #     cantidad_pantalon=int(fila.get('CANTIDAD_PANTALON', 0) or 0),
+#                     #     talla_zapatos=talla_zapatos,
+#                     #     cantidad_zapatos=int(fila.get('CANTIDAD_ZAPATOS', 0) or 0),
+#                     #     cantidad_botas_caucho=int(fila.get('BOTAS_CAUCHO', 0) or 0),
+#                     # )
+#                     contador += 1
+
+#                     # 🔹 cada fila que procesas → actualizas progreso
+#                     progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+#                     progreso["actual"] += 1
+#                     cache.set('progreso_carga', progreso, timeout=600)
+
+#                     cargo_obj = Cargo.objects.get(nombre__iexact=empleado.cargo)
+#                     grupos = GrupoDotacion.objects.filter(
+#                         cargos=cargo_obj,
+#                         ciudades__nombre__iexact=empleado.ciudad,
+#                         cliente__nombre__icontains=empleado.cliente,
+#                         genero__iexact=empleado.sexo
+#                     ).distinct()
+
+#                     genero = safe_str(fila['SEXO']).upper()
+
+#                     if grupos.exists():
+#                         grupo = grupos.first()
+#                         productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
+
+#                         productos_sin_stock = []
+#                         productos_entregados = []
+
+#                         for producto_grupo in productos:
+#                             talla = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
+#                             try:
+#                                 producto = Producto.objects.get(
+#                                     nombre__icontains=talla,
+#                                     categoria=producto_grupo.categoria
+#                                 )
+#                                 inventario = InventarioBodega.objects.get(
+#                                     bodega=bodega_dotacion,
+#                                     producto=producto
+#                                 )
+
+#                                 if inventario.stock < producto_grupo.cantidad:
+#                                     productos_sin_stock.append(producto.nombre)
+#                                     continue
+
+#                                 entrega = EntregaDotacion.objects.get_or_create(
+#                                     empleado=empleado,
+#                                     grupo=grupo,
+#                                     tipo_entrega=tipo_entrega,
+#                                     periodo= periodo 
+#                                 )[0]
+
+#                                 detalle = DetalleEntregaDotacion.objects.create(
+#                                     entrega=entrega,
+#                                     producto=producto,
+#                                     cantidad=producto_grupo.cantidad
+#                                 )
+#                                 productos_entregados.append(detalle)
+
+#                             except Producto.DoesNotExist:
+#                                 productos_sin_stock.append(
+#                                     f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}"
+#                                 )
+#                             except InventarioBodega.DoesNotExist:
+#                                 productos_sin_stock.append(
+#                                     f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}"
+#                                 )
+
+#                         print("Tipo de usuario recibido: linea 963", type(request.user))
+
+#                         if productos_entregados:
+#                             print("Tipo de usuario recibido: linea 965", type(request.user))
+#                             generar_salida_por_entrega(entrega, productos_entregados, request.user)
+#                             entregas += 1
+
+#                         if productos_sin_stock:
+#                             empleados_sin_entrega.append(
+#                                 f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
+#                             )
+
+#                     else:
+#                         errores = []
+#                         if not GrupoDotacion.objects.filter(cargos=cargo).exists():
+#                             errores.append(f"Cargo: '{cargo.nombre}'")
+#                         if not GrupoDotacion.objects.filter(cliente=cliente).exists():
+#                             errores.append(f"Cliente: '{cliente.nombre}'")
+#                         if not GrupoDotacion.objects.filter(ciudades=ciudad).exists():
+#                             errores.append(f"Ciudad: '{ciudad.nombre}'")
+#                         if not GrupoDotacion.objects.filter(genero=genero).exists():
+#                             errores.append(f"Genero: '{genero}'")
+
+#                         motivo = ', '.join(errores)
+#                         empleados_sin_entrega.append(
+#                             f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
+#                         )
+                        
+#                     # 🔹 actualizamos progreso
+#                     PROGRESO_CARGA["actual"] += 1
+                        
+#                 if contador > 0:
+#                     mensaje = f"✅ Se cargaron {contador} empleados y se generaron {entregas} entregas."
+#                     if empleados_sin_entrega:
+#                         mensaje += f" ⚠️ Sin entrega para {len(empleados_sin_entrega)} empleados."
+#                     request.session['empleados_sin_entrega'] = empleados_sin_entrega
+#                     messages.success(request, mensaje)
+#                 else:
+#                     messages.warning(request, "⚠️ No se cargó ningún empleado nuevo.")
+
+#                 return redirect('cargar_empleados')
+
+#             except Exception as e:
+#                 print("Tipo del objeto recibido como usuario: linea 1002", type(request))
+#                 messages.error(request, f"❌ Error al procesar el archivo: {str(e)}")
+
+#     else:
+#         form = CargarArchivoForm()
+#         empleados_sin_entrega = request.session.pop('empleados_sin_entrega', [])
+
+#     return render(request, 'cargar_empleados.html', {
+#         'form': form,
+#         'empleados_sin_entrega': empleados_sin_entrega
+#     })
+
+## este codigo era el que estaba
+
+
+#TODO comento este codigo para probar uno nuevo 01 de sep 2025
+# def cargar_empleados_desde_excel(request):
+#     empleados_sin_entrega = []
+#     global PROGRESO_CARGA
+#     advertencias = []
+    
+#     if request.method == 'POST':
+#         set_current_user(request.user)
+#         form = CargarArchivoForm(request.POST, request.FILES)
+
+#         if form.is_valid():
+#             archivo = request.FILES['archivo']
+#             print("📂 Archivo recibido:", archivo.name)
+#             periodo = form.cleaned_data['periodo']
+#             tipo_entrega = form.cleaned_data['tipo_entrega']
+#             print("📅 Periodo recibido:", periodo)
+
+#             try:
+#                 # 🔹 1. Leemos el archivo Excel
+#                 df = pd.read_excel(archivo)
+
+#                 # reiniciamos progreso en cache
+#                 total = len(df)
+#                 cache.set('progreso_carga', {"total": total, "actual": 0}, timeout=600)
+                
+#                 print("Antes de limpiar:")
+#                 print(df.head())
+
+#                 # 🔹 2. Aplicamos el helper de limpieza
+#                 df = limpiar_dataframe(df)
+                
+#                 print("Después de limpiar:")
+#                 print(df.head())
+
+#                 # 🔹 3. Validamos que venga la columna de documento
+#                 if "NUMERO_DE_DOCUMENTO" not in df.columns:
+#                     messages.error(request, "❌ El archivo no contiene la columna 'NUMERO DE DOCUMENTO'.")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 # 🔹 4. Eliminamos filas sin documento
+#                 df = df.dropna(subset=['NUMERO_DE_DOCUMENTO'])
+#                 df = df[df['NUMERO_DE_DOCUMENTO'].astype(str).str.strip() != '']
+
+#                 # 🔹 5. Validamos columnas requeridas
+#                 columnas_requeridas = [
+#                     'NUMERO_DE_DOCUMENTO',
+#                     'NOMBRE_COMPLETO',
+#                     'CENTRO_TRABAJO',
+#                     'INGRESO',
+#                     'CARGO',
+#                     'CLIENTE',
+#                     'C._COSTO',
+#                     'SEXO',
+#                     'TALLA_CAMISA',
+#                     'TALLA_PANTALON',
+#                     'TALLA_ZAPATOS'
+#                 ]
+#                 faltantes = [col for col in columnas_requeridas if col not in df.columns]
+#                 if faltantes:
+#                     messages.error(request, f"❌ Faltan columnas en el archivo: {faltantes}")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 contador, entregas = 0, 0
+
+#                 try:
+#                     bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
+#                 except Bodega.DoesNotExist:
+#                     messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 # 🔹 6. Procesamos cada fila del DataFrame
+#                 for _, fila in df.iterrows():
+#                     cedula = safe_str(fila['NUMERO_DE_DOCUMENTO']).strip()
+#                     print("\n🆕 Procesando fila:", cedula)
+
+#                     # ⚠️ Ojo: si ya existe el empleado, igual usamos obtener_o_crear_empleado
+#                     empleado = obtener_o_crear_empleado(fila)
+#                     contador += 1
+
+#                     # 🔹 actualizamos progreso
+#                     progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+#                     progreso["actual"] += 1
+#                     cache.set('progreso_carga', progreso, timeout=600)
+
+#                     # --- Buscar grupos de dotación ---
+#                     cargo_obj = empleado.cargo
+#                     grupos = GrupoDotacion.objects.filter(
+#                         cargos=cargo_obj,
+#                         ciudades__nombre__iexact=empleado.ciudad.nombre,
+#                         cliente=empleado.cliente,
+#                         genero__iexact=empleado.sexo
+#                     ).distinct()
+
+#                     genero = empleado.sexo.upper()
+
+#                     if grupos.exists():
+#                         grupo = grupos.first()
+#                         productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
+
+#                         productos_sin_stock = []
+#                         productos_entregados = []
+
+#                         for producto_grupo in productos:
+#                             talla = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
+#                             try:
+#                                 producto = Producto.objects.get(
+#                                     nombre__icontains=talla,
+#                                     categoria=producto_grupo.categoria
+#                                 )
+#                                 inventario = InventarioBodega.objects.get(
+#                                     bodega=bodega_dotacion,
+#                                     producto=producto
+#                                 )
+
+#                                 if inventario.stock < producto_grupo.cantidad:
+#                                     productos_sin_stock.append(producto.nombre)
+#                                     continue
+                                
+#                                 entrega = crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo)
+
+#                                 if entrega:
+#                                     # 👌 Solo aquí haces cosas con entrega (guardar detalle, imprimir, etc.)
+#                                     print(f"Entrega creada para {entrega.empleado.nombre} ({entrega.tipo_entrega})")
+#                                 else:
+#                                     # 🚫 No se creó entrega, lo agregamos a la lista de advertencias
+#                                     advertencias.append(f"{empleado.nombre} ({empleado.cedula}) - No cumple reglas para entrega {tipo_entrega.lower()}")
+
+#                                 # entrega = EntregaDotacion.objects.get_or_create(
+#                                 #     empleado=empleado,
+#                                 #     grupo=grupo,
+#                                 #     tipo_entrega=tipo_entrega,
+#                                 #     periodo=periodo
+#                                 # )[0]
+
+#                                 # detalle = DetalleEntregaDotacion.objects.create(
+#                                 #     entrega=entrega,
+#                                 #     producto=producto,
+#                                 #     cantidad=producto_grupo.cantidad
+#                                 # )
+#                                 # productos_entregados.append(detalle)
+
+#                             except Producto.DoesNotExist:
+#                                 productos_sin_stock.append(
+#                                     f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}"
+#                                 )
+#                             except InventarioBodega.DoesNotExist:
+#                                 productos_sin_stock.append(
+#                                     f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}"
+#                                 )
+
+#                         if productos_entregados:
+#                             generar_salida_por_entrega(entrega, productos_entregados, request.user)
+#                             entregas += 1
+
+#                         if productos_sin_stock:
+#                             empleados_sin_entrega.append(
+#                                 f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
+#                             )
+
+#                     else:
+#                         errores = []
+#                         if not GrupoDotacion.objects.filter(cargos=cargo_obj).exists():
+#                             errores.append(f"Cargo: '{cargo_obj.nombre}'")
+#                         if not GrupoDotacion.objects.filter(cliente=empleado.cliente).exists():
+#                             errores.append(f"Cliente: '{empleado.cliente.nombre}'")
+#                         if not GrupoDotacion.objects.filter(ciudades=empleado.ciudad).exists():
+#                             errores.append(f"Ciudad: '{empleado.ciudad.nombre}'")
+#                         if not GrupoDotacion.objects.filter(genero=genero).exists():
+#                             errores.append(f"Genero: '{genero}'")
+
+#                         motivo = ', '.join(errores)
+#                         empleados_sin_entrega.append(
+#                             f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
+#                         )
+                        
+#                     # 🔹 actualizamos progreso global
+#                     PROGRESO_CARGA["actual"] += 1
+                        
+#                 if contador > 0:
+#                     mensaje = f"✅ Se cargaron {contador} empleados y se generaron {entregas} entregas."
+#                     if empleados_sin_entrega:
+#                         mensaje += f" ⚠️ Sin entrega para {len(empleados_sin_entrega)} empleados."
+#                     request.session['empleados_sin_entrega'] = empleados_sin_entrega
+#                     messages.success(request, mensaje)
+#                 else:
+#                     messages.warning(request, "⚠️ No se cargó ningún empleado nuevo.")
+
+#                 return redirect('cargar_empleados')
+
+#             except Exception as e:
+#                 messages.error(request, f"❌ Error al procesar el archivo: {str(e)}")
+
+#     else:
+#         form = CargarArchivoForm()
+#         empleados_sin_entrega = request.session.pop('empleados_sin_entrega', [])
+
+#     return render(request, 'cargar_empleados.html', {
+#         'form': form,
+#         'empleados_sin_entrega': empleados_sin_entrega
+#     })
+
+
+
+
+
+# def cargar_empleados_desde_excel(request):
+#     empleados_sin_entrega = []
+#     global PROGRESO_CARGA
+#     advertencias = []
+    
+#     total_filas = 0
+#     entregas_creadas = 0
+#     sin_stock = []
+#     ya_tenia_ingreso = []
+#     no_cumple_ley = []
+#     sin_grupo = []
+
+#     if request.method == 'POST':
+#         set_current_user(request.user)
+#         form = CargarArchivoForm(request.POST, request.FILES)
+
+#         if form.is_valid():
+#             archivo = request.FILES['archivo']
+#             print("📂 Archivo recibido:", archivo.name)
+#             periodo = form.cleaned_data['periodo']
+#             tipo_entrega = form.cleaned_data['tipo_entrega']
+#             print("📅 Periodo recibido:", periodo)
+
+#             try:
+#                 # 🔹 1. Leemos el archivo Excel
+#                 df = pd.read_excel(archivo)
+
+#                 # reiniciamos progreso en cache
+#                 total = len(df)
+#                 cache.set('progreso_carga', {"total": total, "actual": 0}, timeout=600)
+
+#                 print("Antes de limpiar:")
+#                 print(df.head())
+
+#                 # 🔹 2. Aplicamos el helper de limpieza
+#                 df = limpiar_dataframe(df)
+
+#                 print("Después de limpiar:")
+#                 print(df.head())
+
+#                 # 🔹 3. Validamos que venga la columna de documento
+#                 if "NUMERO_DE_DOCUMENTO" not in df.columns:
+#                     messages.error(request, "❌ El archivo no contiene la columna 'NUMERO DE DOCUMENTO'.")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 # 🔹 4. Eliminamos filas sin documento
+#                 df = df.dropna(subset=['NUMERO_DE_DOCUMENTO'])
+#                 df = df[df['NUMERO_DE_DOCUMENTO'].astype(str).str.strip() != '']
+
+#                 # 🔹 5. Validamos columnas requeridas
+#                 columnas_requeridas = [
+#                     'NUMERO_DE_DOCUMENTO',
+#                     'NOMBRE_COMPLETO',
+#                     'CENTRO_TRABAJO',
+#                     'INGRESO',
+#                     'CARGO',
+#                     'CLIENTE',
+#                     'C._COSTO',
+#                     'SEXO',
+#                     'TALLA_CAMISA',
+#                     'TALLA_PANTALON',
+#                     'TALLA_ZAPATOS'
+#                 ]
+#                 faltantes = [col for col in columnas_requeridas if col not in df.columns]
+#                 if faltantes:
+#                     messages.error(request, f"❌ Faltan columnas en el archivo: {faltantes}")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 contador, entregas = 0, 0
+
+#                 try:
+#                     bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
+#                 except Bodega.DoesNotExist:
+#                     messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+#                     return render(request, 'cargar_empleados.html', {'form': form})
+
+#                 # 🔹 6. Procesamos cada fila del DataFrame
+#                 for _, fila in df.iterrows():
+#                     cedula = safe_str(fila['NUMERO_DE_DOCUMENTO']).strip()
+#                     print("\n🆕 Procesando fila:", cedula)
+#                     total_filas += 1
+
+#                     # obtener o crear empleado (puede retornar None si falta cédula etc.)
+#                     empleado = obtener_o_crear_empleado(fila)
+#                     if not empleado:
+#                         advertencias.append(f"Cédula {cedula}: no se creó/obtuvo empleado.")
+#                         # actualizar progreso y continuar
+#                         progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+#                         progreso["actual"] += 1
+#                         cache.set('progreso_carga', progreso, timeout=600)
+#                         continue
+
+#                     contador += 1
+
+#                     # 🔹 actualizamos progreso
+#                     progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
+#                     progreso["actual"] += 1
+#                     cache.set('progreso_carga', progreso, timeout=600)
+
+#                     # --- Buscar grupos de dotación ---
+#                     cargo_obj = empleado.cargo
+#                     # Nota: empleado.ciudad y empleado.cliente son FK
+#                     grupos = GrupoDotacion.objects.filter(
+#                         cargos=cargo_obj,
+#                         ciudades__nombre__iexact=empleado.ciudad.nombre if empleado.ciudad else None,
+#                         cliente=empleado.cliente,
+#                         genero__iexact=empleado.sexo
+#                     ).distinct()
+
+#                     genero = (empleado.sexo or "").upper()
+
+#                     if not grupos.exists():
+#                         errores = []
+#                         if not GrupoDotacion.objects.filter(cargos=cargo_obj).exists():
+#                             errores.append(f"Cargo: '{getattr(cargo_obj, 'nombre', cargo_obj)}'")
+#                         if not GrupoDotacion.objects.filter(cliente=empleado.cliente).exists():
+#                             errores.append(f"Cliente: '{getattr(empleado.cliente, 'nombre', empleado.cliente)}'")
+#                         if not GrupoDotacion.objects.filter(ciudades=empleado.ciudad).exists():
+#                             errores.append(f"Ciudad: '{getattr(empleado.ciudad, 'nombre', empleado.ciudad)}'")
+#                         if not GrupoDotacion.objects.filter(genero=genero).exists():
+#                             errores.append(f"Genero: '{genero}'")
+
+#                         motivo = ', '.join(errores)
+#                         empleados_sin_entrega.append(
+#                             f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
+#                         )
+#                         # no avanzamos con productos si no hay grupo
+#                         PROGRESO_CARGA["actual"] += 1
+#                         continue
+
+#                     # Si hay grupo, tomamos el primero (como antes)
+#                     grupo = grupos.first()
+#                     productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
+
+#                     # --- VALIDAR reglas de negocio para crear la entrega (antes de consultar stock) ---
+#                     entrega = crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo)
+#                     if not entrega:
+#                         advertencias.append(f"{empleado.nombre} ({empleado.cedula}) - No cumple reglas para entrega {tipo_entrega.lower()}")
+#                         # no crear detalles ni consultar inventario
+#                         PROGRESO_CARGA["actual"] += 1
+#                         continue
+
+#                     # Si llegamos aquí hay una entrega válida creada → crear detalles solo para productos con stock
+#                     productos_sin_stock = []
+#                     productos_entregados = []
+
+#                     for producto_grupo in productos:
+#                         talla = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
+#                         try:
+#                             producto = Producto.objects.get(
+#                                 nombre__icontains=talla,
+#                                 categoria=producto_grupo.categoria
+#                             )
+#                             inventario = InventarioBodega.objects.get(
+#                                 bodega=bodega_dotacion,
+#                                 producto=producto
+#                             )
+
+#                             if inventario.stock < producto_grupo.cantidad:
+#                                 productos_sin_stock.append(producto.nombre)
+#                                 continue
+
+#                             detalle = DetalleEntregaDotacion.objects.create(
+#                                 entrega=entrega,
+#                                 producto=producto,
+#                                 cantidad=producto_grupo.cantidad
+#                             )
+#                             productos_entregados.append(detalle)
+
+#                         except Producto.DoesNotExist:
+#                             productos_sin_stock.append(
+#                                 f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}"
+#                             )
+#                         except InventarioBodega.DoesNotExist:
+#                             productos_sin_stock.append(
+#                                 f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}"
+#                             )
+
+#                     # Si no se entregó ningún detalle -> eliminar la entrega vacía y reportar
+#                     if not productos_entregados:
+#                         # eliminar entrega vacía para no dejar registros sin detalle
+#                         try:
+#                             entrega.delete()
+#                         except Exception:
+#                             pass
+#                         empleados_sin_entrega.append(
+#                             f"{empleado.nombre} ({cedula}) - No se generó detalle (sin stock o sin productos coincidentes)"
+#                         )
+#                         PROGRESO_CARGA["actual"] += 1
+#                         continue
+
+#                     # Si sí hay detalles, generamos la salida y contamos la entrega
+#                     generar_salida_por_entrega(entrega, productos_entregados, request.user)
+#                     entregas += 1
+
+#                     if productos_sin_stock:
+#                         empleados_sin_entrega.append(
+#                             f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
+#                         )
+
+#                     # 🔹 actualizamos progreso global
+#                     PROGRESO_CARGA["actual"] += 1
+
+#                 # --- Mensajes finales ---
+#                 if contador > 0:
+#                     mensaje = f"✅ Se procesaron {contador} filas y se generaron {entregas} entregas."
+#                     if empleados_sin_entrega:
+#                         mensaje += f" ⚠️ Sin entrega para {len(empleados_sin_entrega)} empleados."
+#                     if advertencias:
+#                         mensaje += f" ⚠️ {len(advertencias)} advertencias."
+#                     request.session['empleados_sin_entrega'] = empleados_sin_entrega
+#                     request.session['advertencias'] = advertencias
+#                     messages.success(request, mensaje)
+#                 else:
+#                     messages.warning(request, "⚠️ No se procesó ninguna fila válida.")
+
+#                 return redirect('cargar_empleados')
+
+#             except Exception as e:
+#                 messages.error(request, f"❌ Error al procesar el archivo: {str(e)}")
+
+#     else:
+#         form = CargarArchivoForm()
+#         empleados_sin_entrega = request.session.pop('empleados_sin_entrega', [])
+#         # leer advertencias si habían quedado en sesión
+#         advertencias = request.session.pop('advertencias', [])
+
+#     return render(request, 'cargar_empleados.html', {
+#         'form': form,
+#         'empleados_sin_entrega': empleados_sin_entrega,
+#         'advertencias': advertencias,
+#     })
+
+
+
+
 
 def cargar_empleados_desde_excel(request):
-    
     empleados_sin_entrega = []
     global PROGRESO_CARGA
-    
+    advertencias = []
+
+    total_filas = 0
+    entregas_creadas = 0
+    sin_stock = []
+    ya_tenia_ingreso = []
+    no_cumple_ley = []
+    sin_grupo = []
+
     if request.method == 'POST':
         set_current_user(request.user)
         form = CargarArchivoForm(request.POST, request.FILES)
 
         if form.is_valid():
             archivo = request.FILES['archivo']
-            print("📂 Archivo recibido:", archivo.name)
             periodo = form.cleaned_data['periodo']
             tipo_entrega = form.cleaned_data['tipo_entrega']
-            print("📅 Periodo recibido:", periodo)
+            print(tipo_entrega)
 
             try:
-                df = pd.read_excel(archivo)  # ← Leemos el archivo
+                # 🔹 1. Leemos el archivo Excel
+                df = pd.read_excel(archivo)
+
                 # reiniciamos progreso en cache
                 total = len(df)
                 cache.set('progreso_carga', {"total": total, "actual": 0}, timeout=600)
 
-                
-                # eliminar filas donde la columna 'Cedula' esté vacía o nula
-                df = df.dropna(subset=['NUMERO DE DOCUMENTO'])
-                df = df[df['NUMERO DE DOCUMENTO'].astype(str).str.strip() != '']
-                
-                df.columns = [col.strip().upper().replace(" ", "_") for col in df.columns]
-                
-            
-                df.rename(columns={
-                    'NUMERO DE DO CUMENTO': 'NUMERO DE DOCUMENTO',
-                    # 'CANTIDAD ': 'CANTIDAD_CAMISA',
-                    # 'CANTIDAD': 'CANTIDAD_PANTALON',
-                    'Unnamed: 0': 'IGNORAR_1',
-                    'Unnamed: 15': 'IGNORAR_2',
-                    'Unnamed: 21': 'IGNORAR_3',
-                    ' SUCURSAL': 'SUCURSAL'
-                }, inplace=True)
+                # 🔹 2. Aplicamos limpieza
+                df = limpiar_dataframe(df)
+
+                # 🔹 3. Validaciones básicas
+                if "NUMERO_DE_DOCUMENTO" not in df.columns:
+                    messages.error(request, "❌ El archivo no contiene la columna 'NUMERO DE DOCUMENTO'.")
+                    return render(request, 'cargar_empleados.html', {'form': form})
+
+                df = df.dropna(subset=['NUMERO_DE_DOCUMENTO'])
+                df = df[df['NUMERO_DE_DOCUMENTO'].astype(str).str.strip() != '']
 
                 columnas_requeridas = [
-                    'NUMERO_DE_DOCUMENTO',
-                    'NOMBRE_COMPLETO',
-                    'CENTRO_TRABAJO',
-                    'INGRESO',
-                    'CARGO',
-                    'CLIENTE',
-                    'C._COSTO',
-                    'SEXO',
-                    'TALLA_CAMISA',
-                    'TALLA_PANTALON',
-                    'TALLA_ZAPATOS'
+                    'NUMERO_DE_DOCUMENTO', 'NOMBRE_COMPLETO', 'CENTRO_TRABAJO',
+                    'INGRESO', 'CARGO', 'CLIENTE', 'C._COSTO',
+                    'SEXO', 'TALLA_CAMISA', 'TALLA_PANTALON', 'TALLA_ZAPATOS'
                 ]
-
                 faltantes = [col for col in columnas_requeridas if col not in df.columns]
                 if faltantes:
                     messages.error(request, f"❌ Faltan columnas en el archivo: {faltantes}")
                     return render(request, 'cargar_empleados.html', {'form': form})
 
                 contador, entregas = 0, 0
-                
 
                 try:
                     bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
                 except Bodega.DoesNotExist:
                     messages.error(request, "❌ No se encontró la bodega 'Principal'.")
                     return render(request, 'cargar_empleados.html', {'form': form})
-                
-                
-                
 
+                # 🔹 4. Procesamos cada fila
                 for _, fila in df.iterrows():
                     cedula = safe_str(fila['NUMERO_DE_DOCUMENTO']).strip()
-                    print("\n🆕 Procesando fila:", cedula)
+                    total_filas += 1
 
-                    if EmpleadoDotacion.objects.filter(cedula=cedula).exists():
+                    empleado = obtener_o_crear_empleado(fila)
+                    if not empleado:
+                        advertencias.append(f"Cédula {cedula}: no se creó/obtuvo empleado.")
                         progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
                         progreso["actual"] += 1
                         cache.set('progreso_carga', progreso, timeout=600)
                         continue
 
-                    cliente, _ = Cliente.objects.get_or_create(nombre=safe_str(fila['CLIENTE']).strip())
-                    ciudad, _ = Ciudad.objects.get_or_create(nombre=safe_str(fila['CENTRO_TRABAJO']).strip().title())
-                    cargo, _ = Cargo.objects.get_or_create(nombre=safe_str(fila['CARGO']).strip())
-                    centro_costo = safe_str(fila['C._COSTO']).strip()
-
-                    fecha_ingreso = pd.to_datetime(fila['INGRESO'], errors='coerce')
-                    if pd.isna(fecha_ingreso):
-                        fecha_ingreso = None
-                    else:
-                        fecha_ingreso = fecha_ingreso.date()
-
-                    talla_camisa = normalizar_talla(fila['TALLA_CAMISA'], categoria="CAMISA")
-                    talla_pantalon = normalizar_talla(fila['TALLA_PANTALON'], categoria="PANTALON")
-                    talla_zapatos = normalizar_talla(fila['TALLA_ZAPATOS'], categoria="BOTAS")
-                    
-                    # if not cargo or not str(cargo).strip():
-                    #     continue
-                # if "NUMERO_DE_DOCUMENTO" in df.columns:
-                #     df = df[df["NUMERO_DE_DOCUMENTO"].notna() & (df["NUMERO_DE_DOCUMENTO"].astype(str).str.strip() != "")]
-
-                    empleado = EmpleadoDotacion.objects.create(
-                        cedula=safe_str_number(fila['NUMERO_DE_DOCUMENTO']),
-                        nombre=safe_str(fila['NOMBRE_COMPLETO']),
-                        ciudad=safe_str(fila['CENTRO_TRABAJO']),  # Texto directo
-                        fecha_ingreso=fecha_ingreso,
-                        cargo=safe_str(fila['CARGO']),
-                        cliente=safe_str(fila['CLIENTE']),  # Texto directo
-                        centro_costo=safe_str(fila['C._COSTO']),
-                        sexo=safe_str(fila['SEXO']),
-                        talla_camisa=talla_camisa,
-                        cantidad_camisa=int(fila.get('CANTIDAD_CAMISA', 0) or 0),
-                        talla_pantalon=talla_pantalon,
-                        cantidad_pantalon=int(fila.get('CANTIDAD_PANTALON', 0) or 0),
-                        talla_zapatos=talla_zapatos,
-                        cantidad_zapatos=int(fila.get('CANTIDAD_ZAPATOS', 0) or 0),
-                        cantidad_botas_caucho=int(fila.get('BOTAS_CAUCHO', 0) or 0),
-                    )
                     contador += 1
-                    
-                    # 🔹 cada fila que procesas → actualizas progreso
                     progreso = cache.get('progreso_carga', {"total": total, "actual": 0})
                     progreso["actual"] += 1
                     cache.set('progreso_carga', progreso, timeout=600)
 
-                    cargo_obj = Cargo.objects.get(nombre__iexact=empleado.cargo)
+                    cargo_obj = empleado.cargo
                     grupos = GrupoDotacion.objects.filter(
                         cargos=cargo_obj,
-                        ciudades__nombre__iexact=empleado.ciudad,
-                        cliente__nombre__icontains=empleado.cliente,
+                        ciudades__nombre__iexact=empleado.ciudad.nombre if empleado.ciudad else None,
+                        cliente=empleado.cliente,
                         genero__iexact=empleado.sexo
                     ).distinct()
 
-                    genero = safe_str(fila['SEXO']).upper()
+                    if not grupos.exists():
+                        empleados_sin_entrega.append(f"{empleado.nombre} ({cedula}) - Sin grupo de dotación")
+                        sin_grupo.append(f"{empleado.nombre} ({cedula}) - Sin grupo de dotación")
+                        continue
 
-                    if grupos.exists():
-                        grupo = grupos.first()
-                        productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
+                    grupo = grupos.first()
+                    productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
 
-                        productos_sin_stock = []
-                        productos_entregados = []
+                    entrega = crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo)
+                    if not entrega:
+                        motivo = f"No cumple reglas para entrega {tipo_entrega.lower()}"
+                        no_cumple_ley.append(f"{empleado.nombre} ({cedula}) - {motivo}")
+                        advertencias.append(f"{empleado.nombre} ({empleado.cedula}) - {motivo}")
+                        empleados_sin_entrega.append(f"{empleado.nombre} ({cedula}) - {motivo}")
+                        continue
 
-                        for producto_grupo in productos:
-                            talla = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
-                            try:
-                                producto = Producto.objects.get(
-                                    nombre__icontains=talla,
-                                    categoria=producto_grupo.categoria
-                                )
-                                inventario = InventarioBodega.objects.get(
-                                    bodega=bodega_dotacion,
-                                    producto=producto
-                                )
+                    productos_sin_stock = []
+                    productos_entregados = []
 
-                                if inventario.stock < producto_grupo.cantidad:
-                                    productos_sin_stock.append(producto.nombre)
-                                    continue
-
-                                entrega = EntregaDotacion.objects.get_or_create(
-                                    empleado=empleado,
-                                    grupo=grupo,
-                                    tipo_entrega=tipo_entrega,
-                                    periodo= periodo 
-                                    # defaults={
-                                    #     'tipo_entrega': tipo_entrega,
-                                    #     'periodo': periodo
-                                    # }
-                                    
-                                )[0]
-
-                                detalle = DetalleEntregaDotacion.objects.create(
-                                    entrega=entrega,
-                                    producto=producto,
-                                    cantidad=producto_grupo.cantidad
-                                )
-                                productos_entregados.append(detalle)
-
-                            except Producto.DoesNotExist:
-                                productos_sin_stock.append(
-                                    f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}"
-                                )
-                            except InventarioBodega.DoesNotExist:
-                                productos_sin_stock.append(
-                                    f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}"
-                                )
-
-                        print("Tipo de usuario recibido: linea 963", type(request.user))
-
-                        if productos_entregados:
-                            print("Tipo de usuario recibido: linea 965", type(request.user))
-                            generar_salida_por_entrega(entrega, productos_entregados, request.user)
-                            entregas += 1
-
-                        if productos_sin_stock:
-                            empleados_sin_entrega.append(
-                                f"{empleado.nombre} ({cedula}) - Sin stock para: {', '.join(productos_sin_stock)}"
+                    for producto_grupo in productos:
+                        talla = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
+                        try:
+                            producto = Producto.objects.get(
+                                nombre__icontains=talla,
+                                categoria=producto_grupo.categoria
+                            )
+                            inventario = InventarioBodega.objects.get(
+                                bodega=bodega_dotacion,
+                                producto=producto
                             )
 
-                    else:
-                        errores = []
-                        if not GrupoDotacion.objects.filter(cargos=cargo).exists():
-                            errores.append(f"Cargo: '{cargo.nombre}'")
-                        if not GrupoDotacion.objects.filter(cliente=cliente).exists():
-                            errores.append(f"Cliente: '{cliente.nombre}'")
-                        if not GrupoDotacion.objects.filter(ciudades=ciudad).exists():
-                            errores.append(f"Ciudad: '{ciudad.nombre}'")
-                        if not GrupoDotacion.objects.filter(genero=genero).exists():
-                            errores.append(f"Genero: '{genero}'")
+                            if inventario.stock < producto_grupo.cantidad:
+                                productos_sin_stock.append(f"{producto.nombre} - requerido {producto_grupo.cantidad}")
+                                continue
 
-                        motivo = ', '.join(errores)
+                            detalle = DetalleEntregaDotacion.objects.create(
+                                entrega=entrega,
+                                producto=producto,
+                                cantidad=producto_grupo.cantidad
+                            )
+                            productos_entregados.append(detalle)
+
+                        except Producto.DoesNotExist:
+                            productos_sin_stock.append(
+                                f"Sin producto: {producto_grupo.categoria.nombre} - Talla: {talla}"
+                            )
+                        except InventarioBodega.DoesNotExist:
+                            productos_sin_stock.append(
+                                f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}"
+                            )
+
+                    if not productos_entregados:
+                        try:
+                            entrega.delete()
+                        except Exception:
+                            pass
                         empleados_sin_entrega.append(
-                            f"{empleado.nombre} ({cedula}) - Sin grupo para: {motivo}"
+                            f"{empleado.nombre} ({cedula} {motivo}) "
                         )
-                        
-                    # 🔹 actualizamos progreso
-                    PROGRESO_CARGA["actual"] += 1
-                        
-                       
+                        sin_stock.append(f"{empleado.nombre} ({cedula} {motivo}) - Sin stock total")
+                        continue
 
+                    generar_salida_por_entrega(entrega, productos_entregados, request.user)
+                    entregas += 1
+
+                    if productos_sin_stock:
+                        motivo = f"Sin stock para: {', '.join(productos_sin_stock)}"
+                        empleados_sin_entrega.append(f"{empleado.nombre} ({cedula}) - {motivo}")
+
+                # --- Mensaje resumen y detalles en plantilla ---
                 if contador > 0:
-                    mensaje = f"✅ Se cargaron {contador} empleados y se generaron {entregas} entregas."
-                    if empleados_sin_entrega:
-                        mensaje += f" ⚠️ Sin entrega para {len(empleados_sin_entrega)} empleados."
-                    request.session['empleados_sin_entrega'] = empleados_sin_entrega
-                    messages.success(request, mensaje)
-                else:
-                    messages.warning(request, "⚠️ No se cargó ningún empleado nuevo.")
+                    resumen = f"✅ Se procesaron {contador} filas y se generaron {entregas} entregas."
+                    messages.success(request, resumen)
 
-                return redirect('cargar_empleados')
+                    # Construir lista de detalles
+                    empleados_detalle = []
+                    for e in empleados_sin_entrega:
+                        # separa el motivo si existe
+                        nombre_cedula, sep, motivo = e.rpartition(" - ")
+                        # extraer nombre y cédula
+                        nombre = nombre_cedula.split("(")[0].strip()
+                        cedula = nombre_cedula[nombre_cedula.find("(")+1 : nombre_cedula.find(")")]
+                        empleados_detalle.append({
+                            "nombre": nombre,
+                            "cedula": cedula,
+                            "motivo": motivo if motivo else "No especificado"
+                        })
+
+                    return render(request, "cargar_empleados_resultado.html", {
+                        "mensaje": resumen,
+                        "empleados_sin_entrega": empleados_detalle
+                    })
+
+                else:
+                    messages.warning(request, "⚠️ No se procesó ninguna fila válida.")
+                    return redirect("cargar_empleados")
 
             except Exception as e:
-                print("Tipo del objeto recibido como usuario: linea 1002", type(request))
                 messages.error(request, f"❌ Error al procesar el archivo: {str(e)}")
+                return redirect("cargar_empleados")
 
     else:
         form = CargarArchivoForm()
-        empleados_sin_entrega = request.session.pop('empleados_sin_entrega', [])
 
     return render(request, 'cargar_empleados.html', {
         'form': form,
-        'empleados_sin_entrega': empleados_sin_entrega
     })
+
+
 
 
 def progreso_carga(request):
@@ -1363,12 +2197,12 @@ def vista_consolidado(request):
     consolidado = (
         EntregaDotacion.objects
         .values(
-            'empleado__cliente',  # nombre directo
+            'empleado__cliente__nombre',  # nombre directo
             'periodo',
             'tipo_entrega'
         )
         .annotate(total_entregas=Count('id'))
-        .order_by('empleado__cliente', 'periodo')
+        .order_by('empleado__cliente__nombre', 'periodo')
     )
     return render(request, 'consolidado.html', {'consolidado': consolidado})
 
