@@ -2,7 +2,7 @@
 /entornoV/
 
 # Ignorar base de datos SQLite
-
+db.sqlite3
 
 # Ignorar archivos de migración generados localmente (excepto las necesarias para el repositorio)
 *.log
