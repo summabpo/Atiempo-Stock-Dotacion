@@ -9,7 +9,7 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 
 # App de Debug Toolbar
-INSTALLED_APPS += ['debug_toolbar']
+# INSTALLED_APPS += ['debug_toolbar']
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
