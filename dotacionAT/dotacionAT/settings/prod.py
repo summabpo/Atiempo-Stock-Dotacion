@@ -2,7 +2,7 @@ from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['danielyustres.pythonanywhere.com']  # usa tu dominio tal cual
+ALLOWED_HOSTS = ['DanielYustres.pythonanywhere.com']  # usa tu dominio tal cual
 CSRF_TRUSTED_ORIGINS = ['https://danielyustres.pythonanywhere.com']
 
 # Usar la misma BD SQLite por ahora
