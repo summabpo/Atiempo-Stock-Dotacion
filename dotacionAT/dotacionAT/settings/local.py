@@ -42,7 +42,7 @@ DATABASES = {
 STATIC_URL = 'static/'
 
 # Middleware de Debug Toolbar
-MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+# MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 # Solo permitir IPs locales
 INTERNAL_IPS = ['127.0.0.1']
