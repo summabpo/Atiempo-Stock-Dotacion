@@ -473,7 +473,6 @@ def generar_pdf_entregas(entregas):
     return buffer
 
 
-
 def crear_historial_ingreso_inicial(empleado):
     """
     Crea el registro inicial de historial de ingreso
@@ -488,52 +487,8 @@ def crear_historial_ingreso_inicial(empleado):
         fecha_ingreso=empleado.fecha_ingreso,
         observaciones="Ingreso inicial"
     )
-
-
-# def registrar_cambio_ingreso(empleado, nueva_fecha):
-#     """
-#     Registra un nuevo historial de ingreso si la fecha cambió.
-#     - Busca el último historial del empleado.
-#     - Si no existe historial o la fecha de ingreso es distinta,
-#       crea un nuevo registro en historial.
-#     """
-#     ultimo_historial = HistorialIngresoEmpleado.objects.filter(
-#         empleado=empleado
-#     ).order_by('-fecha_ingreso').first()
-
-#     if not ultimo_historial or ultimo_historial.fecha_ingreso != nueva_fecha:
-#         HistorialIngresoEmpleado.objects.create(
-#             empleado=empleado,
-#             cliente=empleado.cliente,
-#             ciudad=empleado.ciudad,
-#             cargo=empleado.cargo,
-#             centro_costo=empleado.centro_costo,
-#             fecha_ingreso=nueva_fecha,
-#             observaciones="Ingreso actualizado desde Excel"
-#         )
+       
         
-        
-#TODO esta funcion es nuevo un helpers que eoy trabajando en la view  cargar_empleados_desde_excel 
-# def limpiar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-   
-    
-#     # 1. Eliminar filas totalmente vacías
-#     df = df.dropna(how='all')
-    
-#     # 2. Limpiar nombres de columnas
-#     df.columns = [col.strip().lower() for col in df.columns]  # todo en minúsculas
-    
-#     # 3. Limpiar valores de cada celda
-#     for col in df.columns:
-#         if df[col].dtype == "object":  # solo texto
-#             df[col] = df[col].astype(str).str.strip().str.upper()  # mayúsculas
-    
-#     # 4. Reemplazar NaN restantes por vacío
-#     df = df.fillna("")
-    
-#     return df
-
-
 def limpiar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Normaliza el DataFrame:
@@ -584,194 +539,6 @@ def limpiar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 pass  # si no se puede convertir, se deja como está
 
     return df
-
-
-
-# def obtener_o_crear_empleado(fila):
-#     """
-#     Crea o recupera un empleado a partir de una fila del Excel.
-#     Si el empleado se crea nuevo, también se genera el primer HistorialIngresoEmpleado.
-#     """
-
-#     numero_documento = safe_str_number(fila.get("NUMERO_DE_DOCUMENTO"))
-#     if not numero_documento:
-#         return None, False
-
-#     # Relaciones: buscamos instancias o las creamos
-#     cargo, _ = Cargo.objects.get_or_create(nombre=safe_str(fila.get("CARGO")))
-#     cliente, _ = Cliente.objects.get_or_create(nombre=safe_str(fila.get("CLIENTE")))
-#     ciudad, _ = Ciudad.objects.get_or_create(nombre=safe_str(fila.get("CENTRO_TRABAJO")))
-#     centro_costo = safe_str(fila.get("C._COSTO"))
-
-#     # Parseo de fecha
-#     fecha_ingreso = fila.get("FECHA_INGRESO")
-#     if pd.notna(fecha_ingreso):
-#         try:
-#             if isinstance(fecha_ingreso, str):
-#                 fecha_ingreso = pd.to_datetime(fecha_ingreso, dayfirst=True, errors="coerce")
-#             elif isinstance(fecha_ingreso, (int, float)):
-#                 fecha_ingreso = pd.to_datetime(fecha_ingreso, errors="coerce", unit="d", origin="1899-12-30")
-#         except Exception:
-#             fecha_ingreso = None
-#     else:
-#         fecha_ingreso = None
-
-#     # Crear o recuperar empleado
-#     empleado, creado = EmpleadoDotacion.objects.get_or_create(
-#         numero_documento=numero_documento,
-#         defaults={
-#             "nombres": safe_str(fila.get("NOMBRE_COMPLETO")),
-#             "sexo": safe_str(fila.get("SEXO")),
-#             "talla_camisa": safe_str(fila.get("TALLA_CAMISA")),
-#             "talla_pantalon": safe_str(fila.get("TALLA_PANTALON")),
-#             "talla_zapatos": safe_str(fila.get("TALLA_ZAPATOS")),
-#             "cargo": cargo,
-#             "cliente": cliente,
-#             "ciudad": ciudad,
-#             "centro_costo": centro_costo,
-#             "fecha_ingreso": fecha_ingreso,
-#             "cantidad_camisa": int(fila.get("CANTIDAD_CAMISA", 0) or 0),
-#             "cantidad_pantalon": int(fila.get("CANTIDAD_PANTALON", 0) or 0),
-#             "cantidad_zapatos": int(fila.get("CANTIDAD_ZAPATOS", 0) or 0),
-#             "cantidad_botas_caucho": int(fila.get("BOTAS_CAUCHO", 0) or 0),
-#         }
-#     )
-
-#     # Si es un empleado nuevo, registrar historial
-#     if creado:
-#         HistorialIngresoEmpleado.objects.create(
-#             empleado=empleado,
-#             fecha_ingreso=fecha_ingreso or timezone.now().date(),
-#             observacion="Ingreso inicial por carga de Excel",
-#         )
-
-#     return empleado 
-
-# def obtener_o_crear_empleado(fila):
-#     """
-#     Crea o recupera un empleado a partir de una fila del Excel.
-#     Si el empleado se crea nuevo, también se genera el primer HistorialIngresoEmpleado.
-#     """
-
-#     numero_documento = safe_str_number(fila.get("NUMERO_DE_DOCUMENTO"))
-#     if not numero_documento:
-#         return None, False
-
-#     # Relaciones: buscamos instancias o las creamos
-#     cargo, _ = Cargo.objects.get_or_create(nombre=safe_str(fila.get("CARGO")))
-#     cliente, _ = Cliente.objects.get_or_create(nombre=safe_str(fila.get("CLIENTE")))
-#     ciudad, _ = Ciudad.objects.get_or_create(nombre=safe_str(fila.get("CENTRO_TRABAJO")))
-#     centro_costo = safe_str(fila.get("C._COSTO"))   # 👈 Corregido
-
-#     # Parseo de fecha
-#     fecha_ingreso = fila.get("FECHA_INGRESO")
-#     if pd.notna(fecha_ingreso):
-#         try:
-#             if isinstance(fecha_ingreso, str):
-#                 fecha_ingreso = pd.to_datetime(fecha_ingreso, dayfirst=True, errors="coerce")
-#             elif isinstance(fecha_ingreso, (int, float)):
-#                 fecha_ingreso = pd.to_datetime(
-#                     fecha_ingreso, errors="coerce", unit="d", origin="1899-12-30"
-#                 )
-#         except Exception:
-#             fecha_ingreso = None
-#     else:
-#         fecha_ingreso = None
-
-#     # Crear o recuperar empleado
-#     empleado, creado = EmpleadoDotacion.objects.get_or_create(
-#         numero_documento=numero_documento,
-#         defaults={
-#             "nombres": safe_str(fila.get("NOMBRE_COMPLETO")),
-#             "sexo": safe_str(fila.get("SEXO")),
-#             "talla_camisa": safe_str(fila.get("TALLA_CAMISA")),
-#             "talla_pantalon": safe_str(fila.get("TALLA_PANTALON")),
-#             "talla_zapatos": safe_str(fila.get("TALLA_ZAPATOS")),
-#             "cargo": cargo,
-#             "cliente": cliente,
-#             "ciudad": ciudad,
-#             "centro_costo": centro_costo,  # 👈 corregido
-#             "fecha_ingreso": fecha_ingreso,
-#             "cantidad_camisa": int(fila.get("CANTIDAD_CAMISA", 0) or 0),
-#             "cantidad_pantalon": int(fila.get("CANTIDAD_PANTALON", 0) or 0),
-#             "cantidad_zapatos": int(fila.get("CANTIDAD_ZAPATOS", 0) or 0),
-#             "cantidad_botas_caucho": int(fila.get("BOTAS_CAUCHO", 0) or 0),
-#         },
-#     )
-
-#     # Si es un empleado nuevo, registrar historial
-#     if creado:
-#         HistorialIngresoEmpleado.objects.create(
-#             empleado=empleado,
-#             fecha_ingreso=fecha_ingreso or timezone.now().date(),
-#             observacion="Ingreso inicial por carga de Excel",
-#         )
-
-#     return empleado
-
-
-
-# def obtener_o_crear_empleado(fila):
-#     """
-#     Crea o recupera un empleado a partir de una fila del Excel.
-#     Si el empleado se crea nuevo, también se genera el primer HistorialIngresoEmpleado.
-#     """
-
-#     cedula = safe_str_number(fila.get("NUMERO_DE_DOCUMENTO"))
-#     if not cedula:
-#         return None, False
-
-#     # Relaciones: buscamos instancias o las creamos
-#     cargo, _ = Cargo.objects.get_or_create(nombre=safe_str(fila.get("CARGO")))
-#     cliente, _ = Cliente.objects.get_or_create(nombre=safe_str(fila.get("CLIENTE")))
-#     ciudad, _ = Ciudad.objects.get_or_create(nombre=safe_str(fila.get("CENTRO_TRABAJO")))
-#     centro_costo = safe_str(fila.get("C._COSTO"))
-
-#     # Parseo de fecha
-#     fecha_ingreso = fila.get("FECHA_INGRESO")
-#     if pd.notna(fecha_ingreso):
-#         try:
-#             if isinstance(fecha_ingreso, str):
-#                 fecha_ingreso = pd.to_datetime(fecha_ingreso, dayfirst=True, errors="coerce")
-#             elif isinstance(fecha_ingreso, (int, float)):
-#                 fecha_ingreso = pd.to_datetime(
-#                     fecha_ingreso, errors="coerce", unit="d", origin="1899-12-30"
-#                 )
-#         except Exception:
-#             fecha_ingreso = None
-#     else:
-#         fecha_ingreso = None
-
-#     # Crear o recuperar empleado
-#     empleado, creado = EmpleadoDotacion.objects.get_or_create(
-#         cedula=cedula,   # 👈 CAMBIO
-#         defaults={
-#             "nombre": safe_str(fila.get("NOMBRE_COMPLETO")),   # 👈 CAMBIO
-#             "sexo": safe_str(fila.get("SEXO")),
-#             "talla_camisa": safe_str(fila.get("TALLA_CAMISA")),
-#             "talla_pantalon": safe_str(fila.get("TALLA_PANTALON")),
-#             "talla_zapatos": safe_str(fila.get("TALLA_ZAPATOS")),
-#             "cargo": cargo,
-#             "cliente": cliente,
-#             "ciudad": ciudad,
-#             "centro_costo": centro_costo,
-#             "fecha_ingreso": fecha_ingreso,
-#             "cantidad_camisa": int(fila.get("CANTIDAD_CAMISA", 0) or 0),
-#             "cantidad_pantalon": int(fila.get("CANTIDAD_PANTALON", 0) or 0),
-#             "cantidad_zapatos": int(fila.get("CANTIDAD_ZAPATOS", 0) or 0),
-#             "cantidad_botas_caucho": int(fila.get("BOTAS_CAUCHO", 0) or 0),
-#         }
-#     )
-
-#     # Si es un empleado nuevo, registrar historial
-#     if creado:
-#         HistorialIngresoEmpleado.objects.create(
-#             empleado=empleado,
-#             fecha_ingreso=fecha_ingreso or timezone.now().date(),
-#         )
-
-#     return empleado
-
 
 def obtener_o_crear_empleado(fila):
     """
@@ -862,7 +629,6 @@ def obtener_o_crear_empleado(fila):
         )
 
     return empleado
-
 
 
 def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):

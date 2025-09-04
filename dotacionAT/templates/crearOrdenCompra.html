@@ -12,7 +12,6 @@
         </h1>
     </section>
             
-
     <div class="row">  
         <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
     <!--=====================================
@@ -111,25 +110,19 @@
     <!--=====================================
     BOTÓN PARA AGREGAR PRODUCTO
     ======================================-->
-   
-    
-
 
         </div>
         
     </div>
 <div class="form-group">
     <input type="text" name="observacion" placeholder="Observacion Orden compra">
-</div>
-  
+</div> 
 
     <button type="submit" class="btn btn-success">Guardar Orden</button>        
 </form>
         
         </div>
     </div>
-
-
 
 <!-- <div class="box-header with-border"></div> -->
 <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
@@ -157,16 +150,9 @@
     
 
 </div>
-   
 </div>
-  
-
-
-
-
 
 {% block extra_js %}
-
 
 <script>
 
@@ -290,7 +276,6 @@ function quitarProveedor() {
     document.getElementById('listaProveedor').value = ''; // limpiar input oculto
 }
 
-
 const dataTableOptionsOrden = {
     columnDefs: [
         { className: "text-center", targets: "_all" },
@@ -311,9 +296,6 @@ const dataTableOptionsOrden = {
     paging: false,
     info: false,
 };
-
-
-
 
 // ✅ Tabla de Productos
 const initDataTableProductos = async () => {
@@ -391,13 +373,11 @@ function agregarProductoAOrden(id, nombre, costo) {
             <input type="text" name="cantidades[]" class="form-control text-center cantidad" value="1"  min="0" step="0.01" onchange="actualizarSubtotal(this)"  required></td>
 
         <td><input type="text" name="precios[]" class="form-control text-right valorUnitario"   
-      
-     
+         
     onchange="actualizarSubtotal(this)" value="${costo}"  required></td>
 
         <td class="subtotal text-right">0.00</td>
         <td>
-
 
             <button type="button" class="btn btn-danger btn-sm" onclick="quitarProducto(${id}, this)">
                 <i class="fa fa-times"></i>
@@ -417,10 +397,6 @@ function agregarProductoAOrden(id, nombre, costo) {
     // calcular subtotal inicial
     //formatNumber()
 }
-
-
-
-
 
 function formatNumberInput(inputElement) {
     let value = parseFloat(inputElement.value);
@@ -456,7 +432,6 @@ function quitarProducto(id, btn) {
     
 // }
 
-
 function parsePrecioColombiano(valorRaw) {
     const soloNumeros = valorRaw.replace(/[^0-9.,]/g, '');  // limpia símbolos
     const tieneComaDecimal = soloNumeros.includes(',');
@@ -481,7 +456,6 @@ function parsePrecioColombiano(valorRaw) {
     return parseFloat(soloNumeros);
 }
 
-
 function actualizarSubtotal(input) {
     const fila = input.closest('tr');
 
@@ -499,8 +473,8 @@ function actualizarSubtotal(input) {
         minimumFractionDigits: 2
     });
 
-//     console.log(cantidad);
-//     console.log("Raw:", raw);      // Lo que ve el usuario
+//console.log(cantidad);
+//console.log("Raw:", raw);      // Lo que ve el usuario
 // console.log("Clean:", clean);  // Lo que se va a parsear
 // console.log("Precio:", precio);
 
@@ -510,10 +484,6 @@ function actualizarSubtotal(input) {
     actualizarTotalGeneral();
     
 }
-
-
-
-
 
 function agregarProveedorAOrden(id, nombre) {
     // Evitar duplicados
@@ -589,11 +559,8 @@ document.querySelector('form').addEventListener('submit', function() {
         input.value = input.value.replace(/,/g, '');
     });
 });
-   
-
 
 </script>
 
 {% endblock %}
-
 {% endblock %}

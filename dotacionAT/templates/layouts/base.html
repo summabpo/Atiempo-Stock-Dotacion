@@ -39,7 +39,6 @@
     <!-- main CSS -->
     <link rel="stylesheet" href="{% static 'styles/main.css' %}">
      
-
   <script type="text/javascript" charset="utf8" src="{% static 'index/js/jquery.js' %}"></script>
   <link rel="stylesheet" href="{% static 'jquery-ui/jquery-ui.min.css' %}">
   <script src="{% static 'jquery-ui/jquery-ui.min.js' %}"></script>
@@ -146,95 +145,48 @@
             <li class="nav-item">
               <a href="{% url 'ordenes_compra' %}" class="nav-link">
                 <i class="nav-icon far fa-calendar-alt"></i>
-                <p>
+                <span>
                   Administrar Compras
-                </p>
+                </span>
               </a>
             </li>
 
             <li class="nav-item">
               <a href="{% url 'inventario_bodega_list' %}" class="nav-link">
                 <i class="nav-icon fa fa-clipboard-list"></i>
-                <p>
+                <span>
                   Inventario
-                </p>
+                </span>
               </a>
             </li>
 
             <li class="nav-item">
               <a href="{% url 'ordenes_salida' %}" class="nav-link">
                 <i class="nav-icon far fa-calendar-alt"></i>
-                <p>
+                <span>
                   Administrar Salidas
-                </p>
+                </span>
               </a>
             </li>
 
              <li class="nav-item">
               <a href="{% url 'vista_consolidado' %}" class="nav-link">
                 <i class="nav-icon far fa-calendar-alt"></i>
-                <p>
+                <span>
                   📄 Ver Historial de Entregas
-                </p>
+                </span>
               </a>
             </li>
 
                <li class="nav-item">
                          <a href="{% url 'generar_formato_entrega_pdf' %}" class="nav-link">
   <i class="nav-icon far fa-calendar-alt"></i>
-                          <p>
+                          <span>
                   📄 Descargar PDF
-                </p>
+                </span>
 </a>
             </li>
  
-
-
-            <!-- <li class="nav-item">
-              <a href="" class="nav-link">
-                <i class="nav-icon fas fa-boxes"></i>
-                <p>
-                  Inventario
-                </p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="" class="nav-link">
-                <i class="nav-icon fas fa-industry"></i>
-                <p>
-                  Compras
-                </p>
-              </a>
-            </li> -->
-            <!-- <li class="nav-item">
-              <a href="#" class="nav-link">
-                <i class="nav-icon fas fa-tachometer-alt"></i>
-                <p>
-                  Pedidos
-                  <i class="fas fa-angle-left right"></i>
-                </p>
-              </a>
-              <ul class="nav nav-treeview">
-                <li class="nav-item">
-                  <a href="" class="nav-link">
-                    <i class="nav-icon far fa-circle text-info"></i>
-                    <p>Todos</p>
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a href="" class="nav-link">
-                    <i class="nav-icon far fa-circle text-warning"></i>
-                    <p>Para hoy</p>
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a href="" class="nav-link">
-                    <i class="nav-icon far fa-circle text-danger"></i>
-                    <p>Atrasados</p>
-                  </a>
-                </li>
-              </ul>
-            </li> -->
             <li class="nav-header">EMPRESA</li>
             <!-- <li class="nav-item">
               <a href="" class="nav-link">
@@ -245,36 +197,36 @@
             <li class="nav-item">
               <a href="#" class="nav-link">
                 <i class="nav-icon fas fa-cogs spin"></i>
-                <p>
+                <span>
                   Configuraciones
                   <i class="fas fa-angle-left right"></i>
-                </p>
+                </span>
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
                   <a href="{% url 'ciudades' %}" class="nav-link">
                     <i class="nav-icon fas fa-map-marked-alt text-primary pulse"></i>
-                    <p>Ciudades</p>
+                    <span>Ciudades</span>
                   </a>
                 </li>
                 <li class="nav-item">
                   <a href="{% url 'categorias' %}" class="nav-link">
                     <i class="nav-icon fas fa-tags text-warning pulse"></i>
-                    <p>Categorías Productos</p>
+                    <span>Categorías Productos</span>
                   </a>
                 </li>
 
                 <li class="nav-item">
                   <a href="{% url 'bodegas' %}" class="nav-link">
                     <i class="nav-icon fas fa-warehouse text-white pulse"></i>
-                    <p>Bodegas</p>
+                    <span>Bodegas</span>
                   </a>
                 </li>
 
                 <li class="nav-item">
                   <a href="{% url 'listar_grupos_dotacion' %}" class="nav-link">
                     <i class="nav-icon fas fa-hard-hat text-white pulse"></i>
-                    <p>Grupo Dotación</p>
+                    <span>Grupo Dotación</span>
                   </a>
                 </li>
 
@@ -285,28 +237,28 @@
             <li class="nav-item">
               <a href="{% url 'proveedores' %}" class="nav-link">
                 <i class="nav-icon fas fa-address-book "></i>
-                <p>Proveedores</p>
+                <span>Proveedores</span>
               </a>
             </li>
 
             <li class="nav-item">
               <a href="{% url 'empleadodotacion' %}" class="nav-link">
                 <i class="nav-icon fas fa-address-book "></i>
-                <p>Empleados</p>
+                <span>Empleados</span>
               </a>
             </li>
 
             <li class="nav-item">
               <a href="{% url 'productos' %}" class="nav-link">
                 <i class="nav-icon fas fa-box-open"></i>
-                <p>Productos</p>
+                <span>Productos</span>
               </a>
             </li>
 
             <li class="nav-item">
               <a href="{% url 'cliente' %}" class="nav-link">
                 <i class="nav-icon fa fa-users"></i>
-                <p>Clientes</p>
+                <span>Clientes</span>
               </a>
             </li>
 
@@ -387,7 +339,6 @@
   <script src="{% static 'index/DataTables/Buttons-2.0.1/js/buttons.print.min.js' %}"></script>
   <script src="{% static 'index/DataTables/Buttons-2.0.1/js/buttons.html5.min.js' %}"></script>
   <script src="{% static 'index/DataTables/Buttons-2.0.1/js/pdfmaker.min.js' %}"></script> -->
-
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
@@ -401,9 +352,6 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery-number@2.1.6/jquery.number.min.js"></script>
 <!-- <script type="text/javascript" charset="utf8" src="{% static 'index/js/main.js' %}"></script>  -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> 
-
-
-
 
 {% if messages %}
 {% for m in messages %}
@@ -422,7 +370,6 @@
     });
   });
   
-
 </script>
 {% endfor %}
 {% endif %}
@@ -440,7 +387,6 @@ window.addEventListener("load", () => {
 </script>
 
 {% block extra_js %} {% endblock %}
-
 
 </body>
 

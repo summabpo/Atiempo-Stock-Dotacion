@@ -41,23 +41,7 @@ def list_bodegas(_request):
     return JsonResponse(data)    
 
 
-
 @login_required(login_url='login_usuario')
-# def crear_bodega(request):
-#     if request.method == 'POST':
-#         form = BodegaNueva(request.POST)
-#         if form.is_valid():
-#             nueva_bodega = form.save(commit=False)
-#             nueva_bodega.id_usuario_creador = request.user  # ← asigna el usuario que crea
-#             nueva_bodega.save()
-#             messages.success(request, "Bodega Creada Correctamente. ! ")
-#             return redirect('bodegas')
-#         else:
-#             print(form.errors)
-#     else:
-#         form = BodegaNueva()
-
-#     return render(request, 'crear_bodega.html', {'form': form})
 def crear_bodega(request):
     if request.method == 'POST':
         form = BodegaNueva(request.POST)
@@ -91,7 +75,6 @@ def bodegas(request):
         'bodegas': bodegas
     })
     
-    
 @login_required(login_url='login_usuario')    
 def bodega_detalle(request, id):
     ##ciudad = Ciudad.objects.get(id_ciudad=id)
@@ -102,29 +85,6 @@ def bodega_detalle(request, id):
                       'bodega':bodega
                   })
     
-# def crear_bodega(request):
-#     if request.method == 'GET':
-#         # show interface
-#         return render(request, 'crear_bodega.html', {
-#                       'form': BodegaNueva()
-#         })
-#     else:
-#         print("Datos recibidos en el POST:"),
-#         print("Nombre de la bodega:", request.POST.get('nombre')),  # Verifica el valor enviado
-#         Bodega.objects.create(nombre=request.POST['nombre'])
-#         return redirect('bodegas')    
-    
-# def crear_bodega(request):
-#     if request.method == 'POST':
-#         print("POST Data:", request.POST)  # Esto imprime los datos enviados en el POST
-#         form = BodegaNueva(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('bodegas:lista_bodegas')
-#     else:
-#         form = BodegaNueva()
-
-#     return render(request, 'bodegas/crear_bodega.html', {'form': form})    
 
 @login_required(login_url='login_usuario')
 def modificar_bodega(request, id):

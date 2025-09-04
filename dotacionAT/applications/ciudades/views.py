@@ -1,13 +1,3 @@
-# from django.shortcuts import render
-# from .forms import CiudadFormCrear
-
-# # Create your views here.
-
-# def Ciudad(request):
-#     ciudad_form = CiudadFormCrear()
-#     return render(request, 'ciudad/ciudad.html', {'form':ciudad_form})
-
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 # from django.views.generic import CreateView, UpdateView
@@ -33,8 +23,7 @@ def index(request):
         'title': title
         })  # Si está dentro de 'ciudades' subcarpeta
 
-#def index(request):
-#    return HttpResponse('index.html')
+
 @login_required(login_url='login_usuario')
 def list_ciudades(_request):
     # ciudades =list(Ciudad.objects.values())
@@ -157,33 +146,6 @@ def crear_ciudad(request):
 
     return redirect('ciudades')
 
-#@login_required(login_url='login_usuario')
-# def crear_ciudad(request):
-#     if request.method == 'GET':
-#         # show interface
-#         return render(request, 'crear_ciudad.html', {
-#                       'form': CiudadNueva()
-#         })
-#     else:
-#         Ciudad.objects.create(nombre=request.POST['nombre'])
-#         messages.success(request, "Ciudad Creada Correctamente. ! ")
-#         return redirect('ciudades')
-
-# def crear_ciudad(request):
-#     #if request.method == 'POST':
-#     #     form = CiudadNueva(request.POST)
-#     #     if form.is_valid():
-#     #         form.save()  # Guarda la nueva ciudad
-#     #         return redirect('ciudades.html')  # Redirige a otra página o a la misma página
-#     # else:
-#     #     form = CiudadNueva()
-        
-#     data = {
-          
-#          'form': CiudadNueva() 
-#     }  
-    
-#     return render(request, 'crear_ciudad.html', data)
     
 @login_required(login_url='login_usuario')    
 def ciudad_detalle(request, id):
@@ -194,31 +156,6 @@ def ciudad_detalle(request, id):
                   {
                       'ciudad':ciudad
                   })
-
-
-# Vista para crear una nueva ciudad
-# class CiudadCreateView(CreateView):
-#     model = Ciudad
-#     form_class = CiudadForm
-#     template_name = 'ciudad/ciudad_form.html'  # El template que renderiza el formulario
-    # success_url = reverse_lazy('ciudad:ciudad-list')  # Redirige a la lista de ciudades
-
-# Vista para editar una ciudad
-# class CiudadUpdateView(UpdateView):
-#     model = Ciudad
-#     form_class = CiudadForm
-#     template_name = 'ciudad/ciudad_form.html'  # El mismo template que para crear
-    #success_url = reverse_lazy('ciudad:ciudad-list')  # Redirige a la lista de ciudades
-
-# Vista para cambiar el estado de una ciudad a inactivo
-# def inactivar_ciudad(request, pk):
-#     try:
-#         ciudad = Ciudad.objects.get(pk=pk)
-#         ciudad.activo = False
-#         ciudad.save()
-#         return redirect('ciudades:ciudad-list')
-#     except Ciudad.DoesNotExist:
-#         return HttpResponseNotAllowed("Ciudad no encontrada.")
 
 
 
@@ -235,9 +172,7 @@ def modificar_ciudad(request, id):
     data = {
         'form': CiudadActualizaForm(instance=ciudad)
     }
-    
-    
-    
+           
     
     if request.method == 'POST':
         formulario = CiudadActualizaForm(data=request.POST, instance=ciudad)

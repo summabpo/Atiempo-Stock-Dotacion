@@ -1,6 +1,5 @@
 {% extends 'layouts/base.html' %}
 
-
 {% block content %}
 
 {% load static %}
@@ -38,11 +37,6 @@
     </div>
 </div>
 
-<!-- <p>
-{{ ciudades}}
-</p> -->
-
-
 {% block extra_js %}
 
 <script src="{% static 'js/productos.js' %}"></script>
@@ -50,51 +44,3 @@
 {% endblock %}
 
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-<!-- <tbody>
-  {% for producto in productos %}
-  <tr>
-    <th scope="col">{{producto.id_producto| intcomma}}</th>
-    <th scope="col">{{producto.nombre | capfirst }}</th>
-    <th scope="col">{{producto.categoria | title }}</th>
-
-    <th scope="col">{{producto.stock | intcomma }}</th>
-
-    <th scope="col">{{producto.costo | intcomma }}</th>
-
-    <th scope="col">{{producto.unidad_medida | title }}</th>
-
-    <th scope="col">{%if producto.activo == True %}
-      ✅ {{producto.activo}}
-      {% else %}
-      inactivo
-      {% endif %} </th> -->
-    <!-- 
-    <article class="card">
-      <a href="{% url 'productos_detalle' producto.id_producto %}">
-        <h1>{{producto.nombre}}</h1>
-      </a>        -->
-      <!-- <th scope="col"></th>
-      {%if producto.activo == True %}
-      <h1>✅ {{producto.activo}}</h1>
-      {% else %}
-      <h1>inactivo</h1>
-      {% endif %}      
-    </th> -->
-
-      <!-- <th scope="col"><a href="{% url 'modificar_producto' producto.id_producto %}"><button class="btn btn-warning">
-        Actualizar
-      </button></a></th>
-    </tr>
-    {% endfor %}
-  </tbody> -->

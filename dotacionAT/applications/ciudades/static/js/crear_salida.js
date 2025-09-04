@@ -1,7 +1,6 @@
 
 console.log("Hola Crear Salida");
 
-
 var dataTableClienteSalida;
 var dataTableProductos;
 
@@ -119,8 +118,6 @@ if(nombre === 'Atiempo SAS'){
 
 }
 
-
-
 }
 
 function quitarProveedor() {
@@ -156,12 +153,9 @@ const dataTableOptionsOrden = {
     info: false,
 };
 
-
-
 $(document).ready(function() {
     // Cargar productos inicialmente si ya hay una bodega seleccionada
   
-
     const style = document.createElement('style');
 style.textContent = `
     .bg-warning-custom {
@@ -174,113 +168,7 @@ style.textContent = `
 document.head.appendChild(style);
 
 
-
-    // Ejecutar al cambiar el select de bodega
-// $('#selectBodegaSalida').on('change', function() {
-        
-// console.log("Hola");
-
-// const salidaSelect = document.getElementById('selectBodegaSalida');
-//     const entradaSelect = document.getElementById('selectBodegaEntrada');
-//     const entradaContainer = document.getElementById('bodegaDestinoContainer');
-
-//   const salidaSeleccionada = salidaSelect.value;
-
-//   console.log(salidaSeleccionada);
-
-//         if (salidaSeleccionada) {
-//             entradaSelect.innerHTML = '<option value="">Seleccione Bodega Entrada</option>';
-
-//             const bodegasFiltradas = bodegas.filter(b => String(b.id_bodega) !== salidaSeleccionada);
-
-//             console.log(bodegasFiltradas);
-
-//             bodegasFiltradas.forEach(bodega => {
-//                 const option = document.createElement('option');
-//                 option.value = bodega.id_bodega;
-//                 option.textContent = `${bodega.nombre} - ${bodega.ciudad}`;
-//                 entradaSelect.appendChild(option);
-//             });
-
-//             entradaContainer.style.display = 'block';
-//         } else {
-//             entradaContainer.style.display = 'none';
-//             entradaSelect.innerHTML = '<option value="">Seleccione Bodega Entrada</option>';
-//         }
-   
-
-
-// const cargarProductos = async () => {
-//     try {
-//         const filtroBodega = document.getElementById('selectBodegaSalida').value;
-
-//         const response = await fetch('/inventario_bodega_json/');
-//         const data = await response.json();
-//         const tableBody = document.getElementById('tableBody_productosOrden');
-
-//         if (tableBody) {
-//             // Destruye el DataTable si ya está inicializado
-//             if ($.fn.DataTable.isDataTable('#datatableProductosOrden')) {
-//                 $('#datatableProductosOrden').DataTable().destroy();
-//             }
-
-//     let content = ``;
-// const inventariosFiltrados = filtroBodega
-//     ? data.inventarios.filter(p => p.bodega_id == filtroBodega)
-//     : data.inventarios;
-
-// inventariosFiltrados.forEach(producto => {
-//     let colorClass = '';
-
-//     if (producto.stock < 10) {
-//         colorClass = 'bg-danger text-white fw-bold rounded px-2 py-1'; // rojo
-//     } else if (producto.stock < 20) {
-//         colorClass = 'bg-warning-custom'; // naranja
-//     } else {
-//         colorClass = 'bg-success text-white fw-bold rounded px-2 py-1'; // verde
-//     }
-
-    
-
-//     content += `
-//         <tr class="text-center">
-//             <td>${producto.id_producto}</td>
-//             <td>${producto.producto}</td>
-//             <td><span class="${colorClass}">${producto.stock}</span></td>
-//              <td>
-//                 ${producto.stock > 0
-//                     ? `<button class="btn btn-sm btn-primary" onclick="agregarProductoAOrden('${producto.id_producto}', '${producto.producto}', '${producto.stock}')">
-//                         Agregar
-//                        </button>`
-//                     : `<span class="text-muted">Sin stock</span>`
-//                 }
-//             </td>
-//         </tr>
-//     `;
-// });
-
-//             tableBody.innerHTML = content;
-
-//             // Reinicializa el DataTable
-//             $('#datatableProductosOrden').DataTable({
-//                 language: {
-//                     url: '//cdn.datatables.net/plug-ins/1.13.5/i18n/es-ES.json'
-//                 }
-//             });
-//         }
-
-//     } catch (error) {
-//         alert("Error al obtener productos.");
-//         console.error("Error al obtener productos:", error);
-//     }
-// }
-
-
-//     // 👉 Llamada a la función que definiste arriba
-//     cargarProductos()
-//     })
 })
-
 
 
 // ✅ Llamamos ambas al cargar la página
@@ -332,11 +220,9 @@ function agregarProductoAOrden(id, nombre, stock) {
     cambiarCantidad()
 }
 
-
 //   <td class="subtotal text-right">0.00</td>
 //<td><input type="text" name="precios[]" class="form-control text-right valorUnitario"   
 // onchange="actualizarSubtotal(this)" value="${costo}"  required></td>
-
 
 function formatNumberInput(inputElement) {
     let value = parseFloat(inputElement.value);
@@ -381,7 +267,6 @@ function parsePrecioColombiano(valorRaw) {
     return parseFloat(soloNumeros);
 }
 
-
 function actualizarSubtotal(input) {
     const fila = input.closest('tr');
 
@@ -404,13 +289,11 @@ function actualizarSubtotal(input) {
 // console.log("Clean:", clean);  // Lo que se va a parsear
 // console.log("Precio:", precio);
 
-
     console.log(subtotal);
 
     // actualizarTotalGeneral();
     
 }
-
 
 function agregarProveedorAOrden(id, nombre) {
     // Evitar duplicados
@@ -433,7 +316,6 @@ estado = 'Salida';
 tipo_doc = 'SI';
     }
     
-
     fila.innerHTML = `
         <td>${nombre}<input type="hidden" name="proveedor[]" value="${id}"></td>
         <td>${proveedor.id_ciudad}</td>
@@ -447,11 +329,9 @@ tipo_doc = 'SI';
         </td>
     `;
 
-
     tbody.appendChild(fila);
     
 }
-
 
 function actualizarTotalGeneral() {
     let total = 0;
@@ -479,7 +359,6 @@ document.querySelector('form').addEventListener('submit', function() {
     });
 });
    
-
 $(document).ready(function() {
     $('#selectBodegaSalida').select2({
         placeholder: 'Bodega Salida',
@@ -493,7 +372,6 @@ $(document).ready(function() {
     });
 
 });
-
 
 let bodegas = [];
 
@@ -611,9 +489,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     configurarEventoBodegaSalida();
 });
 
-
-
-
 function cambiarCantidad(input) {
     const fila = input.closest('tr'); // Encuentra la fila donde está el input
     const stockInput = fila.querySelector('.stock-hidden'); // Encuentra el input hidden con el stock
@@ -636,5 +511,3 @@ function cambiarCantidad(input) {
         });
     }
 }
-
-

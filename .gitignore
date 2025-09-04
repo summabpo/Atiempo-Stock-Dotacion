@@ -4,6 +4,10 @@
 # Ignorar base de datos SQLite
 db.sqlite3
 
+# Ignorar template antiguo
+dotacionAT/templates/layouts/base2.html
+dotacionAT/templates/historial_entregas2.html
+dotacionAT/templates/crearOrdenCompra1.html
 # Ignorar archivos de migración generados localmente (excepto las necesarias para el repositorio)
 *.log
 *.pot

@@ -45,7 +45,6 @@ def list_orden_salida(request):
     return JsonResponse({'ordenes_salida': data})    
 
 
-
 @transaction.atomic
 def crear_salida(request):
     if request.method == 'POST':
@@ -63,10 +62,6 @@ def crear_salida(request):
         
         print(request.POST)
         
-        # print("Productos:", cliente_id)
-        # print("Cantidades:", cantidades)
-        # print("Precios:", productos)
-        # print("Total:", total)
 
         
         # Validación temprana para cliente y productos
@@ -156,8 +151,6 @@ def crear_salida(request):
 
 
 
-
-
 def detalle_salida(request, id):
     detalle_salida = get_object_or_404(Salida, id=id) 
     items = detalle_salida.items.all()
@@ -165,4 +158,3 @@ def detalle_salida(request, id):
         'detalle_salida': detalle_salida,
         'items': items,
     })
-

@@ -60,18 +60,6 @@ def productos(request):
         'productos': producto
     })
     
-# def crear_productos(request):
-#     categorias_choices = [('', 'Seleccione una opcion')] + CATEGORIAS  # Preparar las opciones para el select
-#     if request.method == 'POST':
-#         form = ProductoForm(request.POST, categorias_choices=categorias_choices)  # Pasamos las categorías al formulario
-#         if form.is_valid():
-#             form.save()  # Guardar el producto
-#             messages.success(request, "Producto Actualizada Correctamente. ! ")
-#             return redirect('productos')  # Redirigir después de guardar
-#     else:
-#         form = ProductoForm(categorias_choices=categorias_choices)  # Pasar las categorías al formulario
-
-#     return render(request, 'crear_productos.html', {'form': form})
 
 @login_required(login_url='login_usuario')
 def crear_productos(request):
@@ -98,19 +86,7 @@ def crear_productos(request):
         form = ProductoForm()
 
     return render(request, 'crear_productos.html', {'form': form})
-# def crear_productos(request):
-#     if request.method == 'POST':
-#         form = ProductoForm(request.POST)
-#         if form.is_valid():
-#             producto = form.save(commit=False)
-#             producto.id_usuario = request.user  # ← Guardar creador
-#             producto.save()
-#             messages.success(request, "Producto creado correctamente.")
-#             return redirect('productos')
-#     else:
-#         form = ProductoForm()
 
-#     return render(request, 'crear_productos.html', {'form': form})
 
 
 @login_required(login_url='login_usuario')
@@ -169,30 +145,8 @@ def list_categorias(_request):
     return JsonResponse(data)
     
     
-# def crear_categoria(request):
-    
-#     if request.method == 'POST':
-#         form = ProductoForm(request.POST)  # Pasamos las categorías al formulario
-#         if form.is_valid():
-#             form.save()  # Guardar el producto
-#             messages.success(request, "Categoria Creada Correctamente. ! ")
-#             return redirect('categoria')  # Redirigir después de guardar
-#     else:
-#         form = ProductoForm(categorias_choices=categorias_choices)  # Pasar las categorías al formulario
-
-#     return render(request, 'crear_productos.html', {'form': form})    
 
 
-# def crear_categoria(request):
-#     if request.method == 'GET':
-#         # show interface
-#         return render(request, 'crear_categoria.html', {
-#                       'form': CategoriaNueva()
-#         })
-#     else:
-#         Categoria.objects.create(nombre=request.POST['nombre'])
-#         messages.success(request, "Categoria Creada Correctamente. ! ")
-#         return redirect('categorias')
 @login_required(login_url='login_usuario')
 def crear_categoria(request):
     if request.method == 'GET':
@@ -220,19 +174,6 @@ def crear_categoria(request):
         messages.success(request, "¡Categoría creada correctamente!")
         return redirect('categorias')
 
-# def crear_categoria(request):
-#     if request.method == 'GET':
-#         return render(request, 'crear_categoria.html', {
-#             'form': CategoriaNueva()
-#         })
-#     else:
-#         categoria = Categoria(
-#             nombre=request.POST['nombre'],
-#             id_usuario_creador=request.user  # ← guardar quién la crea
-#         )
-#         categoria.save()
-#         messages.success(request, "Categoría Creada Correctamente. ! ")
-#         return redirect('categorias')
     
 @login_required(login_url='login_usuario')
 def modificar_categoria(request, id):
@@ -252,23 +193,3 @@ def modificar_categoria(request, id):
         data['form'] = formulario
 
     return render(request, 'editarCategoria.html', data)    
-    
-# def modificar_categoria(request, id):
-#     categoria = get_object_or_404(Categoria, id_categoria=id)
-
-#     # Preparar las opciones para el select (de la misma forma que en crear_productos)
-
-#     # Datos iniciales para el formulario
-#     data = {
-#         'form': CategoriaEditar(instance=categoria)
-#     }
-
-#     if request.method == 'POST':
-#         formulario = CategoriaEditar(data=request.POST, instance=categoria)
-#         if formulario.is_valid():
-#             formulario.save()
-#             messages.success(request, "Categoria Actualizada Correctamente. ! ")
-#             return redirect(to='categorias')  # Redirigir después de guardar
-#         data['form'] = formulario
-
-#     return render(request, 'editarCategoria.html', data)    

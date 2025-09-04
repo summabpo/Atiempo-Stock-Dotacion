@@ -61,4 +61,3 @@ def inventario_bodega_json(request):
     }
 
     return JsonResponse(data)
-

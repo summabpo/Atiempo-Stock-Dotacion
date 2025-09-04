@@ -39,33 +39,4 @@
 <script src="{% static 'js/empleados.js' %}"></script>
 {% endblock %}
 
-
 {% endblock %}
-
-
-<!-- <tbody>
-  {% for proveedor in proveedores %}
-  <tr>
-    <th scope="col">{{proveedor.id_proveedor | intcomma}}</th> -->
-    <!-- <th scope="col">
-      <a href="{% url 'proveedor_detalle' proveedor.id_proveedor %}">
-        <h1>{{proveedor.nombre | title }}</h1>
-      </a></th> -->
-      <!-- <th scope="col">
-        {{proveedor.nombre | title }}
-      </th>
-      <th scope="col">{{proveedor.telefono}}</th>
-      <th scope="col">{{proveedor.email}}</th>
-      <th scope="col">{{proveedor.ciudad | capfirst}}</th> 
-      
-      {%if proveedor.activo == True %}
-      <th scope="col">✅ {{proveedor.activo}}</th>
-      {% else %}
-      <th scope="col"> {{proveedor.activo}}</th>
-      {% endif %}
-      <th scope="col"><a href="{% url 'modificar_proveedor' proveedor.id_proveedor %}"><button class="btn btn-warning">
-        Actualizar
-      </button></a></th>
-    </tr>
-    {% endfor %}
-  </tbody> -->
