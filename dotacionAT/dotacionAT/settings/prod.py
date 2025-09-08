@@ -14,9 +14,9 @@ DATABASES = {
 }
 
 # Static
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # IMPORTANTE: Asegúrate que esta ruta existe y es la misma que usaste en collectstatic
-STATIC_ROOT = '/home/DanielYustres/Atiempo-Stock-Dotacion/dotacionAT/staticfiles'
-
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # si tienes carpeta "static" dentro del proyecto
 # Si tienes archivos estáticos dentro de apps (como ya tienes), puedes dejar tus STATICFILES_DIRS en base.py
