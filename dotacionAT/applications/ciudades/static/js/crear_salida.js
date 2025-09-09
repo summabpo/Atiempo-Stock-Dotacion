@@ -102,7 +102,7 @@ function seleccionarProveedor(id, nombre, ciudad, telefono) {
     tbody.appendChild(fila);
 
      // Mostrar el select condicional
-if(nombre === 'Atiempo SAS'){
+if(nombre === 'ATIEMPO SAS'){
 
     document.getElementById("bodegaDestinoContainer").style.display = "block";
 
