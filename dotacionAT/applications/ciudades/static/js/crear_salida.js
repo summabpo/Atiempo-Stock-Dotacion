@@ -101,6 +101,8 @@ function seleccionarProveedor(id, nombre, ciudad, telefono) {
     `;
     tbody.appendChild(fila);
 
+    console.log(nombre);
+
      // Mostrar el select condicional
 if(nombre === 'ATIEMPO SAS'){
 
