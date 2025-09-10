@@ -13,7 +13,7 @@
     </div>
     <hr>
 
-    <table class="table table-bordered table-striped align-middle">
+    <!-- <table class="table table-bordered table-striped align-middle" id="tabla-grupos">
       <thead class="table-dark">
         <tr>
           <th>ID</th>
@@ -65,7 +65,123 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table> -->
+    <table id="tabla-grupos" class="table table-bordered table-striped align-middle">
+  <thead class="table-dark">
+    <tr>
+      <th></th> <!-- Columna para el botón de expandir -->
+      <th>ID</th>
+      <th>Cargo</th>
+      <th>Cliente</th>
+      <th>Ciudad</th>
+      <th>Género</th>
+      <th>Fecha de Creación</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for grupo in grupos %}
+    <tr data-detalle='
+      <ul>
+        {% for item in grupo.categorias.all %}
+          <li>{{ item.categoria.nombre }} - Cantidad: {{ item.cantidad }}</li>
+        {% empty %}
+          <li><em>Sin productos asociados.</em></li>
+        {% endfor %}
+      </ul>'>
+      <td class="dt-control"></td>
+      <td>{{ grupo.id }}</td>
+      <td>
+        {% for cargo in grupo.cargos.all %}
+          {{ cargo.nombre }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </td>
+      <td>{{ grupo.cliente.nombre }}</td>
+      <td>
+        {% for ciudad in grupo.ciudades.all %}
+          {{ ciudad.nombre }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </td>
+      <td>{{ grupo.genero }}</td>
+      <td>{{ grupo.fecha_creacion|date:"Y-m-d H:i" }}</td>
+      <td>
+  <a href="{% url 'editar_grupo_dotacion' grupo.id %}" class="btn btn-sm btn-primary">
+    Editar
+  </a>
+  <a href="#" class="btn btn-sm btn-danger">Eliminar</a>
+</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function () {
+  console.log("lista grupos");
+
+  const table = $('#tabla-grupos').DataTable({
+    columnDefs: [
+      { className: "text-center", targets: [0, 1, 2, 3] },
+      { orderable: false, targets: [2, 3] },
+      { searchable: false, targets: [3] }
+    ],
+    language: {
+      processing:     "Procesando...",
+      lengthMenu:     "Mostrar _MENU_ registros",
+      zeroRecords:    "No se encontraron resultados",
+      emptyTable:     "Ningún dato disponible en esta tabla",
+      info:           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+      infoEmpty:      "Mostrando registros del 0 al 0 de un total de 0 registros",
+      infoFiltered:   "(filtrado de un total de _MAX_ registros)",
+      search:         "Buscar:",
+      loadingRecords: "Cargando...",
+      paginate: {
+        first:    "Primero",
+        last:     "Último",
+        next:     "Siguiente",
+        previous: "Anterior"
+      },
+      aria: {
+        sortAscending:  ": Activar para ordenar de forma ascendente",
+        sortDescending: ": Activar para ordenar de forma descendente"
+      },
+      buttons: {
+        colvis: "Visibilidad"
+      }
+    },
+
+    // ✅ Usar this.api() para acceder al DataTable
+    initComplete: function () {
+      const api = this.api();
+      api.rows().every(function () {
+        const tr = $(this.node());
+        const detalle = tr.data('detalle');
+        if (detalle) {
+          this.child(detalle).show();
+          tr.addClass('shown');
+        }
+      });
+    }
+  });
+
+  // ✅ Control para expandir/cerrar al hacer clic
+  $('#tabla-grupos tbody').on('click', 'td.dt-control', function () {
+    const tr = $(this).closest('tr');
+    const row = table.row(tr);
+
+    if (row.child.isShown()) {
+      row.child.hide();
+      tr.removeClass('shown');
+    } else {
+      const detalle = tr.data('detalle');
+      row.child(detalle).show();
+      tr.addClass('shown');
+    }
+  });
+});
+</script>
 {% endblock %}
