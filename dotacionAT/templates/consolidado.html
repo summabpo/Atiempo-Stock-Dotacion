@@ -40,7 +40,19 @@
             <td>{{ item.periodo }}</td>
             <td>{{ item.tipo_entrega }}</td>
             <td>{{ item.total_entregas }}</td>
-            <td>
+         <td>
+        <!-- USA EL NOMBRE CORRECTO DEL CAMPO -->
+        <a href="{% url 'generar_pdf_por_periodo' %}?periodo={{ item.periodo }}&cliente_id={{ item.empleado__cliente__id_cliente }}&tipo_entrega={{ item.tipo_entrega }}"
+           class="btn btn-primary btn-sm">
+            📄 Generar Lote PDF
+        </a>
+        
+        <a href="{% url 'historial_entregas' %}?periodo={{ item.periodo }}&cliente_id={{ item.empleado__cliente__id_cliente }}&tipo_entrega={{ item.tipo_entrega }}"
+        class="btn btn-info btn-sm">
+            📋 Ver Detalles
+        </a>
+    </td>
+            <!-- <td>
               <a href="{% url 'generar_formato_entrega_pdf' %}?periodo={{ item.periodo }}&cliente={{ item.empleado__cliente|urlencode }}"
        class="btn btn-primary btn-sm">
         📄 Descargar PDF
@@ -49,11 +61,11 @@
        class="btn btn-info btn-sm">
         📋 Detalle Entrega
     </a>
-<!-- <button class="btn btn-primary">
+ <button class="btn btn-primary">
          <a href="{% url 'historial_entregas2' %}">
     Detalle Entrega 2
-</a></button> -->
-            </td>
+</a></button> 
+            </td> -->
         </tr>
         {% empty %}
         <tr>

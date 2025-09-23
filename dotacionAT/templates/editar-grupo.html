@@ -1,4 +1,5 @@
 {% extends 'layouts/base.html' %}
+{% load static %}
 {% block content %}
 
 <div class="container">
@@ -8,7 +9,7 @@
       <br>
       <div class="card">
         <div class="cadr-body">
-  <h2>Crear Grupo de Dotación</h2>
+  <h2>Editar Grupo de Dotación</h2>
   <form method="post">
     {% csrf_token %}
     <div class="card mb-5">
@@ -46,25 +47,27 @@
     </div>
 
     <h4 class="mt-4">Productos del Grupo</h4>
-   <div id="formset-container">
-  {{ formset.management_form }}
-  {% for form in formset %}
-    <div class="formset-item border p-3 mb-2 bg-light rounded">
-      {% for field in form.visible_fields %}
-        <div class="mb-2">
-          {{ field.label_tag }} {{ field }}
-          {% if field.errors %}<div class="text-danger">{{ field.errors }}</div>{% endif %}
+  <div id="formset-container" data-prefix="{{ formset.prefix }}">
+    {{ formset.management_form }}
+    {% for form in formset %}
+        <div class="formset-item border p-3 mb-2 bg-light rounded">
+            {{ form.id }}  {# Esto es el hidden id #}
+            {% for field in form.visible_fields %}
+                <div class="mb-2">
+                    {{ field.label_tag }} {{ field }}
+                    {% if field.errors %}<div class="text-danger">{{ field.errors }}</div>{% endif %}
+                </div>
+            {% endfor %}
+            <button type="button" class="btn btn-danger btn-sm remove-form">Quitar</button>
         </div>
-      {% endfor %}
-
-      <!-- Botón para quitar este producto -->
-      <button type="button" class="btn btn-danger btn-sm remove-form">Quitar</button>
-    </div>
-  {% endfor %}
+    {% endfor %}
 </div>
 
-<!-- Botón para añadir productos -->
-<button type="button" class="btn btn-outline-primary mb-3" id="add-form">Agregar otro producto</button>
+<!-- Botón para agregar -->
+<button type="button" class="btn btn-outline-primary mb-3" id="add-form">Agregar otra categoría</button>
+<div id="empty-form" style="display:none;">
+    {{ formset.empty_form.as_p|escapejs }}
+</div>
     <br>
     <button type="submit" class="btn btn-success">Guardar Grupo</button>
     <a href="{% url 'listar_grupos_dotacion' %}" class="btn btn-secondary">Cancelar</a>
@@ -80,5 +83,8 @@
 {% block extra_js %}
 
 <script src="{% static 'js/grupo_dotacion.js' %}"></script>
-
+<script>
+document.getElementById("formset-container").dataset.emptyForm =
+    document.getElementById("empty-form").innerHTML;
+</script>
 {% endblock %}

@@ -6,12 +6,15 @@ urlpatterns = [
     path('empleadodotacion/', views.empleadodotacion, name='empleadodotacion'),
     path('list_empleados/', views.list_empleados, name='list_empleados'),
     path('historial-entregas/', views.historial_entregas, name='historial_entregas'),
-     path('historial-entregas2/', views.historial_entregas2, name='historial_entregas2'),
+    path('historial-entregas2/', views.historial_entregas2, name='historial_entregas2'),
     path('entregas/pdf/todas/', views.generar_formato_entrega_pdf, name='generar_formato_entrega_pdf'),
     path('consolidado/', views.vista_consolidado, name='vista_consolidado'),
-    path('pdf/', views.generar_pdf_por_periodo, name='pdf_por_periodo'),
+    path('entregas/pdf/por-periodo/', views.generar_pdf_por_periodo, name='generar_pdf_por_periodo'),
     path('entrega/pdf/<int:entrega_id>/', views.generar_pdf_por_entrega, name='generar_pdf_por_entrega'),
     path("progreso-carga/", views.progreso_carga, name="progreso_carga"),
+    path(
+    'entregas/<int:entrega_id>/generar-faltantes/',
+    views.generar_entrega_faltantes,
+    name='generar_entrega_faltantes'
+        )
 ]
-
-

@@ -65,4 +65,16 @@ GrupoDotacionProductoFormSet = inlineformset_factory(
     formset=BaseGrupoDotacionProductoFormSet,
     fields=['categoria', 'cantidad'],
     extra=1,
+    can_delete=True,  # <--- Esto es lo que faltaba
+)
+
+
+GrupoDotacionProductoFormSetEdit = inlineformset_factory(
+    GrupoDotacion,
+    GrupoDotacionProducto,
+    form=GrupoDotacionProductoForm,
+    formset=BaseGrupoDotacionProductoFormSet,
+    fields=['categoria', 'cantidad'],
+    extra=0,
+    can_delete=True,  # <--- Esto es lo que faltaba
 )

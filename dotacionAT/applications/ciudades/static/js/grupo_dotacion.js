@@ -1,161 +1,283 @@
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(function () {
+  console.log("lista grupos");
 
-  function aplicarSelect2() {
-    $('select').select2({
-      width: '100%',
-      theme: 'classic',
-      placeholder: "Seleccione una opción",
-      allowClear: true
-    });
-  }
+  const table = $('#tabla-grupos').DataTable({
+    columnDefs: [
+      { className: "text-center", targets: [0, 1, 2, 3] },
+      { orderable: false, targets: [2, 3] },
+      { searchable: false, targets: [3] }
+    ],
+    language: {
+      processing:     "Procesando...",
+      lengthMenu:     "Mostrar _MENU_ registros",
+      zeroRecords:    "No se encontraron resultados",
+      emptyTable:     "Ningún dato disponible en esta tabla",
+      info:           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+      infoEmpty:      "Mostrando registros del 0 al 0 de un total de 0 registros",
+      infoFiltered:   "(filtrado de un total de _MAX_ registros)",
+      search:         "Buscar:",
+      loadingRecords: "Cargando...",
+      paginate: {
+        first:    "Primero",
+        last:     "Último",
+        next:     "Siguiente",
+        previous: "Anterior"
+      },
+      aria: {
+        sortAscending:  ": Activar para ordenar de forma ascendente",
+        sortDescending: ": Activar para ordenar de forma descendente"
+      },
+      buttons: {
+        colvis: "Visibilidad"
+      }
+    },
 
-  $(document).ready(function () {
-  $('select.select2').select2({
-    width: '100%',
-    theme: 'classic',
-    placeholder: 'Seleccione una o varias opciones',
-    allowClear: true
-    });
-  });
-
-  aplicarSelect2();
-
-  const formsetContainer = document.getElementById('formset-container');
-  const addFormButton = document.getElementById('add-form');
-  const totalForms = document.getElementById('id_productos-TOTAL_FORMS');
-
-  // 🟢 Ocultar productos ya seleccionados
-  function actualizarOpcionesDisponibles() {
-    const selects = document.querySelectorAll('select[name^="productos-"][name$="-producto"]');
-
-    // Obtiene todos los valores seleccionados
-    const valoresSeleccionados = Array.from(selects).map(s => s.value).filter(v => v !== "");
-
-    selects.forEach(select => {
-      const selectedValue = select.value;
-
-      // Iteramos sobre cada opción
-      $(select).find('option').each(function () {
-        const optionValue = this.value;
-
-        // Mostrar la opción si no está seleccionada en otro campo
-        if (
-          optionValue === "" || // opción vacía
-          optionValue === selectedValue || // opción actual del campo
-          !valoresSeleccionados.includes(optionValue)
-        ) {
-          $(this).prop('disabled', false);
-        } else {
-          $(this).prop('disabled', true);
+    // ✅ Usar this.api() para acceder al DataTable
+    initComplete: function () {
+      const api = this.api();
+      api.rows().every(function () {
+        const tr = $(this.node());
+        const detalle = tr.data('detalle');
+        if (detalle) {
+          this.child(detalle).show();
+          tr.addClass('shown');
         }
       });
-
-      // 🔁 Refrescar Select2
-      $(select).trigger('change.select2');
-    });
-  }
-
-  // 🟡 Al cambiar cualquier select, refrescamos opciones disponibles
-  document.addEventListener('change', e => {
-    if (e.target.matches('select[name^="productos-"][name$="-producto"]')) {
-      actualizarOpcionesDisponibles();
     }
   });
 
-  // ➕ Agregar nueva fila
-  addFormButton.addEventListener('click', () => {
-    const currentFormCount = parseInt(totalForms.value);
-    const lastForm = formsetContainer.querySelector('.formset-item:last-of-type');
+  // ✅ Control para expandir/cerrar al hacer clic
+  $('#tabla-grupos tbody').on('click', 'td.dt-control', function () {
+    const tr = $(this).closest('tr');
+    const row = table.row(tr);
 
-    $(lastForm).find('select').select2('destroy');
-
-    const newForm = lastForm.cloneNode(true);
-
-    // Limpiar valores del clon
-    newForm.querySelectorAll('input, select').forEach(input => {
-      input.value = '';
+    if (row.child.isShown()) {
+      row.child.hide();
+      tr.removeClass('shown');
+    } else {
+      const detalle = tr.data('detalle');
+      row.child(detalle).show();
+      tr.addClass('shown');
+    }
+  });
+});
+function aplicarSelect2() {
+    console.log("Aplicando Select2 solo a elementos específicos");
+    
+    // Seleccionar SOLO los selects que necesitan Select2
+    // Evita los que están en modales, alerts, etc.
+    $('select:not(.swal2-select, .modal select, [data-no-select2])').select2({
+        width: '100%',
+        theme: 'classic',
+        placeholder: "Seleccione una opción",
+        allowClear: true
     });
+}
 
-    // Actualizar índices
-    newForm.innerHTML = newForm.innerHTML.replaceAll(`-${currentFormCount - 1}-`, `-${currentFormCount}-`);
-    newForm.innerHTML = newForm.innerHTML.replaceAll(`_${currentFormCount - 1}`, `_${currentFormCount}`);
 
-    formsetContainer.appendChild(newForm);
-    totalForms.value = currentFormCount + 1;
-
+    
     aplicarSelect2();
-    actualizarOpcionesDisponibles();
-  });
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("Hola");
 
-  // 🔴 Validar duplicados antes del submit
-  document.querySelector('form').addEventListener('submit', function (e) {
-    const selects = document.querySelectorAll('select[name^="productos-"][name$="-producto"]');
-    const valores = [];
-    let duplicado = false;
+   
 
-    selects.forEach(select => {
-      const val = select.value;
-      if (val) {
-        if (valores.includes(val)) {
-          duplicado = true;
-        } else {
-          valores.push(val);
-        }
-      }
-    });
 
-    if (duplicado) {
-      e.preventDefault();
-      alert("No puedes seleccionar el mismo producto más de una vez.");
-    }
-  });
+    const formsetContainer = document.getElementById('formset-container');
+    const prefix = formsetContainer.dataset.prefix;
+    const totalForms = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+    const addFormButton = document.getElementById('add-form');
 
-  // Ejecutar en el primer renderizado
-  actualizarOpcionesDisponibles();
-});
-
-document.addEventListener("DOMContentLoaded", function() {
-    let formsetContainer = document.getElementById("formset-container");
-    let addButton = document.getElementById("add-form");
-
-    // Total forms de Django (oculto en el management_form)
-    let totalForms = document.getElementById("id_" + "{{ formset.prefix }}" + "-TOTAL_FORMS");
-
-    // 👉 Agregar producto
-    addButton.addEventListener("click", function() {
-        let formIndex = totalForms.value;
-        let emptyForm = formsetContainer.querySelector(".formset-item").cloneNode(true);
-
-        // Limpiar valores de inputs en el clon
-        emptyForm.querySelectorAll("input, select").forEach(el => {
-            el.value = "";
-            if (el.type === "checkbox") el.checked = false;
+    // 🟢 Función para actualizar opciones disponibles
+    function actualizarOpcionesDisponibles() {
+        const selects = formsetContainer.querySelectorAll(`select[name^="${prefix}"]`);
+        const seleccionadas = new Set();
+        selects.forEach(sel => {
+            if(sel.value) seleccionadas.add(sel.value);
         });
 
-        // Reemplazar índices __prefix__ con el nuevo index
-        emptyForm.innerHTML = emptyForm.innerHTML.replaceAll(
-            new RegExp(`-${formIndex - 1}-`, "g"),
-            `-${formIndex}-`
-        );
-
-        formsetContainer.appendChild(emptyForm);
-        totalForms.value = parseInt(formIndex) + 1;
-
-        attachRemoveButtons();
-    });
-
-    // 👉 Quitar producto
-    function attachRemoveButtons() {
-        document.querySelectorAll(".remove-form").forEach(btn => {
-            btn.onclick = function() {
-                btn.closest(".formset-item").remove();
-                // Actualizar TOTAL_FORMS
-                let items = document.querySelectorAll(".formset-item").length;
-                totalForms.value = items;
-            };
+        selects.forEach(sel => {
+            [...sel.options].forEach(opt => {
+                if(opt.value === "" || opt.value === sel.value) {
+                    opt.disabled = false;
+                } else {
+                    opt.disabled = seleccionadas.has(opt.value);
+                }
+            });
+            $(sel).trigger('change.select2');
         });
     }
 
-    // Inicializar
+    // ➕ Agregar nueva fila
+    addFormButton.addEventListener('click', () => {
+        const currentFormCount = parseInt(totalForms.value);
+        const lastForm = formsetContainer.querySelector('.formset-item:last-of-type');
+
+        $(lastForm).find('select').select2('destroy');
+
+        const newForm = lastForm.cloneNode(true);
+        newForm.querySelectorAll('input, select, textarea').forEach(field => {
+            if(field.tagName === 'SELECT'){
+                field.selectedIndex = 0;
+            } else {
+                field.value = '';
+            }
+        });
+
+        // Renumerar indices
+        newForm.innerHTML = newForm.innerHTML.replaceAll(`-${currentFormCount - 1}-`, `-${currentFormCount}-`);
+        newForm.innerHTML = newForm.innerHTML.replaceAll(`_${currentFormCount - 1}`, `_${currentFormCount}`);
+
+        formsetContainer.appendChild(newForm);
+        totalForms.value = currentFormCount + 1;
+
+        // aplicarSelect2();
+        actualizarOpcionesDisponibles();
+        attachRemoveButtons(); // asegurar que el nuevo botón funcione
+    });
+
+    // 🔴 Función para quitar form
+    // function attachRemoveButtons() {
+    //     formsetContainer.querySelectorAll(".remove-form").forEach(btn => {
+    //         btn.onclick = function() {
+    //             btn.closest(".formset-item").remove();
+    //             // Renumerar forms
+    //             const items = formsetContainer.querySelectorAll('.formset-item');
+    //             items.forEach((item, index) => {
+    //                 item.querySelectorAll('input, select, textarea').forEach(field => {
+    //                     if(field.name){
+    //                         field.name = field.name.replace(/\-\d+\-/, '-' + index + '-');
+    //                         field.id = 'id_' + field.name;
+    //                     }
+    //                 });
+    //             });
+    //             totalForms.value = items.length;
+    //             actualizarOpcionesDisponibles();
+    //         };
+    //     });
+    // }
+
     attachRemoveButtons();
+
+    // 🔴 Validación duplicados antes de enviar
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const selects = formsetContainer.querySelectorAll(`select[name^="${prefix}"]`);
+        const valores = [];
+        let duplicado = false;
+
+        selects.forEach(select => {
+            const val = select.value;
+            if(val){
+                if(valores.includes(val)){
+                    duplicado = true;
+                } else {
+                    valores.push(val);
+                }
+            }
+        });
+
+        if(duplicado){
+            e.preventDefault();
+            alert("No puedes seleccionar el mismo producto más de una vez.");
+        }
+    });
+
+    // Ejecutar al cargar la página
+    actualizarOpcionesDisponibles();
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("formset-container");
+    const prefix = container.dataset.prefix;
+    const totalFormsInput = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+    const emptyForm = container.dataset.emptyForm;
+
+    // Agregar nuevo formulario
+    document.getElementById("add-form").addEventListener("click", () => {
+        let totalForms = parseInt(totalFormsInput.value);
+        let newFormHtml = emptyForm.replace(/__prefix__/g, totalForms);
+        let div = document.createElement("div");
+        div.classList.add("formset-item", "border", "p-3", "mb-2", "bg-light", "rounded");
+        div.innerHTML = newFormHtml;
+
+        div.querySelector(".remove-form").addEventListener("click", e => {
+            div.remove();
+            totalFormsInput.value = parseInt(totalFormsInput.value) - 1; // Solo decrementa TOTAL_FORMS para formularios nuevos
+        });
+
+        container.appendChild(div);
+        totalFormsInput.value = totalForms + 1;
+    });
+
+    // Manejar "Quitar" para todos los formularios
+    container.querySelectorAll(".remove-form").forEach(btn => {
+        btn.addEventListener("click", e => {
+            const formItem = e.target.closest(".formset-item");
+            const deleteInput = formItem.querySelector(`input[name$='-DELETE']`);
+
+            if (deleteInput) {
+                // Formularios existentes: marcar DELETE y ocultar
+                deleteInput.checked = true;
+                formItem.style.display = 'none';
+            } else {
+                // Formularios nuevos: eliminar del DOM y decrementar TOTAL_FORMS
+                formItem.remove();
+                totalFormsInput.value = parseInt(totalFormsInput.value) - 1;
+            }
+        });
+    });
+});
+
+
+
+function attachRemoveButtons() {
+    formsetContainer.querySelectorAll(".remove-form").forEach(btn => {
+        btn.onclick = function() {
+
+            const formItem = btn.closest(".formset-item");
+
+            // 1️⃣ Busca el checkbox DELETE generado por Django para este formulario
+            const deleteCheckbox = formItem.querySelector('input[name$="-DELETE"]');
+
+            if (deleteCheckbox) {
+                // 2️⃣ Marca el checkbox para que Django lo elimine al guardar
+                deleteCheckbox.checked = true;
+
+                // 3️⃣ ❗ No borres el nodo, solo ocúltalo para que el formset lo procese
+                formItem.style.display = 'none';
+            } else {
+                // 🔄 Si es un formulario recién creado (sin DELETE), podemos eliminarlo del DOM
+                formItem.remove();
+
+                // 4️⃣ Renumera los formularios restantes
+                const items = formsetContainer.querySelectorAll('.formset-item');
+                items.forEach((item, index) => {
+                    item.querySelectorAll('input, select, textarea').forEach(field => {
+                        if (field.name) {
+                            field.name = field.name.replace(/\-\d+\-/, '-' + index + '-');
+                            field.id = 'id_' + field.name;
+                        }
+                    });
+                });
+
+                // 5️⃣ Actualiza el contador TOTAL_FORMS para los formularios nuevos
+                totalForms.value = items.length;
+
+                // 6️⃣ Vuelve a actualizar opciones dinámicas si aplica
+                actualizarOpcionesDisponibles();
+            }
+        };
+    });
+}
+
+
+
+let formsetContainer;  // declarar arriba del todo
+
+document.addEventListener("DOMContentLoaded", () => {
+    formsetContainer = document.getElementById("formset-container");
+    attachRemoveButtons(); // ahora sí existe
+});
+
+

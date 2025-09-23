@@ -1,8 +1,25 @@
-
 {% extends 'layouts/base.html' %}
 {% load humanize %}
 
 {% block content %}
+<style>
+.table-success { 
+    background-color: #d4edda !important;
+    border-left: 4px solid #28a745 !important;
+}
+.table-warning { 
+    background-color: #fff3cd !important;
+    border-left: 4px solid #ffc107 !important;
+}
+.table-light { 
+    background-color: #f8f9fa !important;
+    border-left: 4px solid #6c757d !important;
+}
+.badge {
+    font-size: 0.75em;
+    margin: 1px;
+}
+</style>
 <div class="card shadow">
   <div class="card-header bg-primary text-white">
     <h4 class="mb-0">
@@ -33,36 +50,82 @@
           </tr>
         </thead>
         <tbody>
-          {% for entrega in entregas %}
-          <tr>
-              <td>{{ entrega.empleado.nombre }}</td>
-              <td>{{ entrega.empleado.cedula }}</td>
-              <td>{{ entrega.empleado.ciudad }}</td>
-              <td>{{ entrega.empleado.cargo }}</td>
-              <td>{{ entrega.empleado.cliente }}</td>
-              <td>{{ entrega.empleado.sexo }}</td>
-              <td>{{ entrega.fecha_entrega|date:"Y-m-d H:i" }}</td>
-              <td>
-                <div class="d-flex flex-wrap gap-2">
-                  {% for detalle in entrega.detalles.all %}
-                    <span 
-                      class="badge badge-pill badge-info" 
-                      data-toggle="tooltip" 
-                      title="{{ detalle.producto.descripcion|default:detalle.producto.nombre }}">
-                      👕 {{ detalle.producto.nombre }} x{{ detalle.cantidad }}
-                    </span>
-                  {% empty %}
-                    <span class="text-muted">Sin prendas</span>
-                  {% endfor %}
-                </div>
-              </td>
-              <td>
-         <button  class="button-primary"><a href="{% url 'generar_pdf_por_entrega' entrega.id %}" class="btn btn-sm btn-danger">
-        <i class="fa fa-file-pdf"></i> PDF
-    </a></button>
+        {% for entrega in entregas %}
+{% with completa=entrega.es_entrega_completa faltantes=entrega.productos_faltantes %}
+<tr class="{% if completa %}table-success{% elif faltantes %}table-warning{% else %}table-light{% endif %}">
+    <td>
+        {{ entrega.empleado.nombre }}
+        {% if completa %}
+            <span class="badge bg-success ms-1" data-bs-toggle="tooltip" title="✅ ENTREGA COMPLETA">
+                ✅
+            </span>
+        {% elif faltantes %}
+            <span class="badge bg-warning ms-1" data-bs-toggle="tooltip" 
+                  title="⚠️ ENTREGA PARCIAL - Faltan {{ faltantes|length }} productos">
+                ⚠️
+            </span>
+        {% else %}
+            <span class="badge bg-secondary ms-1" data-bs-toggle="tooltip" 
+                  title="ℹ️ Sin grupo de referencia">
+                ℹ️
+            </span>
+        {% endif %}
     </td>
-          </tr>
-          {% endfor %}
+    <td>{{ entrega.empleado.cedula }}</td>
+    <td>{{ entrega.empleado.ciudad }}</td>
+    <td>{{ entrega.empleado.cargo }}</td>
+    <td>{{ entrega.empleado.cliente }}</td>
+    <td>{{ entrega.empleado.sexo }}</td>
+    <td>{{ entrega.fecha_entrega|date:"Y-m-d H:i" }}</td>
+    <td class="prendas">
+        <div class="d-flex flex-wrap gap-1">
+            <!-- Productos entregados -->
+            {% for detalle in entrega.detalles.all %}
+                <span class="badge bg-info text-dark entregado" 
+                      data-bs-toggle="tooltip" 
+                      title="{{ detalle.producto.descripcion|default:detalle.producto.nombre }}">
+                    👕 {{ detalle.producto.nombre }} x{{ detalle.cantidad }}
+                </span>
+            {% empty %}
+                <span class="text-muted">Sin prendas</span>
+            {% endfor %}
+            
+            <!-- Productos faltantes -->
+            {% for item in faltantes %}
+                <span class="badge bg-danger esperado" 
+                      data-bs-toggle="tooltip" 
+                      title="Faltan {{ item.cantidad_faltante }} unidad(es)">
+                    ❌ {{ item.producto.nombre }} x{{ item.cantidad_faltante }}
+                </span>
+            {% endfor %}
+        </div>
+        
+        <!-- SOLO mostrar tallas del empleado (ocultar grupo) -->
+        <small class="text-muted d-block mt-1">
+            👤 Tallas: 
+            {% if entrega.empleado.talla_camisa %}Camisa: {{ entrega.empleado.talla_camisa }}{% endif %}
+            {% if entrega.empleado.talla_pantalon %}, Pantalón: {{ entrega.empleado.talla_pantalon }}{% endif %}
+            {% if entrega.empleado.talla_zapatos %}, Zapatos: {{ entrega.empleado.talla_zapatos }}{% endif %}
+        </small>
+    </td>
+    <td>
+        <a href="{% url 'generar_pdf_por_entrega' entrega.id %}" class="btn btn-sm btn-danger">
+            <i class="fa fa-file-pdf"></i> PDF
+        </a>
+
+         <!-- Mostrar el botón SOLO si hay faltantes pendientes -->
+        {% if entrega.estado != "completa" and faltantes %}
+        <a href="{% url 'generar_entrega_faltantes' entrega.id %}" 
+        class="btn btn-sm btn-info mt-1 "
+        onclick="return confirm('¿Confirmas entregar los faltantes de esta entrega?');">
+            <i class="fa fa-truck"></i> Entregar faltantes
+        </a>
+        {% endif %}
+
+    </td>
+</tr>
+{% endwith %}
+{% endfor %}
         </tbody>
       </table>
     </div>
@@ -102,7 +165,13 @@ $(document).ready(function() {
             }
         }
     });
+    // Inicializar tooltips de Bootstrap
+    $('[data-toggle="tooltip"]').tooltip();
 });
+
+
+
+
 </script>
 {% endblock %}
 

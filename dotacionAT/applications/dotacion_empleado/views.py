@@ -1,4 +1,5 @@
 import threading
+import re
 from applications.inventario.models import  InventarioBodega
 from django.utils import timezone
 from decimal import Decimal
@@ -7,7 +8,7 @@ from django.http import HttpResponse, JsonResponse, FileResponse
 from django.contrib import messages
 from django.utils import timezone
 import pandas as pd
-from .models import EmpleadoDotacion, EntregaDotacion, DetalleEntregaDotacion
+from .models import EmpleadoDotacion, EntregaDotacion, DetalleEntregaDotacion, FaltanteEntrega
 from applications.grupos_dotacion.models import GrupoDotacion, GrupoDotacionProducto
 # from .models import Salida, ItemSalida
 # from applications.inventario.models import Salida, ItemSalida
@@ -52,7 +53,7 @@ from django.conf import settings
 from reportlab.platypus import Image
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-
+from django.db.models import Q
 
 
 def get_or_none(modelo, **filtros):
@@ -61,31 +62,68 @@ def get_or_none(modelo, **filtros):
     except modelo.DoesNotExist:
         return None
 
-@login_required
-def historial_entregas(request):
-    periodo = request.GET.get('periodo', '')
-    cliente = request.GET.get('cliente', '').strip()
+# @login_required
+# def historial_entregas(request):
+#     print("⚡ CARGANDO VISTA HISTORIAL_ENTREGAS ⚡")
+#     periodo = request.GET.get('periodo')
+#     cliente_id = request.GET.get('cliente_id')
+#     tipo_entrega = request.GET.get('tipo_entrega')
+    
+#     # 👀 Imprime los parámetros recibidos
+#     print("🔎 Parámetros recibidos -> periodo:", periodo, 
+#           "cliente_id:", cliente_id, 
+#           "tipo_entrega:", tipo_entrega)
 
-    entregas = EntregaDotacion.objects.select_related('empleado', 'grupo') \
-        .prefetch_related('detalles__producto')
+#     entregas = EntregaDotacion.objects.select_related('empleado__cliente', 'grupo') \
+#         .prefetch_related('detalles__producto')
 
-    if periodo:
-        try:
-            mes, anio = periodo.split('/')
-            entregas = entregas.filter(fecha_entrega__month=int(mes), fecha_entrega__year=int(anio))
-        except ValueError:
-            pass
+#     # --- FILTRAR POR PERIODO ---
+#     if periodo:
+#         try:
+#             if '/' in periodo:  # Ejemplo: '08/2025'
+#                 mes, anio = periodo.split('/')
+#                 entregas = entregas.filter(
+#                     fecha_entrega__year=int(anio),
+#                     fecha_entrega__month=int(mes)
+#                 )
+#             elif '-' in periodo:  # Ejemplo: '2025-08'
+#                 partes = periodo.split('-')
+#                 anio = int(partes[0])
+#                 mes = int(partes[1])
+#                 entregas = entregas.filter(
+#                     fecha_entrega__year=anio,
+#                     fecha_entrega__month=mes
+#                 )
+#         except ValueError:
+#             pass
 
-    if cliente:
-        entregas = entregas.filter(empleado__cliente__icontains=cliente)
+#     # --- FILTRAR POR CLIENTE ---
+#     if cliente_id:
+#         try:
+#             entregas = entregas.filter(empleado__cliente__id_cliente=int(cliente_id))
+#         except ValueError:
+#             pass
 
-    entregas = entregas.order_by('-fecha_entrega')
+#     # --- FILTRAR POR TIPO ---
+#     if tipo_entrega:
+#         entregas = entregas.filter(tipo_entrega=tipo_entrega)
 
-    return render(request, 'historial_entregas.html', {
-        'entregas': entregas,
-        'periodo': periodo,
-        'cliente': cliente
-    })
+#     entregas = entregas.order_by('-fecha_entrega')
+
+#     # Cliente para encabezado
+#     cliente_nombre = None
+#     if cliente_id:
+#         from applications.usuarios.models import Cliente
+#         cliente_obj = Cliente.objects.filter(id_cliente=cliente_id).first()
+#         if cliente_obj:
+#             cliente_nombre = cliente_obj.nombre
+
+#     return render(request, 'historial_entregas.html', {
+#         'entregas': entregas,
+#         'periodo': periodo,
+#         'cliente': cliente_nombre,
+#         'tipo_entrega': tipo_entrega
+#     })
     
     
     
@@ -141,8 +179,76 @@ def safe_int(value):
 
 @login_required
 def historial_entregas(request):
-    entregas = EntregaDotacion.objects.select_related('empleado', 'grupo').order_by('-fecha_entrega')
-    return render(request, 'historial_entregas.html', {'entregas': entregas})
+      # --- Parámetros GET ---
+    periodo = request.GET.get('periodo')
+    cliente_id = request.GET.get('cliente_id')
+    tipo_entrega = request.GET.get('tipo_entrega')
+
+    print(f"🔎 Parámetros recibidos -> periodo={periodo}, cliente_id={cliente_id}, tipo_entrega={tipo_entrega}")
+
+    entregas = (
+        EntregaDotacion.objects
+        .select_related('empleado__cliente', 'grupo')
+        .prefetch_related('detalles__producto')
+        .order_by('-fecha_entrega')
+    )
+
+    # --- FILTRAR POR PERÍODO (MANEJO DE MÚLTIPLES FORMATOS) ---
+    if periodo:
+        try:
+            # Intentar convertir formato "2025-08-02" a "08/2025"
+            if '-' in periodo and len(periodo.split('-')) == 3:
+                fecha = datetime.strptime(periodo, "%Y-%m-%d")
+                periodo_formateado = fecha.strftime("%m/%Y")
+                print(f"🔄 Período convertido: {periodo} -> {periodo_formateado}")
+                
+                # Buscar AMBOS formatos: el original y el convertido
+                entregas = entregas.filter(
+                    Q(periodo=periodo) | Q(periodo=periodo_formateado)
+                )
+            else:
+                # Si ya está en formato "08/2025", buscar directamente
+                entregas = entregas.filter(periodo=periodo)
+                print(f"🔍 Buscando período: {periodo}")
+                
+        except ValueError as e:
+            print(f"⚠️ Error al parsear el período: {e}")
+            # Si hay error, buscar el período tal cual viene
+            entregas = entregas.filter(periodo=periodo)
+
+    # --- FILTRAR POR CLIENTE ---
+    cliente_nombre = None
+    if cliente_id:
+        try:
+            entregas = entregas.filter(empleado__cliente__id_cliente=int(cliente_id))
+            cliente_obj = Cliente.objects.filter(id_cliente=cliente_id).first()
+            cliente_nombre = cliente_obj.nombre if cliente_obj else None
+            print(f"👤 Filtrado por cliente ID: {cliente_id}")
+        except (ValueError, TypeError):
+            print(f"⚠️ ID de cliente inválido: {cliente_id}")
+
+    # --- FILTRAR POR TIPO DE ENTREGA ---
+    if tipo_entrega:
+        entregas = entregas.filter(tipo_entrega=tipo_entrega)
+        print(f"🎯 Filtrado por tipo: {tipo_entrega}")
+
+    print(f"📦 Entregas encontradas después de filtros: {entregas.count()}")
+
+    # Debug: ver qué períodos únicos hay en los resultados
+    if entregas.exists():
+        periodos_unicos = entregas.values_list('periodo', flat=True).distinct()
+        print(f"📊 Períodos únicos en resultados: {list(periodos_unicos)}")
+
+    return render(
+        request,
+        'historial_entregas.html',
+        {
+            'entregas': entregas,
+            'periodo': periodo,
+            'cliente': cliente_nombre,
+            'tipo_entrega': tipo_entrega,
+        }
+    )
 
 
 
@@ -622,17 +728,64 @@ def cargar_empleados_desde_excel(request):
                                 f"Sin stock: {producto_grupo.categoria.nombre} - Talla: {talla}"
                             )
 
+                   # Si no hay nada entregado, eliminamos la entrega
+                    # Si no hay nada entregado, eliminamos la entrega y aseguramos que 'motivo' exista
                     if not productos_entregados:
+                        # Asignamos un motivo claro antes de usarlo
+                        if productos_sin_stock:
+                            motivo = f"Sin stock para: {', '.join(productos_sin_stock)}"
+                        else:
+                            motivo = "Sin stock total"
+
                         try:
                             entrega.delete()
                         except Exception:
                             pass
-                        empleados_sin_entrega.append(
-                            f"{empleado.nombre} ({cedula} {motivo}) "
-                        )
-                        sin_stock.append(f"{empleado.nombre} ({cedula} {motivo}) - Sin stock total")
+
+                        empleados_sin_entrega.append(f"{empleado.nombre} ({cedula}) - {motivo}")
+                        sin_stock.append(f"{empleado.nombre} ({cedula}) - {motivo}")
                         continue
 
+                    # 🔹 Marcar estado de la entrega según lo entregado y lo faltante
+                    if productos_sin_stock:
+                        entrega.estado = "parcial"
+                    else:
+                        entrega.estado = "completa"
+                    entrega.save()
+                    
+                   
+                    # --- Crear registros de faltantes con cantidad detectada ---
+                    for faltante in productos_sin_stock:
+                        # Detectar la cantidad (ej. "requerido 2")
+                        match = re.search(r"requerido\s+(\d+)", faltante, re.IGNORECASE)
+                        cantidad = int(match.group(1)) if match else 1
+
+                        # Obtener el nombre base del producto (sin " - requerido X")
+                        nombre_base = faltante.split(" - ")[0].strip()
+
+                        # ✅ Buscar la talla que corresponde al empleado para esta categoría
+                        talla_empleado = obtener_talla_para_categoria(producto_grupo.categoria, empleado)
+
+                        # Buscar el producto correcto en función de la talla del empleado
+                        producto_real = Producto.objects.filter(
+                            categoria=producto_grupo.categoria,
+                            nombre__icontains=talla_empleado
+                        ).first()
+
+                        if producto_real:
+                            FaltanteEntrega.objects.create(
+                                entrega=entrega,
+                                producto=producto_real,  # ✅ ahora se guarda la talla correcta
+                                cantidad_faltante=cantidad,
+                                estado='pendiente',
+                            )
+                        else:
+                            advertencias.append(
+                                f"No se encontró Producto para faltante: {producto_grupo.categoria.nombre} talla {talla_empleado}"
+                            )
+                    
+
+                    # 🔹 Continuar con la salida
                     generar_salida_por_entrega(entrega, productos_entregados, request.user)
                     entregas += 1
 
@@ -864,6 +1017,7 @@ def vista_consolidado(request):
         EntregaDotacion.objects
         .values(
             'empleado__cliente__nombre',  # nombre directo
+            'empleado__cliente__id_cliente',
             'periodo',
             'tipo_entrega'
         )
@@ -880,28 +1034,202 @@ class Replace(Func):
     arity = 3
 
 def generar_pdf_por_periodo(request):
-    # Obtener periodo del query string (ejemplo: ?periodo=08/2025)
+   # Obtener parámetros de la URL
     periodo = request.GET.get('periodo')
-    if not periodo:
-        return HttpResponse("Debe especificar un periodo.", status=400)
-
+    cliente_id = request.GET.get('cliente_id')
+    tipo_entrega = request.GET.get('tipo_entrega')
+    
+    print(f"DEBUG - periodo: {periodo}, cliente_id: {cliente_id}, tipo: {tipo_entrega}")
+    
+    # Validar parámetros
+    if not periodo or not cliente_id or not tipo_entrega:
+        return HttpResponse("Faltan parámetros requeridos: periodo, cliente_id y tipo_entrega", status=400)
+    
     try:
-        mes, anio = map(int, periodo.split('/'))
-    except ValueError:
-        return HttpResponse("Formato de periodo incorrecto. Use MM/YYYY.", status=400)
-
-    # Filtrar entregas por periodo
-    entregas = EntregaDotacion.objects.select_related('empleado', 'grupo') \
-        .prefetch_related('detalles__producto') \
-        .filter(fecha_entrega__month=mes, fecha_entrega__year=anio)
-
+        cliente_id_int = int(cliente_id)
+    except (ValueError, TypeError):
+        return HttpResponse("ID de cliente inválido", status=400)
+    
+    # FILTRAR usando el campo correcto
+    entregas = EntregaDotacion.objects.filter(
+        periodo=periodo,
+        empleado__cliente__id_cliente=cliente_id_int,  # ← ¡CAMPO CORRECTO!
+        tipo_entrega=tipo_entrega
+    ).select_related('empleado__cliente', 'grupo').prefetch_related('detalles__producto')
+    
     if not entregas.exists():
-        return HttpResponse("No hay entregas para este periodo.", status=404)
+        return HttpResponse(
+            f"No hay entregas para periodo {periodo}, cliente ID {cliente_id} y tipo {tipo_entrega}",
+            status=404
+        )
+    
+    print(f"DEBUG - Entregas encontradas: {entregas.count()}")
 
-    # Aquí tu código existente para generar PDF...
-    buffer = generar_pdf_entregas(entregas)
-    return FileResponse(buffer, as_attachment=True, filename=f'entregas_{periodo}.pdf')
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+    )
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    from io import BytesIO
+    from reportlab.platypus import Spacer
+    from django.http import FileResponse
+    import os
 
+    # === Inicialización general ===
+    ruta_logo = os.path.join(settings.BASE_DIR, 'applications', 'ciudades', 'static', 'index', 'img', 'logoAtiempo.png')
+    logo = Image(ruta_logo, width=80, height=40) if os.path.exists(ruta_logo) else Spacer(1, 40)
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        rightMargin=2 * cm, leftMargin=2 * cm,
+        topMargin=2 * cm, bottomMargin=2 * cm
+    )
+
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Estilos personalizados
+    parrafo_estilo = ParagraphStyle(
+        name="TablaWrap",
+        fontSize=9,
+        leading=10,
+        wordWrap='CJK'
+    )
+
+    # === Recorrer entregas y armar contenido ===
+    for entrega in entregas:
+        empleado = entrega.empleado
+
+        # --- Encabezado ---
+        encabezado_data = [
+            ['Código: FOR-GC-007', Paragraph('FORMATO DE ENTREGA ELEMENTOS DE TRABAJO', parrafo_estilo), logo],
+            ['Versión: 02', '', ''],
+            ['Fecha vigencia: 02/04/2019', '', '']
+        ]
+        encabezado_table = Table(encabezado_data, colWidths=[4.8 * cm, 8.7 * cm, 3.5 * cm])
+        encabezado_table.setStyle(TableStyle([
+            ('SPAN', (1, 0), (1, 2)),
+            ('SPAN', (2, 0), (2, 2)),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+            ('ALIGN', (2, 0), (2, 0), 'CENTER'),
+            ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
+        ]))
+        elements.append(encabezado_table)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # --- Datos trabajador ---
+        datos_trabajador = [
+            ['Nombre Trabajador', Paragraph(empleado.nombre, parrafo_estilo), 'N.° ID', str(empleado.cedula)],
+            ['Empresa', Paragraph(str(empleado.cliente), parrafo_estilo), 'Cargo', Paragraph(str(empleado.cargo), parrafo_estilo)],
+            ['Fecha Ingreso',
+             empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
+             'Fecha de entrega',
+             f"{entrega.fecha_entrega.strftime('%m/%Y')} | Periodo: {entrega.periodo}"]
+        ]
+        tabla_datos = Table(datos_trabajador, colWidths=[3.5 * cm, 5 * cm, 3.5 * cm, 5 * cm])
+        tabla_datos.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('WORDWRAP', (0, 0), (-1, -1), 'CJK'),
+        ]))
+        elements.append(tabla_datos)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # --- Checkbox ---
+        checkbox_texto = Paragraph("Se hace entrega de los siguientes elementos de trabajo:", styles['Normal'])
+        checkboxes_data = [
+            [checkbox_texto, '', '', ''],
+            ['[X] DOTACIÓN', '[ ] EPP', '[ ] HERRAMIENTAS', '[ ] OTROS']
+        ]
+        tabla_checkbox = Table(checkboxes_data, colWidths=[3.5 * cm, 5 * cm, 3.5 * cm, 5 * cm])
+        tabla_checkbox.setStyle(TableStyle([
+            ('SPAN', (0, 0), (3, 0)),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ]))
+        elements.append(tabla_checkbox)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # --- Detalles ---
+        tabla_data = [['ARTÍCULO', 'CANTIDAD']]
+        for detalle in entrega.detalles.all():
+            tabla_data.append([detalle.producto.nombre, str(detalle.cantidad)])
+        tabla = Table(tabla_data, colWidths=[12 * cm, 5 * cm])
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('GRID', (0, 0), (-1, -1), 0.8, colors.black),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ]))
+        elements.append(tabla)
+        elements.append(Spacer(1, 0.5 * cm))
+
+        # --- Observaciones ---
+        observacion = entrega.observaciones or " "
+        observacion_table = Table([
+            [Paragraph("<b>OBSERVACIONES:</b>", styles['Normal'])],
+            [Paragraph(observacion or " ", styles['Normal'])]
+        ], colWidths=[17 * cm])
+        observacion_table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('TOPPADDING', (0, 1), (0, 1), 20),
+            ('BOTTOMPADDING', (0, 1), (0, 1), 20),
+        ]))
+        elements.append(observacion_table)
+        elements.append(Spacer(1, 0.4 * cm))
+
+        # --- Declaración y firmas ---
+        declaracion_parrafo = Paragraph(
+            "El trabajador manifiesta:<br/>"
+            "He recibido los elementos en buen estado y me comprometo a cuidarlos...",
+            ParagraphStyle(name="DeclaracionEstilo", fontSize=9, leading=11)
+        )
+        tabla_final = Table([
+        [declaracion_parrafo],
+        [Table([
+            ['Entregado por:', 'Recibido por:'],
+            ['_______________', '_______________'],
+            ['Gestión Humana', 'C.C. N°'],
+            ['', 'El Trabajador en misión']
+        ], colWidths=[8.5*cm, 8.5*cm])]
+    ], colWidths=[17*cm])
+        tabla_final.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.7, colors.black),
+        ]))
+        elements.append(tabla_final)
+
+        # Salto de página
+        elements.append(PageBreak())
+
+    # === Generar el PDF ===
+    # doc.build(elements)
+    # buffer.seek(0)
+    # return FileResponse(
+    #     buffer,
+    #     as_attachment=True,
+    #     filename=f"entregas_{periodo}_{cliente_id}.pdf"
+    # )
+    doc.build(elements)
+    buffer.seek(0)
+
+    # --- Crear nombre dinámico y seguro ---
+    safe_periodo = periodo.replace('/', '-').replace(' ', '_')
+    safe_tipo = tipo_entrega.replace(' ', '_')
+    # También puedes incluir el nombre del cliente si prefieres
+    cliente = entregas.first().empleado.cliente.nombre
+    safe_cliente = str(cliente).replace(' ', '_')
+    filename = f"dotacion_{safe_periodo}_{safe_tipo}_{safe_cliente}.pdf"
+
+    return FileResponse(
+        buffer,
+        as_attachment=True,
+        filename=filename
+    )
 
 def generar_pdf_por_entrega(request, entrega_id):
     entrega = get_object_or_404(
@@ -1032,3 +1360,83 @@ def generar_pdf_por_entrega(request, entrega_id):
     doc.build(elements)
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename=f'entrega_{entrega.id}.pdf')
+
+
+
+
+
+def generar_entrega_faltantes(request, entrega_id):
+    """
+    Genera la entrega de los productos faltantes de una entrega parcial.
+    Solo entrega productos cuya talla coincida con la talla del empleado.
+    """
+    entrega = get_object_or_404(EntregaDotacion, id=entrega_id)
+    faltantes = FaltanteEntrega.objects.filter(entrega=entrega, estado='pendiente')
+
+    if not faltantes.exists():
+        messages.info(request, "Esta entrega no tiene faltantes pendientes.")
+        return redirect('historial_entregas')
+
+    # Obtener bodega principal
+    try:
+        bodega = Bodega.objects.get(nombre__iexact='Principal')
+    except Bodega.DoesNotExist:
+        messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+        return redirect('historial_entregas')
+
+    entregados = []
+    no_stock = []
+
+    # Extraer talla del empleado (puede incluir texto como 'N° 40')
+    talla_empleado_match = re.search(r'(\d+)', entrega.empleado.talla_zapatos or '')
+    talla_empleado = talla_empleado_match.group(1) if talla_empleado_match else None
+
+    for faltante in faltantes:
+        try:
+            # Verificamos inventario del producto faltante exacto
+            inventario = InventarioBodega.objects.get(bodega=bodega, producto=faltante.producto)
+
+            # 📌 Extraer talla numérica del producto faltante
+            talla_producto_match = re.search(r'(\d+)', faltante.producto.nombre)
+            talla_producto = talla_producto_match.group(1) if talla_producto_match else None
+
+            # ❌ Si ambas tallas existen y no coinciden, saltar
+            if talla_producto and talla_empleado and talla_producto != talla_empleado:
+                no_stock.append(
+                    f"Excluida {faltante.producto.nombre}: talla entregada {talla_producto} ≠ talla empleado {talla_empleado}"
+                )
+                continue
+
+            # ✅ Si hay stock suficiente, entregar
+            if inventario.stock >= faltante.cantidad_faltante:
+                DetalleEntregaDotacion.objects.create(
+                    entrega=entrega,
+                    producto=faltante.producto,
+                    cantidad=faltante.cantidad_faltante
+                )
+                inventario.stock -= faltante.cantidad_faltante
+                inventario.save()
+
+                faltante.estado = 'entregado'
+                faltante.fecha_resolucion = timezone.now()
+                faltante.save()
+
+                entregados.append(faltante.producto.nombre)
+            else:
+                no_stock.append(f"{faltante.producto.nombre} (Faltan {faltante.cantidad_faltante})")
+
+        except InventarioBodega.DoesNotExist:
+            no_stock.append(f"{faltante.producto.nombre} (Sin registro en bodega)")
+
+    # Si ya no hay faltantes pendientes, marcamos la entrega como completa
+    if not FaltanteEntrega.objects.filter(entrega=entrega, estado='pendiente').exists():
+        entrega.estado = 'completa'
+        entrega.save()
+
+    # ✅ Mensajes al usuario
+    if entregados:
+        messages.success(request, f"✅ Se entregaron: {', '.join(entregados)}.")
+    if no_stock:
+        messages.warning(request, f"⚠️ Sin stock o talla incorrecta para: {', '.join(no_stock)}.")
+
+    return redirect('historial_entregas')

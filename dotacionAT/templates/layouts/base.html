@@ -364,19 +364,30 @@
     icon: "{% if 'error' in m.tags %}error{% elif 'warning' in m.tags %}warning{% elif 'success' in m.tags %}success{% else %}info{% endif %}"
   });
 
-  $(document).ready(function () {
-    $('.select2').select2({
-      width: '100%',
-      placeholder: 'Seleccione una ciudad',
-      allowClear: true
-    });
-  });
+ 
   
 </script>
 {% endfor %}
 {% endif %}
 
 <script>
+console.log('=== DEBUG SELECT2 ===');
+console.log('Elementos con clase select2:', $('.select2').length);
+console.log('Placeholders encontrados:');
+$('.select2').each(function() {
+  console.log(' - ', $(this).attr('placeholder') || $(this).data('placeholder'));
+});
+</script>
+
+<script>
+
+//  $(document).ready(function () {
+//     $('.select2').select2({
+//       width: '100%',
+//       placeholder: 'Seleccione una ciudad',
+//       allowClear: true
+//     });
+//   });
 
 const start = performance.now();
 

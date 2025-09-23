@@ -137,7 +137,9 @@ const OrdenSalida = async () => {
                 estado =`Salida Cliente`;
             }
         
-            content += `
+            if(item.tipo_documento == 'TR'){
+
+                content += `
                 <tr class="text-center">
                     <td>${item.id}</td>
                     <td style="text-transform: uppercase;">${item.cliente}</td>
@@ -154,6 +156,10 @@ const OrdenSalida = async () => {
                     </td>
                 </tr>
             `;
+
+
+            }
+            
             });
 
             tableBody.innerHTML = content;

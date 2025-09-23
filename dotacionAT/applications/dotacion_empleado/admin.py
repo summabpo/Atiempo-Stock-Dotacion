@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import EmpleadoDotacion, EntregaDotacion, EntregaDotacion, DetalleEntregaDotacion, HistorialIngresoEmpleado
+from .models import EmpleadoDotacion, EntregaDotacion, DetalleEntregaDotacion, HistorialIngresoEmpleado, FaltanteEntrega
 from applications.grupos_dotacion.models import GrupoDotacion, GrupoDotacionProducto
 
 # Register your models here.
@@ -47,11 +47,13 @@ class EntregaDotacionAdmin(admin.ModelAdmin):
         'empleado_cargo',
         'periodo',
         'tipo_entrega',
+        'estado',
         'empleado_cliente',
         'empleado_sexo',
         'grupo',
         'fecha_entrega',
         'productos_entregados',
+        
     )
     list_filter = ('fecha_entrega',)
     search_fields = ('id', 'empleado__nombre', 'empleado__cedula', 'grupo__cliente__nombre')
@@ -94,3 +96,30 @@ class DetalleEntregaDotacionAdmin(admin.ModelAdmin):
     list_display = ('entrega', 'producto', 'cantidad')
     search_fields = ('producto__nombre', 'entrega__empleado__nombre')
     list_filter = ('producto',)
+    
+    
+    
+
+@admin.register(FaltanteEntrega)
+class FaltanteEntregaAdmin(admin.ModelAdmin):
+    # Campos visibles en la lista
+    list_display = (
+        'empleado_relacionado',  # ← método para mostrar empleado
+        'producto',
+        'cantidad_faltante',
+        'estado',
+        'fecha_registro',
+        'fecha_resolucion',
+    )
+    list_filter = ('estado', 'fecha_registro')
+    search_fields = (
+        'entrega__empleado__nombre',  # Busca por nombre del empleado
+        'producto__nombre',
+        'observaciones',
+    )
+    ordering = ('-fecha_registro',)
+
+    def empleado_relacionado(self, obj):
+        """Muestra el empleado asociado a la entrega."""
+        return obj.entrega.empleado
+    empleado_relacionado.short_description = "Empleado"    

@@ -25,7 +25,7 @@ from applications.clientes.models import Cliente
 from datetime import timedelta
 from datetime import timedelta
 from django.utils.timezone import now
-
+from collections import Counter
 
 # from .models import (
 #     EmpleadoDotacion,
@@ -35,12 +35,14 @@ from django.utils.timezone import now
 # from .utils import safe_str, safe_str_number, normalizar_talla
 
 def obtener_talla_para_categoria(categoria, empleado):
-    print(categoria)
-    print(empleado)
-    nombre = categoria.nombre.lower()
+    nombre = categoria.nombre.lower().strip()
+    print(f"🔎 Categoria detectada: '{nombre}'")
+    print(f"Empleado: {empleado.nombre} (Camisa={empleado.talla_camisa}, "
+          f"Pantalón={empleado.talla_pantalon}, Zapatos={empleado.talla_zapatos})")
+
     if "camisa" in nombre:
         return empleado.talla_camisa
-    elif "jean" in nombre or "pantalón" in nombre:
+    elif "jean" in nombre or "pantalon" in nombre:
         return empleado.talla_pantalon
     elif "zapato" in nombre or "botas" in nombre or "bota" in nombre:
         return empleado.talla_zapatos
@@ -704,3 +706,29 @@ def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):
         )
 
     return None
+
+
+def reconstruir_productos_esperados(grupo_productos, tallas_empleado):
+    """
+    Construye un diccionario { (categoria, talla): cantidad_esperada } a partir
+    de los productos del grupo y las tallas del empleado.
+    """
+    productos_esperados = Counter()
+
+    for gp in grupo_productos:  # gp: instancia de GrupoDotacionProducto
+        categoria = gp.categoria.nombre.strip().upper()
+
+        # Determinar la talla según la categoría
+        if "CAMISA" in categoria:
+            talla = tallas_empleado.get("camisa")
+        elif "JEAN" in categoria or "PANTALON" in categoria:
+            talla = tallas_empleado.get("pantalon")
+        elif "BOTA" in categoria or "ZAPATO" in categoria:
+            talla = tallas_empleado.get("zapato")
+        else:
+            talla = "ÚNICA"
+
+        clave = (categoria, talla)
+        productos_esperados[clave] += gp.cantidad
+
+    return productos_esperados

@@ -75,4 +75,52 @@ class Producto(models.Model):
         # Aquí puedes ajustar la inicialización si es necesario    
         
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)    
+        super().save(*args, **kwargs)
+        
+    def obtener_talla(self):
+        """
+        Extrae la talla del nombre del producto - CORREGIDO
+        """
+        nombre = self.nombre.upper()
+        
+        # 1. Primero buscar patrones específicos de tallas numéricas (botas, zapatos)
+        import re
+        
+        # Para tallas numéricas como "N° 35", "No. 36", "Talla 37"
+        patrones_numericos = [
+            r'N°\s*(\d{2})',      # N° 35
+            r'NO\.\s*(\d{2})',    # No. 36  
+            r'NUMERO\s*(\d{2})',  # Numero 37
+            r'TALLA\s*(\d{2})',   # Talla 38
+            r'SIZE\s*(\d{2})',    # Size 39
+        ]
+        
+        for patron in patrones_numericos:
+            match = re.search(patron, nombre)
+            if match:
+                talla = match.group(1)
+                print(f"🔍 {self.nombre} -> Talla numérica encontrada: {talla}")
+                return talla
+        
+        # 2. Buscar tallas de texto como "S", "M", "L", "XL"
+        patrones_texto = [
+            r'TALLA\s+([SMLX]+)',    # Talla M, Talla XL
+            r'SIZE\s+([SMLX]+)',     # Size L, Size XL
+            r'\b([SMLX]{1,3})\b',    # S, M, L, XL, XXL (standalone)
+        ]
+        
+        for patron in patrones_texto:
+            match = re.search(patron, nombre)
+            if match:
+                talla = match.group(1)
+                print(f"🔍 {self.nombre} -> Talla texto encontrada: {talla}")
+                return talla
+        
+        # 3. Buscar números sueltos (para pantalones)
+        numeros_sueltos = re.findall(r'\b(\d{2})\b', nombre)
+        if numeros_sueltos:
+            print(f"🔍 {self.nombre} -> Número suelto encontrado: {numeros_sueltos[0]}")
+            return numeros_sueltos[0]
+        
+        print(f"🔍 {self.nombre} -> No se pudo extraer talla")
+        return None       
