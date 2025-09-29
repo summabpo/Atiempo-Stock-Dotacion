@@ -17,8 +17,8 @@ class Bodega(models.Model):
     #     choices=[('activo', 'Activo'), ('inactivo', 'Inactivo')],
     #     default='activo'
     # )
-    id_usuario_creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bodegas_creadas', null=True, blank=True)
-    id_usuario_editor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bodegas_editadas', null=True, blank=True)
+    id_usuario_creador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='bodegas_creadas', null=True, blank=True)
+    id_usuario_editor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='bodegas_editadas', null=True, blank=True)
 
     def __str__(self):
         return self.nombre

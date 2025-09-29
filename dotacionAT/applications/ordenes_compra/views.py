@@ -40,9 +40,19 @@ def mi_vista(request):
 
 @login_required(login_url='login_usuario')
 def list_orden_y_compra(request):
-    ordenes = OrdenCompra.objects.select_related('proveedor')
-    compras = Compra.objects.select_related('orden_compra', 'proveedor')
+    user = request.user  
 
+    # 👉 Base querysets
+    ordenes = OrdenCompra.objects.select_related('proveedor', 'usuario_creador__sucursal')
+    compras = Compra.objects.select_related('orden_compra', 'proveedor', 'usuario_creador__sucursal')
+
+    # 👉 Filtro por rol
+    if user.rol in ["almacen", "empleado"]:
+        if user.sucursal:  # solo si tiene sucursal asignada
+            ordenes = ordenes.filter(usuario_creador__sucursal=user.sucursal)
+            compras = compras.filter(usuario_creador__sucursal=user.sucursal)
+
+    # -------------------------
     data = []
 
     # Añadir órdenes
@@ -63,6 +73,11 @@ def list_orden_y_compra(request):
             'total': orden.total,
             'numero_factura': '',
             'estado': orden.estado,
+            'usuario': (
+                f"{orden.usuario_creador.get_full_name()} - {orden.usuario_creador.sucursal.nombre}"
+                if orden.usuario_creador and orden.usuario_creador.sucursal else
+                orden.usuario_creador.get_full_name() if orden.usuario_creador else "Sin usuario"
+            ),
             'url_editar': f'/comprar_orden/{orden.id}/',
             'url_cancelar': f'/cambiar_estado_orden/{orden.id}/'
         })
@@ -91,6 +106,11 @@ def list_orden_y_compra(request):
             'total': compra.total,
             'numero_factura': compra.numero_factura or '',
             'estado': compra.estado,
+            'usuario': (
+                f"{compra.usuario_creador.get_full_name()} - {compra.usuario_creador.sucursal.nombre}"
+                if compra.usuario_creador and compra.usuario_creador.sucursal else
+                compra.usuario_creador.get_full_name() if compra.usuario_creador else "Sin usuario"
+            ),
             'url_editar': f'/detalle_comprar/{compra.id}/',
             'url_cancelar': ''
         })
@@ -98,15 +118,30 @@ def list_orden_y_compra(request):
     return JsonResponse({'ordenes_compras': data})
 
 
-
+#antes de roles de usuario
+# @login_required(login_url='login_usuario')
+# def ordenes_compra(request):
+#     ordenes_compra = OrdenCompra.objects.all()
+#     return render (request, 'ordenesCompra.html', {
+#         'ordenes_compra': ordenes_compra
+#     })
+    
 @login_required(login_url='login_usuario')
 def ordenes_compra(request):
-    ordenes_compra = OrdenCompra.objects.all()
-    return render (request, 'ordenesCompra.html', {
+    user = request.user  # usuario logueado
+    
+    if user.rol in ["almacen", "empleado"]:
+        # Filtra órdenes de usuarios que pertenezcan a la misma sucursal
+        ordenes_compra = OrdenCompra.objects.filter(
+            usuario_creador__sucursal=user.sucursal
+        )
+    else:
+        # Admin (o cualquier otro rol) ve todas
+        ordenes_compra = OrdenCompra.objects.all()
+    
+    return render(request, 'ordenesCompra.html', {
         'ordenes_compra': ordenes_compra
     })
-    
-
     
     
 @transaction.atomic
@@ -185,6 +220,29 @@ def crear_orden_compra(request):
     return render(request, 'crearOrdenCompra.html', {'productos': productos})    
     
 
+# View que me funcionaba
+# @login_required(login_url='login_usuario')
+# def comprar_orden_vista(request, orden_id):
+#     orden = get_object_or_404(OrdenCompra, id=orden_id)
+
+#     try:
+#         compra = orden.compra  # usa el related_name
+#     except Compra.DoesNotExist:
+#         compra = None
+
+#     items = orden.items.all()  # ajusta según tu modelo real
+    
+#     logger.info(f"ORDEN: {orden}")
+#     logger.info(f"ESTADO: {orden.estado}")
+#     logger.info(f"COMPRA: {compra}")
+#     logger.info(f"ITEMS: {list(items)}")
+
+#     return render(request, 'comprarOrden.html', {
+#         'orden': orden,
+#         'compra': compra,
+#         'items': items,
+#     })
+    
 
 @login_required(login_url='login_usuario')
 def comprar_orden_vista(request, orden_id):
@@ -196,16 +254,31 @@ def comprar_orden_vista(request, orden_id):
         compra = None
 
     items = orden.items.all()  # ajusta según tu modelo real
-    
+
+    # 🔹 Lógica para las bodegas
+    user = request.user
+    bodegas = None  
+
+    if user.rol.nombre in ['Administrador', 'Contable']:  
+        bodegas = Bodega.objects.all()
+    elif user.rol.nombre in ['Almacen', 'Empleado']:
+        # Asumiendo que usuario tiene sucursal relacionada
+        if hasattr(user, "sucursal") and user.sucursal:
+            bodegas = Bodega.objects.filter(sucursal=user.sucursal)
+        else:
+            bodegas = Bodega.objects.none()
+
     logger.info(f"ORDEN: {orden}")
     logger.info(f"ESTADO: {orden.estado}")
     logger.info(f"COMPRA: {compra}")
     logger.info(f"ITEMS: {list(items)}")
+    logger.info(f"BODEGAS DISPONIBLES: {list(bodegas)}")
 
     return render(request, 'comprarOrden.html', {
         'orden': orden,
         'compra': compra,
         'items': items,
+        'bodegas': bodegas,  # 🔹 mandamos las bodegas al template
     })
     
    

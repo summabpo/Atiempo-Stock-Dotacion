@@ -18,11 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from applications.inventario import views as inventario_views
 #from . import views
 #from applications.ciudades import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+     path('', inventario_views.index, name='index'),
     path('', include('applications.ciudades.urls')),
     path('', include('applications.bodegas.urls')),
     path('', include('applications.proveedores.urls')),

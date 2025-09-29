@@ -49,7 +49,6 @@
     animation: spin 2s linear infinite;
   }
 
-  
     @keyframes spin {
       from { transform: rotate(0deg); }
       to   { transform: rotate(360deg); }
@@ -97,11 +96,14 @@
       <ul class="navbar-nav ml-auto">
            <div class="d-flex align-items-center justify-content-end gap-3">
   <!-- Info del usuario -->
-  <div class="text-end me-3">
-    <strong style="color: white;">{{ request.user.get_full_name|default:request.user.username|capfirst }}</strong><br>
-    <small class="text-muted" style="color: white">{{ request.user.rol|capfirst }}</small>
-  <br>
-  </div>
+      <div class="text-end me-3">
+      <strong style="color: white;">
+        {{ request.user.get_full_name|default:request.user.username|capfirst }}
+      </strong><br>
+      <small class="text-muted" style="color: white;">
+        {{ request.user.rol|capfirst }} - {{ request.user.sucursal|capfirst }}
+      </small>
+    </div>
 
   <!-- Botón de logout -->
   <form action="{% url 'logout' %}" method="post" class="d-inline">
@@ -137,133 +139,144 @@
 
         <!-- Sidebar Menu -->
         <nav class="mt-2">
-          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-            <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
+  <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+    
+    {% if user.is_authenticated %}
+      
+      {% if user.rol == "admin" or user.rol == "contable" %}
+        <!-- 🔹 Admin y Contable: pueden ver todo -->
 
-            <li class="nav-header">OPCIONES</li>
+        <li class="nav-header">OPCIONES</li>
+        <li class="nav-item">
+          <a href="{% url 'ordenes_compra' %}" class="nav-link">
+            <i class="nav-icon far fa-calendar-alt"></i>
+            <span>Administrar Compras</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{% url 'inventario_bodega_list' %}" class="nav-link">
+            <i class="nav-icon fa fa-clipboard-list"></i>
+            <span>Inventario</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{% url 'ordenes_salida' %}" class="nav-link">
+            <i class="nav-icon far fa-calendar-alt"></i>
+            <span>Administrar Salidas</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{% url 'vista_consolidado' %}" class="nav-link">
+            <i class="nav-icon far fa-calendar-alt"></i>
+            <span>📄 Ver Historial de Entregas</span>
+          </a>
+        </li>
+
+        <li class="nav-header">EMPRESA</li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-cogs spin"></i>
+            <span>Configuraciones<i class="fas fa-angle-left right"></i></span>
+          </a>
+          <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{% url 'ordenes_compra' %}" class="nav-link">
-                <i class="nav-icon far fa-calendar-alt"></i>
-                <span>
-                  Administrar Compras
-                </span>
+              <a href="{% url 'ciudades' %}" class="nav-link">
+                <i class="nav-icon fas fa-map-marked-alt text-primary pulse"></i>
+                <span>Ciudades</span>
               </a>
             </li>
-
             <li class="nav-item">
-              <a href="{% url 'inventario_bodega_list' %}" class="nav-link">
-                <i class="nav-icon fa fa-clipboard-list"></i>
-                <span>
-                  Inventario
-                </span>
+              <a href="{% url 'categorias' %}" class="nav-link">
+                <i class="nav-icon fas fa-tags text-warning pulse"></i>
+                <span>Categorías Productos</span>
               </a>
             </li>
-
             <li class="nav-item">
-              <a href="{% url 'ordenes_salida' %}" class="nav-link">
-                <i class="nav-icon far fa-calendar-alt"></i>
-                <span>
-                  Administrar Salidas
-                </span>
+              <a href="{% url 'bodegas' %}" class="nav-link">
+                <i class="nav-icon fas fa-warehouse text-white pulse"></i>
+                <span>Bodegas</span>
               </a>
             </li>
-
-             <li class="nav-item">
-              <a href="{% url 'vista_consolidado' %}" class="nav-link">
-                <i class="nav-icon far fa-calendar-alt"></i>
-                <span>
-                  📄 Ver Historial de Entregas
-                </span>
-              </a>
-            </li>
-
-               <li class="nav-item">
-                         <a href="{% url 'generar_formato_entrega_pdf' %}" class="nav-link">
-  <i class="nav-icon far fa-calendar-alt"></i>
-                          <span>
-                  📄 Descargar PDF
-                </span>
-</a>
-            </li>
- 
-            <li class="nav-header">EMPRESA</li>
-            <!-- <li class="nav-item">
-              <a href="" class="nav-link">
-                <i class=" nav-icon fas fa-globe"></i>
-                <p>Información</p>
-              </a>
-            </li>  -->
             <li class="nav-item">
-              <a href="#" class="nav-link">
-                <i class="nav-icon fas fa-cogs spin"></i>
-                <span>
-                  Configuraciones
-                  <i class="fas fa-angle-left right"></i>
-                </span>
-              </a>
-              <ul class="nav nav-treeview">
-                <li class="nav-item">
-                  <a href="{% url 'ciudades' %}" class="nav-link">
-                    <i class="nav-icon fas fa-map-marked-alt text-primary pulse"></i>
-                    <span>Ciudades</span>
-                  </a>
-                </li>
-                <li class="nav-item">
-                  <a href="{% url 'categorias' %}" class="nav-link">
-                    <i class="nav-icon fas fa-tags text-warning pulse"></i>
-                    <span>Categorías Productos</span>
-                  </a>
-                </li>
-
-                <li class="nav-item">
-                  <a href="{% url 'bodegas' %}" class="nav-link">
-                    <i class="nav-icon fas fa-warehouse text-white pulse"></i>
-                    <span>Bodegas</span>
-                  </a>
-                </li>
-
-                <li class="nav-item">
-                  <a href="{% url 'listar_grupos_dotacion' %}" class="nav-link">
-                    <i class="nav-icon fas fa-hard-hat text-white pulse"></i>
-                    <span>Grupo Dotación</span>
-                  </a>
-                </li>
-
-                
-              </ul>
-            </li>
-            
-            <li class="nav-item">
-              <a href="{% url 'proveedores' %}" class="nav-link">
-                <i class="nav-icon fas fa-address-book "></i>
-                <span>Proveedores</span>
+              <a href="{% url 'listar_grupos_dotacion' %}" class="nav-link">
+                <i class="nav-icon fas fa-hard-hat text-white pulse"></i>
+                <span>Grupo Dotación</span>
               </a>
             </li>
-
-            <li class="nav-item">
-              <a href="{% url 'empleadodotacion' %}" class="nav-link">
-                <i class="nav-icon fas fa-address-book "></i>
-                <span>Empleados</span>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              <a href="{% url 'productos' %}" class="nav-link">
-                <i class="nav-icon fas fa-box-open"></i>
-                <span>Productos</span>
-              </a>
-            </li>
-
-            <li class="nav-item">
-              <a href="{% url 'cliente' %}" class="nav-link">
-                <i class="nav-icon fa fa-users"></i>
-                <span>Clientes</span>
-              </a>
-            </li>
-
           </ul>
-        </nav>
+        </li>
+
+        <li class="nav-item">
+          <a href="{% url 'proveedores' %}" class="nav-link">
+            <i class="nav-icon fas fa-truck"></i>
+            <span>Proveedores</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{% url 'empleadodotacion' %}" class="nav-link">
+            <i class="nav-icon fas fa-address-book"></i>
+            <span>Empleados</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{% url 'productos' %}" class="nav-link">
+            <i class="nav-icon fas fa-box-open"></i>
+            <span>Productos</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{% url 'cliente' %}" class="nav-link">
+            <i class="nav-icon fa fa-building"></i>
+            <span>Clientes</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="{% url 'usuario' %}" class="nav-link">
+            <i class="nav-icon fa fa-users"></i>
+            <span>Usuarios</span>
+          </a>
+        </li>
+      
+      {% elif user.rol == "almacen" or user.rol == "empleado" %}
+        <!-- 🔹 Almacen y Empleado: solo bloque OPCIONES -->
+
+        <li class="nav-header">OPCIONES</li>
+        <li class="nav-item">
+          <a href="{% url 'ordenes_compra' %}" class="nav-link">
+            <i class="nav-icon far fa-calendar-alt"></i>
+            <span>Administrar Compras</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'inventario_bodega_list' %}" class="nav-link">
+            <i class="nav-icon fa fa-clipboard-list"></i>
+            <span>Inventario</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'ordenes_salida' %}" class="nav-link">
+            <i class="nav-icon far fa-calendar-alt"></i>
+            <span>Administrar Salidas</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'vista_consolidado' %}" class="nav-link">
+            <i class="nav-icon far fa-calendar-alt"></i>
+            <span>📄 Ver Historial de Entregas</span>
+          </a>
+        </li>
+      {% endif %}
+    
+    {% endif %}
+  </ul>
+</nav>
         <!-- /.sidebar-menu -->
       </div>
       <!-- /.sidebar -->

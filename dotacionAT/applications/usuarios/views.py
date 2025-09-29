@@ -1,7 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from .models import Usuario
+from django.http import HttpResponse, JsonResponse
+from django.urls import reverse
+from .forms import UsuarioForm  # Asegúrate de importar el formulario
 # Create your views here.
 
 # Redirección por rol
@@ -19,7 +23,11 @@ def redirect_por_rol(user):
         return 'index'  # Asegúrate de tener esta ruta definida
     elif user.rol == 'gerente':
         return 'index'
+    elif user.rol == 'contable':
+        return 'index'
     elif user.rol == 'empleado':
+        return 'index'
+    elif user.rol == 'almacen':
         return 'index'
     return 'login'  # fallback por si no tiene rol
 
@@ -55,3 +63,69 @@ def login_usuario(request):
             messages.error(request, 'Credenciales incorrectas.')
 
     return render(request, 'login.html')  # Asegúrate de tener este template
+
+@login_required(login_url='login_usuario')
+def usuario(request):
+    #ciudades = list(Ciudad.objects.values())
+    usuario = Usuario.objects.all()
+    return render(request, 'usuarios.html', {
+        'usuario': usuario
+    })
+    
+    
+@login_required(login_url='login_usuario')    
+def list_usuarios(_request):
+    # def list_Cliente(request):
+    # proveedores =list(Proveedor.objects.values())
+    # data={'proveedores':proveedores}
+    # return JsonResponse(data)
+    usuario = Usuario.objects.all()
+    data = {
+        'usuario': [
+            {
+                'id': c.id,
+                'nombre': c.username,
+                'email': c.email,
+                'rol': c.rol,
+                'estado': 'activo' if c.estado == 'activo' else 'inactivo',  # ✅ CORREGIDO
+                'estado_display': 'Activo' if c.estado == 'activo' else 'Inactivo',  # ✅ AGREGADO
+                'fecha_creacion': c.fecha_creacion
+                # 'url_editar': reverse('modificar_cliente', args=[c.id])
+            } for c in usuario
+        ]
+    }
+    return JsonResponse(data) 
+
+
+
+@login_required(login_url='login_usuario')
+def crear_usuario(request):
+    if request.method == "POST":
+        form = UsuarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✅ Usuario creado correctamente.")
+            return redirect("usuario")  # Ajusta a tu url real de listado
+        else:
+            messages.error(request, "❌ Error al crear el usuario. Revisa el formulario.")
+    else:
+        form = UsuarioForm()
+
+    return render(request, "crear_usuario.html", {"form": form})
+
+
+def editar_usuario(request, user_id):
+    usuario = get_object_or_404(Usuario, id=user_id)
+
+    if request.method == 'POST':
+        form = UsuarioForm(request.POST, instance=usuario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"✅ Usuario '{usuario.username}' actualizado correctamente.")
+            return redirect('usuario')  # o donde quieras volver
+        else:
+            messages.error(request, "❌ Corrige los errores antes de continuar.")
+    else:
+        form = UsuarioForm(instance=usuario)
+
+    return render(request, "editar_usuario.html", {"form": form, "usuario": usuario})

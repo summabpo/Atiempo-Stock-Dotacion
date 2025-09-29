@@ -3,6 +3,8 @@ from .models import InventarioBodega
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.db.models import F
 # Create your views here.
 
 @login_required(login_url='login_usuario')
@@ -61,3 +63,32 @@ def inventario_bodega_json(request):
     }
 
     return JsonResponse(data)
+
+# def index(request):
+#     productos_bajos = (
+#         InventarioBodega.objects
+#         .select_related("producto", "bodega")
+#         .order_by("stock")[:15]
+#     )
+    
+#     print("DEBUG → productos bajos:", productos_bajos)  # 👈 revisa la consola
+
+#     return render(request, "index.html", {
+#         "productos_bajos": productos_bajos,
+#     })
+
+
+def index(request):
+    # Traer TODOS los inventarios para verificar
+    todos = InventarioBodega.objects.all()
+  
+    # Solo los que tienen menos de 8
+    productos_bajos = (
+        InventarioBodega.objects
+        .filter(stock__lt=8)
+        .order_by("stock")[:15]
+    )
+
+    return render(request, "index.html", {
+        "productos_bajos": productos_bajos
+    })

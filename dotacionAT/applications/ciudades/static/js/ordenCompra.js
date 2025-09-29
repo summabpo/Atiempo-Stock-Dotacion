@@ -141,8 +141,9 @@ const OrdenCompras = async () => {
                     <td>${idTipoDoc}</td>
                     <td style="text-transform: uppercase;">${item.proveedor}</td>
                     <td style="text-transform: uppercase;">${estadoId}</td>
-                    <td class="total">${item.total}</td>
+                    <td class="total">${item.total}</td> 
                     <td>${formatearFecha(item.fecha)}</td>
+                    <td style="text-transform: uppercase;">${item.usuario}</td>
                     <td>
                         <a href="${item.url_editar}">
                             <button title="Ver Detalle O C" class="btn btn-sm btn-warning">
