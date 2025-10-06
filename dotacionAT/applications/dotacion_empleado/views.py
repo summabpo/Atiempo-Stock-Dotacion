@@ -62,69 +62,6 @@ def get_or_none(modelo, **filtros):
     except modelo.DoesNotExist:
         return None
 
-# @login_required
-# def historial_entregas(request):
-#     print("⚡ CARGANDO VISTA HISTORIAL_ENTREGAS ⚡")
-#     periodo = request.GET.get('periodo')
-#     cliente_id = request.GET.get('cliente_id')
-#     tipo_entrega = request.GET.get('tipo_entrega')
-    
-#     # 👀 Imprime los parámetros recibidos
-#     print("🔎 Parámetros recibidos -> periodo:", periodo, 
-#           "cliente_id:", cliente_id, 
-#           "tipo_entrega:", tipo_entrega)
-
-#     entregas = EntregaDotacion.objects.select_related('empleado__cliente', 'grupo') \
-#         .prefetch_related('detalles__producto')
-
-#     # --- FILTRAR POR PERIODO ---
-#     if periodo:
-#         try:
-#             if '/' in periodo:  # Ejemplo: '08/2025'
-#                 mes, anio = periodo.split('/')
-#                 entregas = entregas.filter(
-#                     fecha_entrega__year=int(anio),
-#                     fecha_entrega__month=int(mes)
-#                 )
-#             elif '-' in periodo:  # Ejemplo: '2025-08'
-#                 partes = periodo.split('-')
-#                 anio = int(partes[0])
-#                 mes = int(partes[1])
-#                 entregas = entregas.filter(
-#                     fecha_entrega__year=anio,
-#                     fecha_entrega__month=mes
-#                 )
-#         except ValueError:
-#             pass
-
-#     # --- FILTRAR POR CLIENTE ---
-#     if cliente_id:
-#         try:
-#             entregas = entregas.filter(empleado__cliente__id_cliente=int(cliente_id))
-#         except ValueError:
-#             pass
-
-#     # --- FILTRAR POR TIPO ---
-#     if tipo_entrega:
-#         entregas = entregas.filter(tipo_entrega=tipo_entrega)
-
-#     entregas = entregas.order_by('-fecha_entrega')
-
-#     # Cliente para encabezado
-#     cliente_nombre = None
-#     if cliente_id:
-#         from applications.usuarios.models import Cliente
-#         cliente_obj = Cliente.objects.filter(id_cliente=cliente_id).first()
-#         if cliente_obj:
-#             cliente_nombre = cliente_obj.nombre
-
-#     return render(request, 'historial_entregas.html', {
-#         'entregas': entregas,
-#         'periodo': periodo,
-#         'cliente': cliente_nombre,
-#         'tipo_entrega': tipo_entrega
-#     })
-    
     
     
 def historial_entregas2(request):
@@ -187,11 +124,11 @@ def historial_entregas(request):
     centro_costo = request.GET.get('centro_costo')
     ciudad = request.GET.get('ciudad')
 
-    print(f"🔎 Parámetros recibidos -> periodo={periodo}, cliente_id={cliente_id}, tipo_entrega={tipo_entrega}, centro_costo={centro_costo}, ciudad={ciudad}")
+    # print(f"🔎 Parámetros recibidos -> periodo={periodo}, cliente_id={cliente_id}, tipo_entrega={tipo_entrega}, centro_costo={centro_costo}, ciudad={ciudad}")
 
     entregas = (
         EntregaDotacion.objects
-        .select_related('empleado__cliente', 'grupo')
+        .select_related('empleado__cliente',  'empleado__ciudad', 'grupo')
         .prefetch_related('detalles__producto')
         .order_by('-fecha_entrega')
     )
@@ -202,15 +139,15 @@ def historial_entregas(request):
             if '-' in periodo and len(periodo.split('-')) == 3:
                 fecha = datetime.strptime(periodo, "%Y-%m-%d")
                 periodo_formateado = fecha.strftime("%m/%Y")
-                print(f"🔄 Período convertido: {periodo} -> {periodo_formateado}")
+                # print(f"🔄 Período convertido: {periodo} -> {periodo_formateado}")
                 entregas = entregas.filter(
                     Q(periodo=periodo) | Q(periodo=periodo_formateado)
                 )
             else:
                 entregas = entregas.filter(periodo=periodo)
-                print(f"🔍 Buscando período: {periodo}")
+                # print(f"🔍 Buscando período: {periodo}")
         except ValueError as e:
-            print(f"⚠️ Error al parsear el período: {e}")
+            # print(f"⚠️ Error al parsear el período: {e}")
             entregas = entregas.filter(periodo=periodo)
 
     # --- FILTRAR POR CLIENTE ---
@@ -227,23 +164,23 @@ def historial_entregas(request):
     # --- FILTRAR POR TIPO DE ENTREGA ---
     if tipo_entrega:
         entregas = entregas.filter(tipo_entrega=tipo_entrega)
-        print(f"🎯 Filtrado por tipo: {tipo_entrega}")
+        # print(f"🎯 Filtrado por tipo: {tipo_entrega}")
 
     # --- FILTRAR POR CENTRO DE COSTO ---
     if centro_costo:
         entregas = entregas.filter(empleado__centro_costo__iexact=centro_costo)
-        print(f"🏢 Filtrado por centro de costo: {centro_costo}")
+        # print(f"🏢 Filtrado por centro de costo: {centro_costo}")
 
     # --- FILTRAR POR CIUDAD ---
     if ciudad:
         entregas = entregas.filter(empleado__ciudad__iexact=ciudad)
-        print(f"🌆 Filtrado por ciudad: {ciudad}")
+        # print(f"🌆 Filtrado por ciudad: {ciudad}")
 
     print(f"📦 Entregas encontradas después de filtros: {entregas.count()}")
 
     if entregas.exists():
         periodos_unicos = entregas.values_list('periodo', flat=True).distinct()
-        print(f"📊 Períodos únicos en resultados: {list(periodos_unicos)}")
+        # print(f"📊 Períodos únicos en resultados: {list(periodos_unicos)}")
 
     return render(
         request,

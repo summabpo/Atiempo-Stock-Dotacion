@@ -8,6 +8,8 @@ from applications.grupos_dotacion.models import Cargo
 from django.core.exceptions import ValidationError
 import re
 from django.utils import timezone
+from functools import lru_cache
+
 # Create your models here.
 
 class EmpleadoDotacion(models.Model):
@@ -149,6 +151,7 @@ class EntregaDotacion(models.Model):
         #print(f"   🎯 Productos coincidentes encontrados: {len(productos_coincidentes)}")
         return productos_coincidentes
     
+    @lru_cache(maxsize=None)
     def obtener_productos_esperados(self):
         """
         Retorna los productos ESPECÍFICOS para este empleado según su talla
@@ -185,7 +188,7 @@ class EntregaDotacion(models.Model):
     
     
     
-
+    @lru_cache(maxsize=None)
     def obtener_productos_entregados(self):
         """
         Retorna diccionario con los productos y cantidades entregadas,
@@ -229,7 +232,7 @@ class EntregaDotacion(models.Model):
 
         return productos_entregados
     
-
+    @lru_cache(maxsize=None)
     def es_entrega_completa(self):
         #print(f"\n🔍🔍🔍 ANALIZANDO ENTREGA {self.id} - {self.empleado.nombre}")
         
@@ -254,7 +257,7 @@ class EntregaDotacion(models.Model):
         
         #print("✅ ENTREGA COMPLETA")
         return True
-
+    @lru_cache(maxsize=None)
     def productos_faltantes(self):
         """
         Retorna lista de productos que faltaron en la entrega con sus cantidades
