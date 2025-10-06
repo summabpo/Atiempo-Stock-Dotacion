@@ -10,7 +10,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-l=h^a#x%80d=x9p1z38jgi=8*db1z2p2s$8^3ofn3%rih3^^(l'
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -49,7 +48,6 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = 'bootstrap5'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
-
 # Configuración para evitar conflictos con crispy-forms
 CRISPY_CLASS_CONVERTERS = {'select2': ''}
 
@@ -64,9 +62,6 @@ MIDDLEWARE = [
     'dotacionAT.middleware.CurrentUserMiddleware',
     'crum.CurrentRequestUserMiddleware',
 ]
-
-
-
 
 ROOT_URLCONF = 'dotacionAT.urls'
 

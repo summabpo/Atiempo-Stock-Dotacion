@@ -8,6 +8,7 @@ urlpatterns = [
     # path('productos_detalle/<int:id>/', views.productos_detalle, name='productos_detalle'),  # Aquí debe estar 'productos'
     #path('comprar_orden_vista/<int:id>/', views.comprar_orden_vista, name='comprar_orden_vista'),  # Aquí debe estar 'productos'
     path('comprar_orden/<int:id>/', views.comprar_orden, name='comprar_orden'),  # Aquí debe estar 'productos'
+    #path('confirmar_traslado/<int:id>/', views.confirmar_traslado, name='confirmar_traslado'),  # Aquí debe estar 'productos'
     path('detalle_comprar/<int:id>/', views.detalle_comprar, name='detalle_comprar'),  # Aquí debe estar 'productos'    
     path('list_orden_y_compra/', views.list_orden_y_compra, name='list_orden_y_compra'),  # Aquí debe estar 'productos'
     # path('modificar_categoria/<int:id>/', views.modificar_categoria, name='modificar_categoria'),  # Aquí debe estar 'productos'

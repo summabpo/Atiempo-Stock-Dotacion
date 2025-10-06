@@ -1,4 +1,3 @@
-
 console.log("Hola Crear Salida");
 
 var dataTableClienteSalida;
@@ -380,7 +379,7 @@ let bodegas = [];
 // 🔁 Cargar bodegas desde el servidor
 async function cargarBodegas() {
     try {
-        const response = await fetch('/list_bodegas/');
+        const response = await fetch('/list_bodegas_filtradas/');
         const data = await response.json();
         bodegas = data.bodegas || [];
 
@@ -484,6 +483,37 @@ function configurarEventoBodegaSalida() {
         }
     });
 }
+
+
+async function configurarEventoBodegaSalida() {
+    $('#selectBodegaSalida').on('change', async function () {
+        const salidaId = this.value;
+        const entradaSelect = document.getElementById('selectBodegaEntrada');
+
+        if (salidaId) {
+            // ✅ Traer todas las bodegas disponibles para entrada
+            const response = await fetch('/list_bodegas/');
+            const data = await response.json();
+            const todasBodegas = data.bodegas || [];
+
+            entradaSelect.innerHTML = '<option value="">Seleccione Bodega Entrada</option>';
+
+            // Mostrar todas menos la seleccionada en salida
+            todasBodegas
+                .filter(b => String(b.id_bodega) !== salidaId)
+                .forEach(bodega => {
+                    const option = document.createElement('option');
+                    option.value = bodega.id_bodega;
+                    option.textContent = `${bodega.nombre} - ${bodega.ciudad}`;
+                    entradaSelect.appendChild(option);
+                });
+
+            // ✅ Cargar productos de la bodega de salida
+            cargarProductos(salidaId);
+        }
+    });
+}
+
 
 // 🚀 Inicializar todo al cargar la página
 document.addEventListener('DOMContentLoaded', async function () {

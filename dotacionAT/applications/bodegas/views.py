@@ -20,6 +20,33 @@ def bodegas(request):
     })
 
 @login_required(login_url='login_usuario')    
+def list_bodegas_filtradas(request):
+    # Si el usuario es admin o contable → ve TODAS las bodegas
+    if request.user.rol in ["admin", "contable"]:
+        bodegas = Bodega.objects.select_related('id_ciudad')
+    else:
+        # Cualquier otro rol → solo la bodega de su sucursal
+        bodegas = Bodega.objects.filter(
+            id_bodega=request.user.sucursal_id
+        ).select_related('id_ciudad')
+
+    data = {
+        'bodegas': [
+            {
+                'id_bodega': bodega.id_bodega,
+                'nombre': bodega.nombre,
+                'ciudad': bodega.id_ciudad.nombre if bodega.id_ciudad else None,
+                'direccion': bodega.direccion,
+                'activo': bodega.estado,
+                'url_editar': reverse('modificar_bodega', args=[bodega.id_bodega])
+            }
+            for bodega in bodegas
+        ]
+    }
+    return JsonResponse(data)
+
+# se comenta para dejar el codigo aca
+@login_required(login_url='login_usuario')    
 def list_bodegas(_request):
     # bodegas =list(Bodega.objects.values())
     # data={'bodegas':bodegas}

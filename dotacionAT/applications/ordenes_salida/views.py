@@ -12,6 +12,8 @@ from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, IntegrityError
 from django.contrib.auth.decorators import login_required
+from applications.proveedores.models import Proveedor
+from applications.ordenes_compra.models import OrdenCompra, ItemOrdenCompra
 
 # Create your views here.
 
@@ -23,26 +25,34 @@ def ordenes_salida(request):
     })
     
    
-@login_required(login_url='login_usuario')    
+@login_required(login_url='login_usuario')
 def list_orden_salida(request):
-    
-    salidas = Salida.objects.select_related('bodegaEntrada', 'bodegaSalida', 'cliente')
+    # base queryset
+    salidas = Salida.objects.select_related(
+        'bodegaEntrada', 'bodegaSalida', 'cliente', 'usuario_creador__sucursal'
+    )
+
+    # 🔒 Restricción por rol
+    if request.user.rol == "almacen":
+        salidas = salidas.filter(usuario_creador__sucursal=request.user.sucursal)
 
     data = []
-
-    # Añadir compras
     for salida in salidas:
         data.append({
             'id': salida.id,
-            'cliente': salida.cliente.nombre,
+            'cliente': salida.cliente.nombre if salida.cliente else "Sin cliente",
             'fecha': salida.fecha_creacion,
             'tipo_documento': salida.tipo_documento,
-            'bodegaSalida': salida.bodegaSalida.nombre,
+            'bodegaSalida': salida.bodegaSalida.nombre if salida.bodegaSalida else "Sin bodega",
+            'usuario': (
+                f"{salida.usuario_creador.get_full_name()} - {salida.usuario_creador.sucursal.nombre}"
+                if salida.usuario_creador and salida.usuario_creador.sucursal else
+                salida.usuario_creador.get_full_name() if salida.usuario_creador else "Sin usuario"
+            ),
             'url_editar': f'/detalle_salida/{salida.id}/',
-            # 'url_editar': f'/detalle_salida/{salida.id}/',
         })
 
-    return JsonResponse({'ordenes_salida': data})    
+    return JsonResponse({'ordenes_salida': data})  
 
 
 @transaction.atomic
@@ -133,15 +143,34 @@ def crear_salida(request):
             #observaciones=observaciones,
             # Aquí puedes agregar cualquier otro campo necesario, como tipo_documento, bodega, etc.
         )
+#Comentado
+        if tipo_documento == 'TR' and bodegaEntrada:  
+            proveedor_nombre = f"Traslado interno - {bodegaEntrada.nombre}"
 
-        # Ahora crea los ítems vinculados a esa salida
-        for item in items:
-            ItemSalida.objects.create(
-                salida=salida,  # Vinculamos el ItemSalida a la salida recién creada
-                producto_id=item['producto_id'],
-                cantidad=item['cantidad'],
-                precio_unitario=item['precio_unitario']
+            proveedor, _ = Proveedor.objects.get_or_create(
+                nombre=proveedor_nombre,
+                defaults={
+                    "direccion": "Interno",
+                    "ciudad": bodegaEntrada.id_ciudad,  # 👈 aquí va el FK correcto
+                    "usuario_creador": request.user
+                }
             )
+
+            orden = OrdenCompra.objects.create(
+                proveedor=proveedor,
+                observaciones=f"Traslado desde {bodegaSalida.nombre} hacia {bodegaEntrada.nombre}",
+                total=Decimal("0.00"),
+                usuario_creador=request.user,
+                tipo_documento="TR"
+            )
+
+            for item in items:
+                ItemOrdenCompra.objects.create(
+                    orden=orden,
+                    producto_id=item['producto_id'],
+                    cantidad=item['cantidad'],
+                    precio_unitario=item['precio_unitario']
+                )
 
         messages.success(request, "Orden de salida creada correctamente.")
         return redirect('ordenes_salida')

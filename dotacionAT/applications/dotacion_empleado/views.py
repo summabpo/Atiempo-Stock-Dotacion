@@ -141,29 +141,30 @@ def empleadodotacion(request):
         'empleadoDotacion': empleadoDotacion
     })
 
-
 @login_required(login_url='login_usuario')    
-def list_empleados(_request):
-    # empleadoDotacion =list(EmpleadoDotacion.objects.values())
-    # data={'empleadoDotacion':empleadoDotacion}
-    # return JsonResponse(data)
-    empleadoDotacion = EmpleadoDotacion.objects.all()
+def list_empleados(request):
+    if request.user.rol == 'almacen' and request.user.sucursal:
+        # Comparación insensible a mayúsculas/minúsculas con icontains
+        empleadoDotacion = EmpleadoDotacion.objects.filter(ciudad__nombre__icontains=request.user.sucursal.nombre)
+    else:
+        empleadoDotacion = EmpleadoDotacion.objects.all()
+
     data = {
         'empleado': [
             {
                 'cedula': c.cedula,
                 'nombre': c.nombre,
-                'ciudad': c.ciudad.nombre,
-                'cargo': c.cargo.nombre,
-                'cliente': c.cliente.nombre,
-                'centro_costo': c.centro_costo,  # <-- corregido
+                'ciudad': c.ciudad.nombre if c.ciudad else "Sin ciudad",
+                'cargo': c.cargo.nombre if c.cargo else "Sin cargo",
+                'cliente': c.cliente.nombre if c.cliente else "Sin cliente",
+                'centro_costo': c.centro_costo,
                 'Genero': c.sexo,
                 'fecha_ingreso': c.fecha_ingreso,
                 'fecha_registro': c.fecha_registro
             } for c in empleadoDotacion
         ]
     }
-    return JsonResponse(data)      
+    return JsonResponse(data)
     
 
 def safe_str(value):
@@ -179,12 +180,14 @@ def safe_int(value):
 
 @login_required
 def historial_entregas(request):
-      # --- Parámetros GET ---
+    # --- Parámetros GET ---
     periodo = request.GET.get('periodo')
     cliente_id = request.GET.get('cliente_id')
     tipo_entrega = request.GET.get('tipo_entrega')
+    centro_costo = request.GET.get('centro_costo')
+    ciudad = request.GET.get('ciudad')
 
-    print(f"🔎 Parámetros recibidos -> periodo={periodo}, cliente_id={cliente_id}, tipo_entrega={tipo_entrega}")
+    print(f"🔎 Parámetros recibidos -> periodo={periodo}, cliente_id={cliente_id}, tipo_entrega={tipo_entrega}, centro_costo={centro_costo}, ciudad={ciudad}")
 
     entregas = (
         EntregaDotacion.objects
@@ -193,27 +196,21 @@ def historial_entregas(request):
         .order_by('-fecha_entrega')
     )
 
-    # --- FILTRAR POR PERÍODO (MANEJO DE MÚLTIPLES FORMATOS) ---
+    # --- FILTRAR POR PERÍODO ---
     if periodo:
         try:
-            # Intentar convertir formato "2025-08-02" a "08/2025"
             if '-' in periodo and len(periodo.split('-')) == 3:
                 fecha = datetime.strptime(periodo, "%Y-%m-%d")
                 periodo_formateado = fecha.strftime("%m/%Y")
                 print(f"🔄 Período convertido: {periodo} -> {periodo_formateado}")
-                
-                # Buscar AMBOS formatos: el original y el convertido
                 entregas = entregas.filter(
                     Q(periodo=periodo) | Q(periodo=periodo_formateado)
                 )
             else:
-                # Si ya está en formato "08/2025", buscar directamente
                 entregas = entregas.filter(periodo=periodo)
                 print(f"🔍 Buscando período: {periodo}")
-                
         except ValueError as e:
             print(f"⚠️ Error al parsear el período: {e}")
-            # Si hay error, buscar el período tal cual viene
             entregas = entregas.filter(periodo=periodo)
 
     # --- FILTRAR POR CLIENTE ---
@@ -232,9 +229,18 @@ def historial_entregas(request):
         entregas = entregas.filter(tipo_entrega=tipo_entrega)
         print(f"🎯 Filtrado por tipo: {tipo_entrega}")
 
+    # --- FILTRAR POR CENTRO DE COSTO ---
+    if centro_costo:
+        entregas = entregas.filter(empleado__centro_costo__iexact=centro_costo)
+        print(f"🏢 Filtrado por centro de costo: {centro_costo}")
+
+    # --- FILTRAR POR CIUDAD ---
+    if ciudad:
+        entregas = entregas.filter(empleado__ciudad__iexact=ciudad)
+        print(f"🌆 Filtrado por ciudad: {ciudad}")
+
     print(f"📦 Entregas encontradas después de filtros: {entregas.count()}")
 
-    # Debug: ver qué períodos únicos hay en los resultados
     if entregas.exists():
         periodos_unicos = entregas.values_list('periodo', flat=True).distinct()
         print(f"📊 Períodos únicos en resultados: {list(periodos_unicos)}")
@@ -247,6 +253,8 @@ def historial_entregas(request):
             'periodo': periodo,
             'cliente': cliente_nombre,
             'tipo_entrega': tipo_entrega,
+            'centro_costo': centro_costo,
+            'ciudad': ciudad,
         }
     )
 
@@ -589,9 +597,6 @@ PROGRESO_CARGA = {"total": 0, "actual": 0}
 
 
 
-
-
-
 def cargar_empleados_desde_excel(request):
     empleados_sin_entrega = []
     global PROGRESO_CARGA
@@ -606,8 +611,8 @@ def cargar_empleados_desde_excel(request):
 
     if request.method == 'POST':
         set_current_user(request.user)
-        form = CargarArchivoForm(request.POST, request.FILES)
-
+        # form = CargarArchivoForm(request.POST, request.FILES)
+        form = CargarArchivoForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             archivo = request.FILES['archivo']
             periodo = form.cleaned_data['periodo']
@@ -826,7 +831,7 @@ def cargar_empleados_desde_excel(request):
                 return redirect("cargar_empleados")
 
     else:
-        form = CargarArchivoForm()
+        form = CargarArchivoForm(user=request.user)
 
     return render(request, 'cargar_empleados.html', {
         'form': form,
@@ -1012,18 +1017,43 @@ def descargar_pdf_entrega(request, entrega_id):
     return generar_formato_entrega_pdf(entrega)
 
 
+
 def vista_consolidado(request):
+    # Base queryset
+    entregas = EntregaDotacion.objects.all()
+
+    # 👷 Filtro según rol y sucursal
+    if request.user.rol == 'almacen' and request.user.sucursal:
+        ciudad_bodega = request.user.sucursal.id_ciudad  # campo FK en Bodega
+        entregas = entregas.filter(empleado__ciudad=ciudad_bodega)
+        print(f"👷 Usuario Almacén -> filtrando por bodega: {request.user.sucursal.nombre}")
+        print(f"📍 Ciudad asociada: {request.user.sucursal.id_ciudad.nombre}")
+        print(f"📦 Entregas visibles: {entregas.count()}")
+    else:
+        print(f"👑 Usuario {request.user.rol} -> sin filtro de ciudad (ve todo)")
+
+    # Consolidado final
     consolidado = (
-        EntregaDotacion.objects
+        entregas
         .values(
-            'empleado__cliente__nombre',  # nombre directo
+            'empleado__cliente__nombre',
             'empleado__cliente__id_cliente',
+            'empleado__ciudad__id_ciudad',
+            'empleado__ciudad__nombre',
+            'empleado__centro_costo',
+            'periodo',
+            'tipo_entrega',
+        )
+        .annotate(total_entregas=Count('id'))
+        .order_by(
+            'empleado__cliente__nombre',
+            'empleado__ciudad__nombre',
+            'empleado__centro_costo',
             'periodo',
             'tipo_entrega'
         )
-        .annotate(total_entregas=Count('id'))
-        .order_by('empleado__cliente__nombre', 'periodo')
     )
+
     return render(request, 'consolidado.html', {'consolidado': consolidado})
 
 
@@ -1034,32 +1064,46 @@ class Replace(Func):
     arity = 3
 
 def generar_pdf_por_periodo(request):
-   # Obtener parámetros de la URL
+    # Obtener parámetros de la URL
     periodo = request.GET.get('periodo')
     cliente_id = request.GET.get('cliente_id')
     tipo_entrega = request.GET.get('tipo_entrega')
-    
-    print(f"DEBUG - periodo: {periodo}, cliente_id: {cliente_id}, tipo: {tipo_entrega}")
-    
-    # Validar parámetros
+    centro_costo = request.GET.get('centro_costo')  # Nuevo
+    ciudad = request.GET.get('ciudad')              # Nuevo
+
+    print(f"DEBUG - periodo: {periodo}, cliente_id: {cliente_id}, tipo: {tipo_entrega}, "
+           f"centro_costo: {centro_costo}, ciudad: {ciudad}")
+
+    # Validar parámetros mínimos obligatorios
     if not periodo or not cliente_id or not tipo_entrega:
         return HttpResponse("Faltan parámetros requeridos: periodo, cliente_id y tipo_entrega", status=400)
-    
+
     try:
         cliente_id_int = int(cliente_id)
     except (ValueError, TypeError):
         return HttpResponse("ID de cliente inválido", status=400)
-    
-    # FILTRAR usando el campo correcto
-    entregas = EntregaDotacion.objects.filter(
-        periodo=periodo,
-        empleado__cliente__id_cliente=cliente_id_int,  # ← ¡CAMPO CORRECTO!
-        tipo_entrega=tipo_entrega
-    ).select_related('empleado__cliente', 'grupo').prefetch_related('detalles__producto')
-    
+
+    # Filtro base
+    filtros = {
+        "periodo": periodo,
+        "empleado__cliente__id_cliente": cliente_id_int,
+        "tipo_entrega": tipo_entrega
+    }
+
+    # Agregar filtros dinámicamente si vienen
+    if centro_costo:
+        filtros["empleado__centro_costo__icontains"] = centro_costo  # usa icontains por si no es exacto
+    if ciudad:
+        filtros["empleado__ciudad__icontains"] = ciudad
+
+    # Aplicar filtro
+    entregas = EntregaDotacion.objects.filter(**filtros).select_related(
+        'empleado__cliente', 'grupo'
+    ).prefetch_related('detalles__producto')
+
     if not entregas.exists():
         return HttpResponse(
-            f"No hay entregas para periodo {periodo}, cliente ID {cliente_id} y tipo {tipo_entrega}",
+            f"No hay entregas para los parámetros dados: {filtros}",
             status=404
         )
     
@@ -1127,10 +1171,11 @@ def generar_pdf_por_periodo(request):
         datos_trabajador = [
             ['Nombre Trabajador', Paragraph(empleado.nombre, parrafo_estilo), 'N.° ID', str(empleado.cedula)],
             ['Empresa', Paragraph(str(empleado.cliente), parrafo_estilo), 'Cargo', Paragraph(str(empleado.cargo), parrafo_estilo)],
+            ['Ciudad', Paragraph(str(empleado.ciudad), parrafo_estilo), 'Centro de Costo', Paragraph(str(empleado.centro_costo), parrafo_estilo)],
             ['Fecha Ingreso',
-             empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
-             'Fecha de entrega',
-             f"{entrega.fecha_entrega.strftime('%m/%Y')} | Periodo: {entrega.periodo}"]
+            empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
+            'Fecha de entrega',
+            f"{entrega.fecha_entrega.strftime('%m/%Y')}  |  Periodo: {entrega.periodo}" ]
         ]
         tabla_datos = Table(datos_trabajador, colWidths=[3.5 * cm, 5 * cm, 3.5 * cm, 5 * cm])
         tabla_datos.setStyle(TableStyle([
@@ -1223,7 +1268,10 @@ def generar_pdf_por_periodo(request):
     # También puedes incluir el nombre del cliente si prefieres
     cliente = entregas.first().empleado.cliente.nombre
     safe_cliente = str(cliente).replace(' ', '_')
-    filename = f"dotacion_{safe_periodo}_{safe_tipo}_{safe_cliente}.pdf"
+    # Centro de costo
+    centro_costo_val = entregas.first().empleado.centro_costo or "SinCentroCosto"
+    safe_centro = str(centro_costo_val).replace(' ', '_').replace('/', '-')
+    filename = f"dotacion_{safe_periodo}_{safe_tipo}_{safe_cliente}_{safe_centro}.pdf"
 
     return FileResponse(
         buffer,
@@ -1278,12 +1326,13 @@ def generar_pdf_por_entrega(request, entrega_id):
 
     # === Datos del trabajador ===
     datos_trabajador = [
-        ['Nombre Trabajador', Paragraph(empleado.nombre, styles['Normal']), 'N.° ID', str(empleado.cedula)],
-        ['Empresa', Paragraph(str(empleado.cliente), styles['Normal']), 'Cargo', Paragraph(str(empleado.cargo), styles['Normal'])],
+        ['Nombre Trabajador', Paragraph(empleado.nombre, parrafo_estilo), 'N.° ID', str(empleado.cedula)],
+        ['Empresa', Paragraph(str(empleado.cliente), parrafo_estilo), 'Cargo', Paragraph(str(empleado.cargo), parrafo_estilo)],
+        ['Ciudad', Paragraph(str(empleado.ciudad), parrafo_estilo), 'Centro de Costo', Paragraph(str(empleado.centro_costo), parrafo_estilo)],
         ['Fecha Ingreso',
-         empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
-         'Fecha de entrega',
-         f"{entrega.fecha_entrega.strftime('%m/%Y')}  |  Periodo: {entrega.periodo}"]
+        empleado.fecha_ingreso.strftime("%d/%m/%Y") if empleado.fecha_ingreso else '',
+        'Fecha de entrega',
+        f"{entrega.fecha_entrega.strftime('%m/%Y')}  |  Periodo: {entrega.periodo}" ]
     ]
     tabla_datos = Table(datos_trabajador, colWidths=[3.5*cm, 5*cm, 3.5*cm, 5*cm])
     tabla_datos.setStyle(TableStyle([
@@ -1356,10 +1405,18 @@ def generar_pdf_por_entrega(request, entrega_id):
         ('ALIGN', (0, 0), (-1, -1), 'CENTER')
     ]))
     elements.append(tabla_final)
+    
+    # --- Armar nombre del archivo ---
+    cedula = empleado.cedula.replace(" ", "_")  
+    proyecto = str(empleado.cliente).replace(" ", "_")  
+    centro_costo = str(empleado.centro_costo).replace(" ", "_") if empleado.centro_costo else "sinCC"
+    fecha = entrega.fecha_entrega.strftime("%Y%m%d") if entrega.fecha_entrega else "sin_fecha"
+
+    filename = f"{cedula}_{proyecto}_{centro_costo}_{fecha}.pdf"
 
     doc.build(elements)
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename=f'entrega_{entrega.id}.pdf')
+    return FileResponse(buffer, as_attachment=True, filename=filename)
 
 
 

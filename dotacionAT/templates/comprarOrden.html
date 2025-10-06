@@ -3,6 +3,8 @@
 {% load humanize %}
 {% block content %}
 
+{% if orden.tipo_documento != "TR" %}
+
 <div class="content-wrapper">
 
     <form method="post" id="formCompra" action="{% url 'comprar_orden' orden.id %}">
@@ -56,16 +58,12 @@
                    <div class="form-group col-md-6">
     <label for="selectBodega">Selecciona una bodega:</label>
 
-    {% if orden.get_estado_display != 'generada' and compra %}
-        <input type="text" class="form-control" value="{{ compra.bodega }}" required readonly>
-    {% else %}
-        <select id="selectBodega" name="bodega_id" class="form-control" required>
-            <option value="">Seleccione una bodega</option>
-            {% for bodega in bodegas %}
-                <option value="{{ bodega.id }}">{{ bodega.nombre }}</option>
-            {% endfor %}
-        </select>
-    {% endif %}
+   <select id="selectBodega" name="bodega_id" class="form-control" required>
+    <option value="">Seleccione una bodega</option>
+    {% for bodega in bodegas %}
+        <option value="{{ bodega.id_bodega }}">{{ bodega.nombre }}</option>
+    {% endfor %}
+</select>
 </div>
                     <div class="col-md-12">
                         <label>Observaciones:</label>
@@ -140,7 +138,140 @@
         </form>
     </section>
 </div>
+{% else %}
+<div class="content-wrapper">
 
+    <form method="post" id="formCompra" action="{% url 'comprar_orden' orden.id %}">
+    {% csrf_token %}
+
+    <section class="content-header">
+        <div class="card bg-light mb-3">
+            <div class="card-header">
+                <h3 class="mb-0">Orden de Compra #{{ orden.id }}</h3>
+            </div>
+            <div class="card-body text-dark">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <label>Fecha Orden Compra:</label>
+                        <input class="form-control" type="text" value="{{ orden.fecha_creacion }}" readonly>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label>Fecha Compra:</label>
+
+                        {% if orden.get_estado_display != 'generada' and compra %}
+                            <input class="form-control" type="date" value="{{ compra.fecha_compra|date:'Y-m-d' }}" readonly>
+                            {% else %}
+                            <input class="form-control" type="date" value="" name="fechaCompra" required>
+                        {% endif %}
+
+                        
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Proveedor:</label>
+                        <input type="text" class="form-control" value="{{ orden.proveedor.nombre }}" readonly>
+                        <input type="hidden" name="proveedor" class="form-control" value="{{ orden.proveedor.id_proveedor}}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Ciudad Proveedor:</label>
+                        <input type="text" class="form-control" value="{{ orden.proveedor.ciudad }}" readonly>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Estado:</label>
+                        <input type="text" class="form-control" value="{{ orden.get_estado_display }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Numero Factura:</label>
+
+                        {% if orden.get_estado_display != 'generada' and compra %}
+                            <input class="form-control" type="text" value="{{ compra.numero_factura }}" readonly >
+                            {% else %}
+                            <input type="text" class="form-control" name="numFActura" value=""  placeholder="Ingrese numero de Factura" required>
+                        {% endif %}
+                        
+                    </div>
+                   <div class="form-group col-md-6">
+    <label for="selectBodega">Selecciona una bodega:</label>
+
+   <select id="selectBodega" name="bodega_id" class="form-control" required>
+    <option value="">Seleccione una bodega</option>
+    {% for bodega in bodegas %}
+        <option value="{{ bodega.id_bodega }}">{{ bodega.nombre }}</option>
+    {% endfor %}
+</select>
+</div>
+                    <div class="col-md-12">
+                        <label>Observaciones:</label>
+                        <input type="text" class="form-control" value="{{ orden.observaciones }}" >
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h3>Productos en la Orden</h3>
+
+        
+            <table class="table table-bordered" style="color: black;" id="tablaProductos">
+                <thead class="thead-dark">
+                    <tr style="text-align: center;">
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% for item in items %}
+                    <!-- <p>Producto: {{ item.producto.nombre }}</p>
+    <p>Cantidad: {{ item.cantidad }}</p>
+    <p>Precio: {{ item.precio_unitario }}</p> -->
+    
+                    <tr>
+                        <td>
+                            {{ item.producto.nombre }}
+                            <input type="hidden" name="productos[]" value="{{ item.producto.id_producto }}">
+                        </td>
+                        <td>
+                            <input type="number" name="cantidades[]" class="form-control text-center cantidad" value="{{ item.cantidad }}" min="1" onchange="actualizarSubtotal(this)">
+                        </td>
+                        
+                            <input type="hidden" name="precios[]"  class="form-control text-right precio" value="{{ item.precio_unitario|floatformat|intcomma }}"  onchange="actualizarSubtotal(this)">
+                            <input type="hidden" class="precio-hidden" value="{{ item.precio_unitario }}">
+                            <input type="hidden" class="subtotal-hidden" value="{{ item.subtotal }}">
+                       
+                      
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm " data-id="{{ item.producto.id }}" onclick="quitarProducto(this)">
+                                <i class="fa fa-times"></i>
+                            </button>
+                            
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tbody style="color: black;"></tbody>
+                <tfoot style="color: black;">
+                    <tr >
+                      <!-- <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                      <td id="totalOrden"  class="text-right">COP {{ orden.total|floatformat:2|intcomma }}</td> -->
+                      <td></td>
+                      <input type="hidden" name="total_orden" id="inputTotalOrden" value="{{ orden.total|floatformat:2|intcomma }}">
+                    </tr>
+                  </tfoot>
+            </table>
+            {% if orden.get_estado_display == 'generada' %}
+            <div class="text-end mt-3">
+            <button type="submit" class="btn btn-success btn-sm w-auto" onclick="confirmarCompra(this)">Guardar Entrada</button>
+        </div>
+            {% endif %}
+        </form>
+    </section>
+</div>
+
+
+{% endif %}
 {% block extra_js %}
 {{ form.media }}
 
@@ -155,24 +286,24 @@ $(document).ready(function() {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-    fetch('/list_bodegas/')
-    .then(response => response.json())
-    .then(data => {
-        const select = document.getElementById('selectBodega');
-        select.innerHTML = '<option value="">Seleccione una bodega</option>';
+   fetch('/list_bodegas_filtradas/')
+   .then(response => response.json())
+   .then(data => {
+       const select = document.getElementById('selectBodega');
+       select.innerHTML = '<option value="">Seleccione una bodega</option>';
 
-        data.bodegas.forEach(bodega => {  // <-- ¡Aquí va data.bodegas!
-            const option = document.createElement('option');
-            option.value = bodega.id_bodega;
-            option.textContent = bodega.nombre + ' - ' + bodega.ciudad;
-            select.appendChild(option);
-        });
-    })
-    .catch(error => {
-        console.error('Error al cargar las bodegas:', error);
-        const select = document.getElementById('selectBodega');
-        select.innerHTML = '<option value="">Error al cargar</option>';
-    })
+       data.bodegas.forEach(bodega => {  // <-- ¡Aquí va data.bodegas!
+           const option = document.createElement('option');
+           option.value = bodega.id_bodega;
+           option.textContent = bodega.nombre + ' - ' + bodega.ciudad;
+           select.appendChild(option);
+       });
+   })
+   .catch(error => {
+       console.error('Error al cargar las bodegas:', error);
+       const select = document.getElementById('selectBodega');
+       select.innerHTML = '<option value="">Error al cargar</option>';
+   })
 });
 
     console.log("Hola Comprar Orden");
@@ -324,8 +455,7 @@ function actualizarSubtotal(input) {
 
 function quitarProducto(button) {
     
-    console.log("Hola");
-        
+    console.log("Hola"); 
 
     // Obtener el ID del producto desde el atributo data-id del botón
     const id = button.getAttribute('data-id');

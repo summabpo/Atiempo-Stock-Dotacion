@@ -53,6 +53,7 @@ def login_usuario(request):
                 print(f"Nombre completo: {user.get_full_name()}")
                 print(f"Rol: {user.rol}")
                 print(f"Estado: {user.estado}")
+                print(f"sucursal: {user.sucursal}")
                 print(f"Es activo (Django): {user.is_active}")
                 print("===========================")
 

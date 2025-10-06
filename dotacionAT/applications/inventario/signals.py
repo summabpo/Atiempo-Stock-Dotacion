@@ -70,43 +70,43 @@ def actualizar_inventario_salida(sender, instance, created, **kwargs):
         inventario_salida.save()
 
     # 🔵 Entrada a bodega destino
-    if salida.bodegaEntrada:
-        inventario_entrada, _ = InventarioBodega.objects.get_or_create(
-            bodega=salida.bodegaEntrada,
-            producto=producto
-        )
-        inventario_entrada.entradas += cantidad
-        inventario_entrada.stock += cantidad
-        inventario_entrada.ultima_entrada = timezone.now()
-        inventario_entrada.usuario_ultima_entrada = usuario
-        inventario_entrada.save()
+    # if salida.bodegaEntrada:
+    #     inventario_entrada, _ = InventarioBodega.objects.get_or_create(
+    #         bodega=salida.bodegaEntrada,
+    #         producto=producto
+    #     )
+    #     inventario_entrada.entradas += cantidad
+    #     inventario_entrada.stock += cantidad
+    #     inventario_entrada.ultima_entrada = timezone.now()
+    #     inventario_entrada.usuario_ultima_entrada = usuario
+    #     inventario_entrada.save()
 
-        # 🧾 Si es un TRASLADO, crear Compra automáticamente
-        if salida.tipo_documento == 'TR':
-            proveedor = Proveedor.objects.filter(nombre__iexact=salida.cliente.nombre).first()
-            if not proveedor:
-                print(f"❌ No se encontró proveedor con nombre: {salida.cliente.nombre}")
-                return
+    #     # 🧾 Si es un TRASLADO, crear Compra automáticamente
+    #     if salida.tipo_documento == 'TR':
+    #         proveedor = Proveedor.objects.filter(nombre__iexact=salida.cliente.nombre).first()
+    #         if not proveedor:
+    #             print(f"❌ No se encontró proveedor con nombre: {salida.cliente.nombre}")
+    #             return
 
-            compra, _ = Compra.objects.get_or_create(
-                numero_factura=f"TR-{salida.id}",
-                defaults={
-                    'orden_compra': None,
-                    'proveedor': proveedor,
-                    'bodega': salida.bodegaEntrada,
-                    'observaciones': f'Traslado desde salida #{salida.id}',
-                    'total': Decimal('0.00'),
-                    'fecha_compra': timezone.localtime().date(),
-                    'usuario_creador': usuario
-                }
-            )
+    #         compra, _ = Compra.objects.get_or_create(
+    #             numero_factura=f"TR-{salida.id}",
+    #             defaults={
+    #                 'orden_compra': None,
+    #                 'proveedor': proveedor,
+    #                 'bodega': salida.bodegaEntrada,
+    #                 'observaciones': f'Traslado desde salida #{salida.id}',
+    #                 'total': Decimal('0.00'),
+    #                 'fecha_compra': timezone.localtime().date(),
+    #                 'usuario_creador': usuario
+    #             }
+    #         )
 
-            ItemCompra.objects.create(
-                compra=compra,
-                producto=producto,
-                cantidad_recibida=cantidad,
-                precio_unitario=Decimal('0.00')
-            )
+    #         ItemCompra.objects.create(
+    #             compra=compra,
+    #             producto=producto,
+    #             cantidad_recibida=cantidad,
+    #             precio_unitario=Decimal('0.00')
+    #         )
 
     # 🧮 Actualizar stock total
     stock_total = InventarioBodega.objects.filter(producto=producto).aggregate(

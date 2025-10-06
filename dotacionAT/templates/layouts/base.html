@@ -272,6 +272,15 @@
             <span>📄 Ver Historial de Entregas</span>
           </a>
         </li>
+        
+
+        <li class="nav-item">
+          <a href="{% url 'empleadodotacion' %}" class="nav-link">
+            <i class="nav-icon fas fa-address-book"></i>
+            <span>Empleados</span>
+          </a>
+        </li>
+
       {% endif %}
     
     {% endif %}
@@ -377,8 +386,6 @@
     icon: "{% if 'error' in m.tags %}error{% elif 'warning' in m.tags %}warning{% elif 'success' in m.tags %}success{% else %}info{% endif %}"
   });
 
- 
-  
 </script>
 {% endfor %}
 {% endif %}

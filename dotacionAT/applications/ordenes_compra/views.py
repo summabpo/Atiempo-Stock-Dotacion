@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from .forms import OrdenCompraForm
 from applications.productos.models import Producto
 from applications.proveedores.models import Proveedor
+from applications.bodegas.models import Bodega
 from django.forms import modelformset_factory
 from django.contrib import messages
 from decimal import Decimal
@@ -14,6 +15,7 @@ from django.db import transaction, IntegrityError
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from django.utils.timezone import localtime, is_naive, make_aware
+from django.db.models import Q
 
 import json
 
@@ -48,9 +50,15 @@ def list_orden_y_compra(request):
 
     # 👉 Filtro por rol
     if user.rol in ["almacen", "empleado"]:
-        if user.sucursal:  # solo si tiene sucursal asignada
-            ordenes = ordenes.filter(usuario_creador__sucursal=user.sucursal)
-            compras = compras.filter(usuario_creador__sucursal=user.sucursal)
+        if user.sucursal:  # 👈 sucursal es una Bodega
+            ordenes = ordenes.filter(
+                Q(usuario_creador__sucursal=user.sucursal) |
+                Q(proveedor__nombre__icontains=user.sucursal.nombre)  # si usas proveedores internos con nombre = bodega
+            )
+            compras = compras.filter(
+                Q(usuario_creador__sucursal=user.sucursal) |
+                Q(bodega=user.sucursal)   # 👈 aquí va directo porque sucursal = Bodega
+            )
 
     # -------------------------
     data = []
@@ -143,7 +151,8 @@ def ordenes_compra(request):
         'ordenes_compra': ordenes_compra
     })
     
-    
+
+  
 @transaction.atomic
 def crear_orden_compra(request):
     if request.method == 'POST':
@@ -244,42 +253,42 @@ def crear_orden_compra(request):
 #     })
     
 
-@login_required(login_url='login_usuario')
-def comprar_orden_vista(request, orden_id):
-    orden = get_object_or_404(OrdenCompra, id=orden_id)
+# @login_required(login_url='login_usuario')
+# def comprar_orden_vista(request, orden_id):
+#     orden = get_object_or_404(OrdenCompra, id=orden_id)
 
-    try:
-        compra = orden.compra  # usa el related_name
-    except Compra.DoesNotExist:
-        compra = None
+#     try:
+#         compra = orden.compra  # usa el related_name
+#     except Compra.DoesNotExist:
+#         compra = None
 
-    items = orden.items.all()  # ajusta según tu modelo real
+#     items = orden.items.all()  # ajusta según tu modelo real
 
-    # 🔹 Lógica para las bodegas
-    user = request.user
-    bodegas = None  
+#     # 🔹 Lógica para las bodegas
+#     user = request.user
+#     bodegas = None  
 
-    if user.rol.nombre in ['Administrador', 'Contable']:  
-        bodegas = Bodega.objects.all()
-    elif user.rol.nombre in ['Almacen', 'Empleado']:
-        # Asumiendo que usuario tiene sucursal relacionada
-        if hasattr(user, "sucursal") and user.sucursal:
-            bodegas = Bodega.objects.filter(sucursal=user.sucursal)
-        else:
-            bodegas = Bodega.objects.none()
+#     if user.rol.nombre in ['Administrador', 'Contable']:  
+#         bodegas = Bodega.objects.all()
+#     elif user.rol.nombre in ['Almacen', 'Empleado']:
+#         # Asumiendo que usuario tiene sucursal relacionada
+#         if hasattr(user, "sucursal") and user.sucursal:
+#             bodegas = Bodega.objects.filter(sucursal=user.sucursal)
+#         else:
+#             bodegas = Bodega.objects.none()
 
-    logger.info(f"ORDEN: {orden}")
-    logger.info(f"ESTADO: {orden.estado}")
-    logger.info(f"COMPRA: {compra}")
-    logger.info(f"ITEMS: {list(items)}")
-    logger.info(f"BODEGAS DISPONIBLES: {list(bodegas)}")
+#     logger.info(f"ORDEN: {orden}")
+#     logger.info(f"ESTADO: {orden.estado}")
+#     logger.info(f"COMPRA: {compra}")
+#     logger.info(f"ITEMS: {list(items)}")
+#     logger.info(f"BODEGAS DISPONIBLES: {list(bodegas)}")
 
-    return render(request, 'comprarOrden.html', {
-        'orden': orden,
-        'compra': compra,
-        'items': items,
-        'bodegas': bodegas,  # 🔹 mandamos las bodegas al template
-    })
+#     return render(request, 'comprarOrden.html', {
+#         'orden': orden,
+#         'compra': compra,
+#         'items': items,
+#         'bodegas': bodegas,  # 🔹 mandamos las bodegas al template
+#     })
     
    
 @login_required(login_url='login_usuario')    
@@ -294,9 +303,7 @@ def detalle_comprar(request, id):
     #     'detalle_comprar': comprar_orden
     # })         
     
-    
-    
-
+ 
 @transaction.atomic
 def comprar_orden(request, id):
     orden = get_object_or_404(OrdenCompra, id=id)
@@ -318,13 +325,12 @@ def comprar_orden(request, id):
         precios = request.POST.getlist('precios[]')
         fecha_compra = request.POST.getlist('fechaCompra[]')
 
-        # 📌 Imprimir datos recibidos como depuración (tipo var_dump)
         print(">>> Datos del formulario:")
         print("Observaciones:", observaciones)
         print("Número de factura:", numero_factura)
         print("Bodega ID:", bodega)
-        print("POST completo:", dict(request.POST))  # También puedes usar request.POST.items()
-        
+        print("POST completo:", dict(request.POST))  
+
         if not proveedor_id:
             messages.error(request, "Debe seleccionar un proveedor.")
             return redirect('comprar_orden', id=id)
@@ -335,10 +341,7 @@ def comprar_orden(request, id):
             messages.error(request, "Proveedor no válido.")
             return redirect('comprar_orden', id=id)
 
-
-
-
-        # Calcular el total
+        # Calcular el total desde los ítems de la orden
         total_orden_decimal = sum(
             (item.cantidad * item.precio_unitario for item in orden.items.all()),
             start=Decimal('0.00')
@@ -349,26 +352,19 @@ def comprar_orden(request, id):
         compra = Compra.objects.create(
             orden_compra=orden,
             observaciones=observaciones,
-            total=total,
-            fecha_compra = fecha_compra,
+            total=total_orden_decimal,
+            fecha_compra=fecha_compra,
             proveedor=proveedor,
             bodega_id=bodega if bodega else None,
             numero_factura=numero_factura,
             usuario_creador=request.user
         )
 
-        # Crear los ítems de la compra
-        # for item in orden.items.all():
-        #     ItemCompra.objects.create(
-        #         compra=compra,
-        #         producto=item.producto,
-        #         cantidad_recibida=item.cantidad,
-        #         precio_unitario=item.precio_unitario
-        #     )
+        # Crear ítems de la compra
         for i in range(len(productos)):
             producto_id = productos[i]
             cantidad = int(cantidades[i])
-            precio_unitario = Decimal(precios[i].replace(',', ''))  # limpia el formato si viene con comas
+            precio_unitario = Decimal(precios[i].replace(',', ''))  
 
             ItemCompra.objects.create(
                 compra=compra,
@@ -377,26 +373,239 @@ def comprar_orden(request, id):
                 precio_unitario=precio_unitario
             )
 
-        # Cambia el estado de la orden a "comprada"
+        # Cambiar estado de la orden
         orden.estado = 'comprada' + ' ' + compra.numero_factura
         orden.save()
 
         messages.success(request, "Compra registrada correctamente.")
         return redirect('ordenes_compra')
     
+    # ==============================
+    # GET → Preparar datos para template
+    # ==============================
     try:
-        compra = orden.compra  # usa el related_name
+        compra = orden.compra  
     except Compra.DoesNotExist:
         compra = None
 
-    items = orden.items.all()  # ajusta según tu modelo real
-    
-   
+    items = orden.items.all()
+
+    # 🚨 Restricción de bodegas
+    if request.user.rol in ["admin", "contable"]:
+        bodegas = Bodega.objects.all()
+    else:
+        bodegas = [request.user.sucursal]  # 👈 Solo la sucursal del usuario
+
     return render(request, 'comprarOrden.html', {
         'orden': orden,
         'compra': compra,
         'items': items,
+        'bodegas': bodegas,   # <-- se manda al template
     })
+
+
+#de nuevo comento este dejo el codigo de arriba
+# @transaction.atomic
+# def comprar_orden(request, id):
+#     orden = get_object_or_404(OrdenCompra, id=id)
+
+#     if request.method == 'POST':
+#         # ✅ Verificar si ya existe una compra asociada
+#         if hasattr(orden, 'compra'):
+#             messages.error(request, "Esta orden ya tiene una compra registrada.")
+#             return redirect('ordenes_compra')
+
+#         # Obtener datos del formulario
+#         proveedor_id = request.POST.get('proveedor', '').strip()
+#         observaciones = request.POST.get('observaciones', '')
+#         numero_factura = request.POST.get('numFActura', '')
+#         bodega = request.POST.get('bodega_id')
+#         total = request.POST.get('total_orden')
+#         productos = request.POST.getlist('productos[]')
+#         cantidades = request.POST.getlist('cantidades[]')
+#         precios = request.POST.getlist('precios[]')
+#         fecha_compra = request.POST.getlist('fechaCompra[]')
+
+#         print(">>> Datos del formulario:")
+#         print("Observaciones:", observaciones)
+#         print("Número de factura:", numero_factura)
+#         print("Bodega ID:", bodega)
+#         print("POST completo:", dict(request.POST))  
+
+#         if not proveedor_id:
+#             messages.error(request, "Debe seleccionar un proveedor.")
+#             return redirect('comprar_orden', id=id)
+
+#         try:
+#             proveedor = Proveedor.objects.get(id_proveedor=proveedor_id)
+#         except Proveedor.DoesNotExist:
+#             messages.error(request, "Proveedor no válido.")
+#             return redirect('comprar_orden', id=id)
+
+#         # Calcular el total desde los ítems de la orden
+#         total_orden_decimal = sum(
+#             (item.cantidad * item.precio_unitario for item in orden.items.all()),
+#             start=Decimal('0.00')
+#         )
+#         print("Total calculado:", total_orden_decimal)
+        
+#         # Crear la compra
+#         compra = Compra.objects.create(
+#             orden_compra=orden,
+#             observaciones=observaciones,
+#             total=total,
+#             fecha_compra=fecha_compra,
+#             proveedor=proveedor,
+#             bodega_id=bodega if bodega else None,
+#             numero_factura=numero_factura,
+#             usuario_creador=request.user
+#         )
+
+#         # Crear ítems de la compra
+#         for i in range(len(productos)):
+#             producto_id = productos[i]
+#             cantidad = int(cantidades[i])
+#             precio_unitario = Decimal(precios[i].replace(',', ''))  
+
+#             ItemCompra.objects.create(
+#                 compra=compra,
+#                 producto_id=producto_id,
+#                 cantidad_recibida=cantidad,
+#                 precio_unitario=precio_unitario
+#             )
+
+#         # Cambiar estado de la orden
+#         orden.estado = 'comprada' + ' ' + compra.numero_factura
+#         orden.save()
+
+#         messages.success(request, "Compra registrada correctamente.")
+#         return redirect('ordenes_compra')
+    
+#     # ==============================
+#     # GET → Preparar datos para template
+#     # ==============================
+#     try:
+#         compra = orden.compra  
+#     except Compra.DoesNotExist:
+#         compra = None
+
+#     items = orden.items.all()
+
+#    # 🚨 Restricción de bodegas
+#     if request.user.rol in ["admin", "contable"]:   # Usamos tu campo 'rol'
+#         bodegas = Bodega.objects.all()
+#     else:
+#         bodegas = Bodega.objects.filter(id=request.user.sucursal_id)  # 👈 solo la sucursal asignada
+
+#     return render(request, 'comprarOrden.html', {
+#         'orden': orden,
+#         'compra': compra,
+#         'items': items,
+#         'bodegas': bodegas,   # <-- se manda al template
+#     })    
+
+    
+#codigo comentado para probar el que dejo arriba
+# @transaction.atomic
+# def comprar_orden(request, id):
+#     orden = get_object_or_404(OrdenCompra, id=id)
+
+#     if request.method == 'POST':
+#         # ✅ Verificar si ya existe una compra asociada
+#         if hasattr(orden, 'compra'):
+#             messages.error(request, "Esta orden ya tiene una compra registrada.")
+#             return redirect('ordenes_compra')
+
+#         # Obtener datos del formulario
+#         proveedor_id = request.POST.get('proveedor', '').strip()
+#         observaciones = request.POST.get('observaciones', '')
+#         numero_factura = request.POST.get('numFActura', '')
+#         bodega = request.POST.get('bodega_id')
+#         total = request.POST.get('total_orden')
+#         productos = request.POST.getlist('productos[]')
+#         cantidades = request.POST.getlist('cantidades[]')
+#         precios = request.POST.getlist('precios[]')
+#         fecha_compra = request.POST.getlist('fechaCompra[]')
+
+#         # 📌 Imprimir datos recibidos como depuración (tipo var_dump)
+#         print(">>> Datos del formulario:")
+#         print("Observaciones:", observaciones)
+#         print("Número de factura:", numero_factura)
+#         print("Bodega ID:", bodega)
+#         print("POST completo:", dict(request.POST))  # También puedes usar request.POST.items()
+        
+#         if not proveedor_id:
+#             messages.error(request, "Debe seleccionar un proveedor.")
+#             return redirect('comprar_orden', id=id)
+
+#         try:
+#             proveedor = Proveedor.objects.get(id_proveedor=proveedor_id)
+#         except Proveedor.DoesNotExist:
+#             messages.error(request, "Proveedor no válido.")
+#             return redirect('comprar_orden', id=id)
+
+
+
+
+#         # Calcular el total
+#         total_orden_decimal = sum(
+#             (item.cantidad * item.precio_unitario for item in orden.items.all()),
+#             start=Decimal('0.00')
+#         )
+#         print("Total calculado:", total_orden_decimal)
+        
+#         # Crear la compra
+#         compra = Compra.objects.create(
+#             orden_compra=orden,
+#             observaciones=observaciones,
+#             total=total,
+#             fecha_compra = fecha_compra,
+#             proveedor=proveedor,
+#             bodega_id=bodega if bodega else None,
+#             numero_factura=numero_factura,
+#             usuario_creador=request.user
+#         )
+
+#         # Crear los ítems de la compra
+#         # for item in orden.items.all():
+#         #     ItemCompra.objects.create(
+#         #         compra=compra,
+#         #         producto=item.producto,
+#         #         cantidad_recibida=item.cantidad,
+#         #         precio_unitario=item.precio_unitario
+#         #     )
+#         for i in range(len(productos)):
+#             producto_id = productos[i]
+#             cantidad = int(cantidades[i])
+#             precio_unitario = Decimal(precios[i].replace(',', ''))  # limpia el formato si viene con comas
+
+#             ItemCompra.objects.create(
+#                 compra=compra,
+#                 producto_id=producto_id,
+#                 cantidad_recibida=cantidad,
+#                 precio_unitario=precio_unitario
+#             )
+
+#         # Cambia el estado de la orden a "comprada"
+#         orden.estado = 'comprada' + ' ' + compra.numero_factura
+#         orden.save()
+
+#         messages.success(request, "Compra registrada correctamente.")
+#         return redirect('ordenes_compra')
+    
+#     try:
+#         compra = orden.compra  # usa el related_name
+#     except Compra.DoesNotExist:
+#         compra = None
+
+#     items = orden.items.all()  # ajusta según tu modelo real
+    
+   
+#     return render(request, 'comprarOrden.html', {
+#         'orden': orden,
+#         'compra': compra,
+#         'items': items,
+#     })
 
     # return render(request, 'comprarOrden.html', {
     #     'orden': orden,

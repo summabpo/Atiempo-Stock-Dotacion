@@ -29,6 +29,8 @@
             <th>Cliente</th>
             <th>Periodo</th>
             <th>Tipo Entrega</th>
+            <th>Centro Costo</th>
+            <th>Ciudad</th>
             <th>Total Entregas</th>
             <th>Acción</th>
         </tr>
@@ -39,15 +41,17 @@
             <td>{{ item.empleado__cliente__nombre  }}</td>
             <td>{{ item.periodo }}</td>
             <td>{{ item.tipo_entrega }}</td>
+            <td>{{ item.empleado__ciudad__nombre }}</td>
+            <td>{{ item.empleado__centro_costo }}</td>
             <td>{{ item.total_entregas }}</td>
          <td>
         <!-- USA EL NOMBRE CORRECTO DEL CAMPO -->
-        <a href="{% url 'generar_pdf_por_periodo' %}?periodo={{ item.periodo }}&cliente_id={{ item.empleado__cliente__id_cliente }}&tipo_entrega={{ item.tipo_entrega }}"
-           class="btn btn-primary btn-sm">
+        <a href="{% url 'generar_pdf_por_periodo' %}?periodo={{ item.periodo }}&cliente_id={{ item.empleado__cliente__id_cliente }}&tipo_entrega={{ item.tipo_entrega }}&ciudad_id={{ item.empleado__ciudad__id_ciudad }}&centro_costo={{ item.empleado__centro_costo }}"
+        class="btn btn-primary btn-sm">
             📄 Generar Lote PDF
         </a>
         
-        <a href="{% url 'historial_entregas' %}?periodo={{ item.periodo }}&cliente_id={{ item.empleado__cliente__id_cliente }}&tipo_entrega={{ item.tipo_entrega }}"
+        <a href="{% url 'historial_entregas' %}?periodo={{ item.periodo }}&cliente_id={{ item.empleado__cliente__id_cliente }}&tipo_entrega={{ item.tipo_entrega }}&ciudad_id={{ item.empleado__ciudad__id_ciudad }}&centro_costo={{ item.empleado__centro_costo }}"
         class="btn btn-info btn-sm">
             📋 Ver Detalles
         </a>

@@ -42,8 +42,6 @@
     }
 };
 
-
-
 const initDataTable = async () => {
     if (dataTableIsInitialized) {
         dataTable.destroy();
@@ -60,9 +58,6 @@ const initDataTable = async () => {
     }
 }
 
-
-
- 
 
 const usuarios = async () => {
     console.log("hola");
@@ -125,5 +120,3 @@ const usuarios = async () => {
     // Opcional: Recargar datos si el usuario hace algo (ej: después de editar)
     // Puedes llamar a cargarUsuarios() desde otros eventos
 })();
-
-

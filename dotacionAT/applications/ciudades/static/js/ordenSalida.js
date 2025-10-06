@@ -123,7 +123,7 @@ const OrdenSalida = async () => {
             
             let botonCancelar = '';
              let estado = '';
-            if (item.tipo_documento == 'OC' && item.estado == 'generada') {
+            if (item.tipo_documento == 'OC'  && item.estado == 'generada') {
                 botonCancelar = `
                     <button title="Cancelar Orden compra" class="btn btn-sm btn-danger" onclick="confirmarCambioEstado('${item.url_cancelar}')">
                         <i class='fa-solid fa-times'></i>
@@ -144,6 +144,7 @@ const OrdenSalida = async () => {
                     <td>${item.id}</td>
                     <td style="text-transform: uppercase;">${item.cliente}</td>
                     <td style="text-transform: uppercase;">${estado}</td>
+                    <td style="text-transform: uppercase;">${item.usuario}</td>                    
                     <td>${formatearFecha(item.fecha)}</td>
                     <td>
                         <a href="${item.url_editar}">

@@ -7,7 +7,6 @@ ALLOWED_HOSTS = []
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
-
 if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
     MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
@@ -22,7 +21,6 @@ DATABASES = {
     }
 }
 
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',  # Usar PostgreSQL en lugar de SQLite
@@ -33,7 +31,6 @@ DATABASES = {
 #         'PORT': '5432',  # Puerto por defecto de PostgreSQL
 #     }
 # }
-
 
 
 # Static files (CSS, JavaScript, Images)

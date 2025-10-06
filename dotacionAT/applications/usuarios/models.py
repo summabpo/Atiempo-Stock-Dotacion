@@ -11,7 +11,6 @@ class Usuario(AbstractUser):
         ('admin', 'Administrador'),
         ('contable', 'Contable'),
         ('almacen', 'Almacen'), 
-        ('empleado', 'Empleado'),
     ]
     estado_choices = [
         ('activo', 'Activo'),

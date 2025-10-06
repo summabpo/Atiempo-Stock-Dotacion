@@ -22,8 +22,6 @@ function formatearFecha(fechaISO) {
 let dataTable;
 let dataTableIsInitialized = false;
 
-
-
 const dataTableOptions = {
     columnDefs: [
         { className: "text-center", targets: [0, 1, 2, 3] },
@@ -81,7 +79,6 @@ const initDataTable = async () => {
         dataTableIsInitialized = true;
     }
 }
-
 
 const style = document.createElement('style');
 style.textContent = `
@@ -148,6 +145,3 @@ window.addEventListener("load", async () => {
 });
 
 })();
-
-
-    

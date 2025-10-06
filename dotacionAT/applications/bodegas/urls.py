@@ -7,14 +7,5 @@ urlpatterns = [
     path('bodega/<int:id>/', views.bodega_detalle, name='bodega_detalle'),
     path('modificar_bodega/<int:id>/', views.modificar_bodega, name='modificar_bodega'),  # Aquí debe estar 'productos'
     path('list_bodegas/', views.list_bodegas, name='list_bodegas'),
+    path('list_bodegas_filtradas/', views.list_bodegas_filtradas, name='list_bodegas_filtradas'),
 ]
-
-
-# from django.conf import settings
-
-
-# if settings.DEBUG:
-#     import debug_toolbar
-#     urlpatterns += [
-#         path('__debug__/', include(debug_toolbar.urls)),
-#     ] 

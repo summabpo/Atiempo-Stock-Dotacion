@@ -17,13 +17,17 @@ class OrdenCompra(models.Model):
         ('cancelada', 'cancelada'),
     ]
 
+    TIPO_CHOICES = [
+        ('OC', 'Orden de Compra'),
+        ('TR', 'Traslado Interno'),
+    ]
+
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='generada')
     observaciones = models.TextField(blank=True)
-    
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    
+
     usuario_creador = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -32,12 +36,14 @@ class OrdenCompra(models.Model):
         related_name='ordenes_creadas'
     )
 
+    tipo_documento = models.CharField(
+        max_length=2,
+        choices=TIPO_CHOICES,
+        default="OC"
+    )
+
     def __str__(self):
-        return str(self.id)
-    
-    @property
-    def tipo_documento(self):
-        return "OC"
+        return f"{self.id} - {self.get_tipo_documento_display()}"
 
 
 class ItemOrdenCompra(models.Model):
