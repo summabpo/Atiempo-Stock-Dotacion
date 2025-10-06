@@ -44,6 +44,7 @@
             <th>Centro Costo</th>
             <th>Cargo</th>
             <th>Cliente</th>
+            <th>Tipo de Entrega</th>
             <th>Sexo</th>
             <th>Fecha Generado</th>
             <th>🧥 Prendas Entregadas</th>
@@ -77,6 +78,7 @@
     <td>{{ entrega.empleado.centro_costo }}</td>
     <td>{{ entrega.empleado.cargo }}</td>
     <td>{{ entrega.empleado.cliente }}</td>
+    <td>{{ entrega.get_tipo_entrega_display }}</td>
     <td>{{ entrega.empleado.sexo }}</td>
     <td>{{ entrega.fecha_entrega|date:"Y-m-d H:i" }}</td>
     <td class="prendas">
@@ -116,13 +118,22 @@
         </a>
 
          <!-- Mostrar el botón SOLO si hay faltantes pendientes -->
-        {% if entrega.estado != "completa" and faltantes %}
-        <a href="{% url 'generar_entrega_faltantes' entrega.id %}" 
-        class="btn btn-sm btn-info mt-1 "
-        onclick="return confirm('¿Confirmas entregar los faltantes de esta entrega?');">
-            <i class="fa fa-truck"></i> Entregar faltantes
-        </a>
-        {% endif %}
+
+        {% if user.rol == "almacen" and entrega.tipo_entrega == "ingreso" and entrega.estado != "completa" and faltantes %}
+    <a href="{% url 'generar_entrega_faltantes' entrega.id %}" 
+       class="btn btn-sm btn-info mt-1"
+       onclick="return confirm('¿Confirmas entregar los faltantes de esta entrega?');">
+        <i class="fa fa-truck"></i> Entregar faltantes
+    </a>
+
+{% elif user.rol != "almacen" and entrega.estado != "completa" and faltantes %}
+    <a href="{% url 'generar_entrega_faltantes' entrega.id %}" 
+       class="btn btn-sm btn-info mt-1"
+       onclick="return confirm('¿Confirmas entregar los faltantes de esta entrega?');">
+        <i class="fa fa-truck"></i> Entregar faltantes
+    </a>
+{% endif %}
+
 
     </td>
 </tr>

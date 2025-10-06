@@ -100,7 +100,7 @@ const OrdenCompras = async () => {
 
             }else if(item.tipo_documento == 'TR'){
 
-               idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+               idTipoDoc = item.id+' - '+item.tipo_documento;
             }  
                 
             if(item.tipo_documento == 'OC' && item.estado == 'comprada'){

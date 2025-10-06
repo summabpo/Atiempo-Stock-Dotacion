@@ -120,6 +120,7 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+LOGIN_URL = '/login/'
 
 # Archivos estáticos
 STATIC_URL = '/static/'
