@@ -95,6 +95,8 @@ const OrdenSalida = async () => {
             let content = ``;
             data.ordenes_salida.forEach((item, index) => {
                 const activo = item.activo === true;
+                let botonNovedad = '';
+                let estadoActual = '';
            
             // if(item.tipo_documento == 'OC'){
 
@@ -131,20 +133,61 @@ const OrdenSalida = async () => {
                 `;
             }
 
-             if (item.cliente == 'Atiempo SAS' ) {
-                estado = `Traslado a Bodega - ${item.bodegaSalida}`;
+            if (item.cliente == 'ATIEMPO SAS' ) {
+                estado = `Traslado a Bodega - ${item.bodegaEntrada} - # ${item.id_orden}`;
             }else if (item.cliente != 'Atiempo SAS' ){
                 estado =`Salida Cliente`;
             }
+
+            if(item.estado_orden_compra == 'generada'){
+                
+                estadoActual = 'Pendiente Recibido';
+
+            }else if(item.estado_orden_compra == 'recibida'){
+
+                estadoActual = 'Recibido OK';
+
+            }else{
+
+                estadoActual = ' ';
+            }
+
+            let claseEstado = '';
+            if (item.estado_orden_compra === 'generada') {
+            claseEstado = 'estado-pendiente';
+            } else if (item.estado_orden_compra === 'recibida') {
+            claseEstado = 'estado-recibida';
+            } else if (item.estado_orden_compra === 'Cancelada') {
+            claseEstado = 'estado-cancelada';
+            }
+
+            // 🚨 Si tiene diferencias, sobrescribimos la clase
+            if (item.tiene_diferencias) {
+                claseEstado = 'estado-novedad';
+
+                estadoActual = 'Recibido Novedad';
+
+            }
+
+            if (item.tiene_diferencias) {
+                botonNovedad = `
+                        <button class="btn btn-outline-primary btn-sm btn-ver-diferencias"
+                                data-salida-id='${item.id}'>
+                        <i class="bi bi-search"></i> Ver diferencias
+                        </button>
+                `;
+            }
+
         
-            if(item.tipo_documento == 'TR'){
+            if(item.tipo_documento == 'TRS'){
 
                 content += `
-                <tr class="text-center">
+                <tr class="text-center ${claseEstado}">
                     <td>${item.id}</td>
                     <td style="text-transform: uppercase;">${item.cliente}</td>
                     <td style="text-transform: uppercase;">${estado}</td>
-                    <td style="text-transform: uppercase;">${item.usuario}</td>                    
+                    <td style="text-transform: uppercase;">${item.usuario}</td>
+                    <td style="text-transform: uppercase;">${estadoActual}</td>
                     <td>${formatearFecha(item.fecha)}</td>
                     <td>
                         <a href="${item.url_editar}">
@@ -152,11 +195,12 @@ const OrdenSalida = async () => {
                                 <i class='fa-solid fa-pencil'></i>
                             </button>
                         </a>
-                      
                         ${botonCancelar}
+                        ${botonNovedad}
+                        
                     </td>
                 </tr>
-            `;
+                `;
 
 
             }
@@ -179,4 +223,32 @@ window.addEventListener("load", async () => {
     console.log("Página cargada");
 });
 
-})();  
+})(); 
+
+
+document.addEventListener('click', async (e) => {
+  if (e.target.closest('.btn-ver-diferencias')) {
+    const salidaId = e.target.closest('.btn-ver-diferencias').dataset.salidaId;
+
+    const response = await fetch(`/diferencias_por_salida/${salidaId}/`);
+    const data = await response.json();
+
+    const tbody = document.querySelector('#tablaDiferencias tbody');
+    tbody.innerHTML = '';
+
+    data.diferencias.forEach(diff => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${diff.producto}</td>
+          <td>${diff.cantidad_enviada}</td>
+          <td>${diff.cantidad_recibida}</td>
+          <td>${diff.diferencia}</td>
+          <td>${diff.observacion}</td>
+        </tr>
+      `;
+    });
+
+    // Mostrar el modal con Bootstrap 4 (usando jQuery)
+    $('#modalDiferencias').modal('show');
+  }
+});

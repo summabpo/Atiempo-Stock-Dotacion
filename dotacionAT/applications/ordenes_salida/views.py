@@ -13,7 +13,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, IntegrityError
 from django.contrib.auth.decorators import login_required
 from applications.proveedores.models import Proveedor
-from applications.ordenes_compra.models import OrdenCompra, ItemOrdenCompra
+from applications.ordenes_compra.models import OrdenCompra, ItemOrdenCompra, DiferenciaTraslado
+from django.db.models import Q
 
 # Create your views here.
 
@@ -25,34 +26,81 @@ def ordenes_salida(request):
     })
     
    
+# @login_required(login_url='login_usuario')
+# def list_orden_salida(request):
+#     # base queryset
+#     salidas = Salida.objects.select_related(
+#         'bodegaEntrada', 'bodegaSalida', 'cliente', 'usuario_creador__sucursal'
+#     )
+
+#     # 🔒 Restricción por rol
+#     if request.user.rol == "almacen":
+#         salidas = salidas.filter(usuario_creador__sucursal=request.user.sucursal)
+
+#     data = []
+#     for salida in salidas:
+#         data.append({
+#             'id': salida.id,
+#             'cliente': salida.cliente.nombre if salida.cliente else "Sin cliente",
+#             'fecha': salida.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if salida.fecha_creacion else '',
+#             'tipo_documento': salida.tipo_documento,
+#             'bodegaSalida': salida.bodegaSalida.nombre if salida.bodegaSalida else "Sin bodega",
+#             'bodegaEntrada': salida.bodegaEntrada.nombre if salida.bodegaEntrada else "Sin bodega",
+#             'usuario': (
+#                 f"{salida.usuario_creador.get_full_name()} - {salida.usuario_creador.sucursal.nombre}"
+#                 if salida.usuario_creador and salida.usuario_creador.sucursal else
+#                 salida.usuario_creador.get_full_name() if salida.usuario_creador else "Sin usuario"
+#             ),
+#             'estado_orden_compra': (
+#                 salida.orden_compra_asociada.estado 
+#                 if salida.orden_compra_asociada else 
+#                 "Sin orden asociada"
+#             ),
+#             'id_orden': salida.orden_compra_asociada.id if salida.orden_compra_asociada else '',
+#             'url_editar': f'/detalle_salida/{salida.id}/',
+#         })
+
+#     return JsonResponse({'ordenes_salida': data}) 
+
 @login_required(login_url='login_usuario')
 def list_orden_salida(request):
-    # base queryset
     salidas = Salida.objects.select_related(
         'bodegaEntrada', 'bodegaSalida', 'cliente', 'usuario_creador__sucursal'
     )
 
-    # 🔒 Restricción por rol
     if request.user.rol == "almacen":
         salidas = salidas.filter(usuario_creador__sucursal=request.user.sucursal)
 
     data = []
     for salida in salidas:
+        # 🔍 Verificar si tiene diferencias pendientes
+        tiene_diferencias = salida.diferencias.filter(resuelto=False).exists()
+
         data.append({
             'id': salida.id,
             'cliente': salida.cliente.nombre if salida.cliente else "Sin cliente",
-            'fecha': salida.fecha_creacion,
+            'fecha': salida.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if salida.fecha_creacion else '',
             'tipo_documento': salida.tipo_documento,
             'bodegaSalida': salida.bodegaSalida.nombre if salida.bodegaSalida else "Sin bodega",
+            'bodegaEntrada': salida.bodegaEntrada.nombre if salida.bodegaEntrada else "Sin bodega",
             'usuario': (
                 f"{salida.usuario_creador.get_full_name()} - {salida.usuario_creador.sucursal.nombre}"
                 if salida.usuario_creador and salida.usuario_creador.sucursal else
                 salida.usuario_creador.get_full_name() if salida.usuario_creador else "Sin usuario"
             ),
+            'estado_orden_compra': (
+                salida.orden_compra_asociada.estado 
+                if salida.orden_compra_asociada else 
+                "Sin orden asociada"
+            ),
+            'id_orden': salida.orden_compra_asociada.id if salida.orden_compra_asociada else '',
             'url_editar': f'/detalle_salida/{salida.id}/',
+            
+            # 👇 Nuevo campo para la grid
+            'tiene_diferencias': tiene_diferencias,
         })
 
-    return JsonResponse({'ordenes_salida': data})  
+    return JsonResponse({'ordenes_salida': data}) 
 
 
 @transaction.atomic
@@ -94,8 +142,8 @@ def crear_salida(request):
                 bodegaEntrada = None
             
             if cliente.nombre.lower() == 'atiempo sas' or cliente.id_cliente == 1:
-                tipo_documento = 'TR'
-                estado = 'Traslado'
+                tipo_documento = 'TRS'
+                estado = 'Pendiente'
             else:
                 tipo_documento = 'SI'
                 estado = 'salida'    
@@ -143,8 +191,18 @@ def crear_salida(request):
             #observaciones=observaciones,
             # Aquí puedes agregar cualquier otro campo necesario, como tipo_documento, bodega, etc.
         )
+        
+        # 🔹 Crear los ítems asociados a la salida
+        for item in items:
+            ItemSalida.objects.create(
+                salida=salida,
+                producto_id=item['producto_id'],
+                cantidad=item['cantidad'],
+                precio_unitario=item['precio_unitario']
+            )
+        
 #Comentado
-        if tipo_documento == 'TR' and bodegaEntrada:  
+        if tipo_documento == 'TRS' and bodegaEntrada:  
             proveedor_nombre = f"Traslado interno - {bodegaEntrada.nombre}"
 
             proveedor, _ = Proveedor.objects.get_or_create(
@@ -161,8 +219,12 @@ def crear_salida(request):
                 observaciones=f"Traslado desde {bodegaSalida.nombre} hacia {bodegaEntrada.nombre}",
                 total=Decimal("0.00"),
                 usuario_creador=request.user,
-                tipo_documento="TR"
+                tipo_documento="TRS"
             )
+            
+            # 👇 Relacionamos la orden con la salida
+            salida.orden_compra_asociada = orden
+            salida.save()
 
             for item in items:
                 ItemOrdenCompra.objects.create(
@@ -187,3 +249,30 @@ def detalle_salida(request, id):
         'detalle_salida': detalle_salida,
         'items': items,
     })
+    
+    
+    
+    
+    
+    
+    
+    
+    
+def diferencias_por_salida(request, salida_id):
+    diferencias = DiferenciaTraslado.objects.filter(salida__id=salida_id).select_related('producto', 'compra')
+    
+    data = []
+    for d in diferencias:
+        data.append({
+            'id': d.id,
+            'producto': d.producto.nombre,
+            'cantidad_enviada': d.cantidad_enviada,
+            'cantidad_recibida': d.cantidad_recibida,
+            'diferencia': d.diferencia,
+            'observacion': d.observacion or '',
+            'resuelto': d.resuelto,
+            'fecha_registro': d.fecha_registro.strftime('%Y-%m-%d %H:%M'),
+            'compra': d.compra.id,
+        })
+    
+    return JsonResponse({'diferencias': data})

@@ -2,6 +2,7 @@ from django.db import models
 from applications.proveedores.models import Proveedor
 from applications.productos.models import Producto
 from applications.bodegas.models import Bodega
+#from applications.ordenes_salida.models import Salida
 from django.utils.html import format_html
 from decimal import Decimal
 from django.conf import settings
@@ -19,7 +20,7 @@ class OrdenCompra(models.Model):
 
     TIPO_CHOICES = [
         ('OC', 'Orden de Compra'),
-        ('TR', 'Traslado Interno'),
+        ('TRS', 'Traslado Interno'),
     ]
 
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE)
@@ -37,9 +38,8 @@ class OrdenCompra(models.Model):
     )
 
     tipo_documento = models.CharField(
-        max_length=2,
-        choices=TIPO_CHOICES,
-        default="OC"
+        max_length=3,
+        choices=TIPO_CHOICES
     )
 
     def __str__(self):
@@ -95,7 +95,7 @@ class Compra(models.Model):
     bodega = models.ForeignKey(Bodega, on_delete=models.SET_NULL, null=True, blank=True, related_name='compras')
     numero_factura = models.CharField(max_length=50, blank=True, verbose_name="Número de Factura")
     proveedor = models.ForeignKey(Proveedor, null=True, on_delete=models.CASCADE)
-       
+    tipo_documento = models.CharField(max_length=50, blank=True, verbose_name="Tipo Documento")   
     usuario_creador = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -108,11 +108,11 @@ class Compra(models.Model):
             return f"Compra de orden #{self.orden_compra.id}"
         return f"Compra sin orden asociada #{self.id}"
 
-    @property
-    def tipo_documento(self):
-        if self.orden_compra:
-            return "CP"  # Orden Regular
-        return "TR" 
+    # @property
+    # def tipo_documento(self):
+    #     if self.orden_compra:
+    #         return "CP"  # Orden Regular
+    #     return "TRR" 
 
 
 class ItemCompra(models.Model):
@@ -142,3 +142,25 @@ class ItemCompra(models.Model):
     @property
     def tipo_documento(self):
         return "OR"
+    
+    
+class DiferenciaTraslado(models.Model):
+    # 👇 Aquí está la clave del cambio
+    salida = models.ForeignKey(
+        'ordenes_salida.Salida',  # ✅ Usa string para evitar import circular
+        on_delete=models.CASCADE,
+        related_name='diferencias'
+    )
+    compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='diferencias')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    
+    cantidad_enviada = models.PositiveIntegerField()
+    cantidad_recibida = models.PositiveIntegerField(default=0)
+    diferencia = models.IntegerField()
+    observacion = models.TextField(blank=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    resuelto = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        self.diferencia = self.cantidad_enviada - self.cantidad_recibida
+        super().save(*args, **kwargs)

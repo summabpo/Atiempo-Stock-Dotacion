@@ -2,6 +2,8 @@ from django.db import models
 from applications.clientes.models import Cliente
 from applications.productos.models import Producto
 from applications.bodegas.models import Bodega
+from applications.ordenes_compra.models import OrdenCompra
+
 from django.utils.html import format_html
 from decimal import Decimal
 from django.conf import settings
@@ -31,11 +33,24 @@ class Salida(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True, related_name="salidas_creadas")
+    
+    # 👇 Nueva relación
+    orden_compra_asociada = models.ForeignKey(
+        OrdenCompra,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='salidas_relacionadas'
+    )
+
+    def __str__(self):
+        return f"Salida {self.id} - {self.tipo_documento}"
+    
 
      
 
 class ItemSalida(models.Model):
-    salida = models.ForeignKey(Salida, on_delete=models.CASCADE, related_name='items')
+    salida = models.ForeignKey(Salida, on_delete=models.CASCADE, related_name='items_salida')
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(null=True, blank=True)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

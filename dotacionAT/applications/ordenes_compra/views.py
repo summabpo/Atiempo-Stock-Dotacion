@@ -1,12 +1,14 @@
 from django.shortcuts import render
+from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import OrdenCompra, ItemOrdenCompra, Compra, ItemCompra
+from .models import OrdenCompra, ItemOrdenCompra, Compra, ItemCompra, DiferenciaTraslado
 from django.urls import reverse
 from django.http import JsonResponse
 from .forms import OrdenCompraForm
 from applications.productos.models import Producto
 from applications.proveedores.models import Proveedor
 from applications.bodegas.models import Bodega
+from applications.ordenes_salida.models import Salida 
 from django.forms import modelformset_factory
 from django.contrib import messages
 from decimal import Decimal
@@ -72,9 +74,13 @@ def list_orden_y_compra(request):
             fecha_str = localtime(fecha_dt).strftime('%Y-%m-%dT%H:%M:%S')
         else:
             fecha_str = ''
+            
+        salidas_ids = list(orden.salidas_relacionadas.values_list('id', flat=True))    
 
         data.append({
             'id': orden.id,
+            'orden_compra': '',
+            'salidas_ids':  salidas_ids,
             'proveedor': orden.proveedor.nombre if orden.proveedor else 'Sin proveedor',
             'fecha': fecha_str,
             'tipo_documento': orden.tipo_documento if hasattr(orden, 'tipo_documento') else '',
@@ -108,6 +114,8 @@ def list_orden_y_compra(request):
 
         data.append({
             'id': compra.id,
+            'orden_compra': f"{compra.orden_compra.id} - {compra.orden_compra.get_tipo_documento_display()}" if compra.orden_compra else '',
+            'salidas_ids':  '',
             'proveedor': proveedor_nombre,
             'fecha': fecha_str,
             'tipo_documento': getattr(compra, 'tipo_documento', ''),
@@ -320,6 +328,7 @@ def comprar_orden(request, id):
         numero_factura = request.POST.get('numFActura', '')
         bodega = request.POST.get('bodega_id')
         total = request.POST.get('total_orden')
+        tipo_documento = request.POST.get('tipo_documento')
         productos = request.POST.getlist('productos[]')
         cantidades = request.POST.getlist('cantidades[]')
         precios = request.POST.getlist('precios[]')
@@ -348,11 +357,19 @@ def comprar_orden(request, id):
         )
         print("Total calculado:", total_orden_decimal)
         
+        if tipo_documento == 'TRS':
+            tipo_documento_salida = 'TRR'  # o lo que necesites
+        else:
+            tipo_documento_salida = 'CP'
+            
+        
+        
         # Crear la compra
         compra = Compra.objects.create(
             orden_compra=orden,
             observaciones=observaciones,
             total=total_orden_decimal,
+            tipo_documento = tipo_documento_salida,
             fecha_compra=fecha_compra,
             proveedor=proveedor,
             bodega_id=bodega if bodega else None,
@@ -374,8 +391,41 @@ def comprar_orden(request, id):
             )
 
         # Cambiar estado de la orden
-        orden.estado = 'comprada' + ' ' + compra.numero_factura
+        
+        if tipo_documento == 'TRS':
+            orden.estado = "recibida"
+        else:
+            orden.estado = "comprada"
+        
+        
         orden.save()
+        
+        salidas_ids = list(orden.salidas_relacionadas.values_list('id', flat=True))
+        salidas = Salida.objects.filter(id__in=salidas_ids)
+        
+         # === Registrar diferencias si es traslado ===
+        for salida in salidas:
+            for item in salida.items_salida.all():  # ✅ corregido related_name
+                producto = item.producto
+                cantidad_enviada = item.cantidad
+
+                # Buscar la cantidad recibida del producto en los ítems de la compra
+                item_compra = compra.items.filter(producto=producto).first()
+                cantidad_recibida = item_compra.cantidad_recibida if item_compra else 0
+
+                # Solo registrar si hay diferencia
+                if cantidad_enviada != cantidad_recibida:
+                    DiferenciaTraslado.objects.create(
+                        salida=salida,
+                        compra=compra,
+                        producto=producto,
+                        cantidad_enviada=cantidad_enviada,
+                        cantidad_recibida=cantidad_recibida,
+                        observacion=(
+                            f"Diferencia detectada: enviada {cantidad_enviada}, "
+                            f"recibida {cantidad_recibida}"
+                        ),
+                    )
 
         messages.success(request, "Compra registrada correctamente.")
         return redirect('ordenes_compra')
@@ -400,7 +450,7 @@ def comprar_orden(request, id):
         'orden': orden,
         'compra': compra,
         'items': items,
-        'bodegas': bodegas,   # <-- se manda al template
+        'bodegas': bodegas,# <-- se manda al template
     })
 
 

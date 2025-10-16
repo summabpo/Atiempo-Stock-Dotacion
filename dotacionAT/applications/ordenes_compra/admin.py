@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import OrdenCompra, ItemOrdenCompra, Compra, ItemCompra
+from .models import OrdenCompra, ItemOrdenCompra, Compra, ItemCompra, DiferenciaTraslado
+
 class detalleOrdenInline(admin.TabularInline):
     model = ItemOrdenCompra
     extra = 1
@@ -59,5 +60,57 @@ class ItemCompraAdmin(admin.ModelAdmin):
     def producto_id_display(self, obj):
         return obj.producto.pk if obj.producto else 'N/A'  
     
-    
-    
+
+
+
+@admin.register(DiferenciaTraslado)
+class DiferenciaTrasladoAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'producto',
+        'salida',
+        'compra',
+        'cantidad_enviada',
+        'cantidad_recibida',
+        'diferencia',
+        'resuelto',
+        'fecha_registro',
+    )
+    list_filter = (
+        'resuelto',
+        'fecha_registro',
+        'salida__bodegaSalida',
+        'compra__bodega',
+    )
+    search_fields = (
+        'producto__nombre',
+        'salida__id',
+        'compra__id',
+        'observacion',
+    )
+    readonly_fields = ('diferencia', 'fecha_registro')
+    list_editable = ('resuelto', 'cantidad_recibida')
+    ordering = ('-fecha_registro',)
+    list_per_page = 25
+    date_hierarchy = 'fecha_registro'
+    fieldsets = (
+        ('Información del Traslado', {
+            'fields': ('salida', 'compra', 'producto')
+        }),
+        ('Cantidades', {
+            'fields': ('cantidad_enviada', 'cantidad_recibida', 'diferencia')
+        }),
+        ('Estado y Observaciones', {
+            'fields': ('resuelto', 'observacion', 'fecha_registro')
+        }),
+    )
+
+    def get_queryset(self, request):
+        """Optimiza el query para evitar consultas repetidas."""
+        qs = super().get_queryset(request)
+        return qs.select_related('salida', 'compra', 'producto')
+
+    def save_model(self, request, obj, form, change):
+        """Recalcula la diferencia antes de guardar desde el admin."""
+        obj.diferencia = obj.cantidad_enviada - obj.cantidad_recibida
+        super().save_model(request, obj, form, change)

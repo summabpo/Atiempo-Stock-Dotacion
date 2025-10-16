@@ -5,6 +5,12 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.db.models import F
+from django.utils import timezone
+from applications.ordenes_compra.models import Compra, ItemCompra
+from .models import InventarioBodega
+from applications.productos.models import Producto
+from applications.bodegas.models import Bodega
+
 # Create your views here.
 
 @login_required(login_url='login_usuario')
@@ -149,3 +155,76 @@ def index(request):
     return render(request, "index.html", {
         "productos_bajos": productos_bajos
     })
+    
+    
+    
+@login_required(login_url='login_usuario')
+def cargar_inventario(request):
+    user = request.user  # usuario logueado
+    
+    if user.rol in ["almacen", "empleado"]:
+        # Filtra órdenes de usuarios que pertenezcan a la misma sucursal
+        cargar_inventario = InventarioBodega.objects.filter(
+            usuario_creador__sucursal=user.sucursal
+        )
+    else:
+        # Admin (o cualquier otro rol) ve todas
+        cargar_inventario = InventarioBodega.objects.all()
+    
+    return render(request, 'cargar_inventario.html', {
+        'cargar_inventario': cargar_inventario
+    })
+    
+    
+@login_required(login_url='login_usuario')
+def registrar_inventario_inicial(request):
+    if request.method == "POST":
+        print("Entrando al método POST")
+        bodega_id = request.POST.get("bodega")
+        productos = request.POST.getlist("productos[]")
+        cantidades = request.POST.getlist("cantidades[]")
+        observaciones = request.POST.get("observaciones", "")
+
+        bodega = get_object_or_404(Bodega, id_bodega=bodega_id)
+
+        compra = Compra.objects.create(
+            bodega=bodega,
+            proveedor=None,
+            tipo_documento="INVENTARIO_INICIAL",
+            usuario_creador=request.user,
+            observaciones=observaciones,
+            estado="Inventario inicial"
+        )
+
+        for i, producto_id in enumerate(productos):
+            producto = get_object_or_404(Producto, id_producto=producto_id)
+            cantidad = int(cantidades[i])
+
+            ItemCompra.objects.create(
+                compra=compra,
+                producto=producto,
+                cantidad_recibida=cantidad,
+                precio_unitario=0
+            )
+            
+
+            # inventario, creado = InventarioBodega.objects.get_or_create(
+            #     bodega=bodega,
+            #     producto=producto
+            # )
+            # inventario.registrar_entrada(cantidad)
+            # inventario.usuario_ultima_entrada = request.user
+            # inventario.save()
+            
+         
+
+        return JsonResponse({"success": True, "message": "Inventario inicial registrado correctamente"})
+
+    else:
+        # if request.user.rol in ["admin", "contable"]:
+        bodegas = Bodega.objects.all()
+        # else:
+        #     bodegas = [request.user.sucursal]
+        return render(request, "cargar_inventario.html", {"bodegas": bodegas})
+        # return render(request, "inventario/cargar_inventario.html", context)
+    

@@ -48,3 +48,11 @@ INTERNAL_IPS = ['127.0.0.1']
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'applications/ciudades/static'),
 ]
+
+CSRF_COOKIE_SECURE = False
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000', 'http://localhost:8000']
+
+
+# Deberia poner producción (por ejemplo, en un dominio real o con HTTPS), ahí sí deberías poner:
+# CSRF_COOKIE_SECURE = True
+# CSRF_TRUSTED_ORIGINS = ['https://tusitio.com']

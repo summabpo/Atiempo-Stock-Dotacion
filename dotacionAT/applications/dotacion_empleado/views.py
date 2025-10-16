@@ -63,6 +63,37 @@ def get_or_none(modelo, **filtros):
         return None
 
     
+def descontar_stock_directo(productos_entregados, bodega):
+    for detalle in productos_entregados:
+        try:
+            inventario = InventarioBodega.objects.get(
+                bodega=bodega,
+                producto=detalle.producto
+            )
+            
+            cantidad = detalle.cantidad or 0
+            if cantidad <= 0:
+                continue
+
+            # 🧾 Actualizar inventario
+            inventario.salidas += cantidad
+            inventario.stock -= cantidad
+            inventario.ultima_salida = timezone.now()
+            inventario.usuario_ultima_salida = getattr(detalle.entrega, "usuario_creador", None)
+            inventario.save()
+
+            # 🔁 Actualizar stock total del producto (sumando todas las bodegas)
+            producto = detalle.producto
+            stock_total = InventarioBodega.objects.filter(producto=producto).aggregate(
+                total=Sum('stock')
+            )['total'] or 0
+            producto.stock = stock_total
+            producto.save(update_fields=['stock'])
+
+        except InventarioBodega.DoesNotExist:
+            print(f"❌ No existe inventario para {detalle.producto.nombre} en {bodega.nombre}")
+            continue
+        
     
 def historial_entregas2(request):
     entregas = EntregaDotacion.objects.select_related('empleado', 'grupo') \
@@ -728,7 +759,8 @@ def cargar_empleados_desde_excel(request):
                     
 
                     # 🔹 Continuar con la salida
-                    generar_salida_por_entrega(entrega, productos_entregados, request.user)
+                    # generar_salida_por_entrega(entrega, productos_entregados, request.user)
+                    descontar_stock_directo(productos_entregados, bodega_dotacion)
                     entregas += 1
 
                     if productos_sin_stock:

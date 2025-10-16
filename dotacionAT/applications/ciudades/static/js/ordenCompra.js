@@ -90,27 +90,37 @@ const OrdenCompras = async () => {
         if (tableBody) {
             let content = ``;
             data.ordenes_compras.forEach((item, index) => {
+                let estadoActual = '';
                 const activo = item.activo === true;
-            if(item.tipo_documento == 'OC'){
 
-                idTipoDoc =   item.id+' - '+item.tipo_documento;
-            }else if(item.tipo_documento == 'CP'){
 
-               idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+            // if(item.tipo_documento == 'OC'){
 
-            }else if(item.tipo_documento == 'TR'){
+            //     idTipoDoc =   item.id+' - '+item.tipo_documento;
+            // }else if(item.tipo_documento == 'CP'){
 
-               idTipoDoc = item.id+' - '+item.tipo_documento;
-            }  
+            //    idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
+
+            // }else if(item.tipo_documento == 'TRS'){
+
+            //    idTipoDoc = item.id+' - '+item.tipo_documento;
+
+            // }else if(item.tipo_documento == 'TRR'){
+
+            //    idTipoDoc = item.id+' - '+item.tipo_documento;
+            // }    
+
+            // console.log(idTipoDoc);
+            
                 
             if(item.tipo_documento == 'OC' && item.estado == 'comprada'){
                 
                 estadoId = item.estado+' # '+item.numero_factura;
                                                 
             }
-            else if(item.tipo_documento == 'TR'){
+            else if(item.tipo_documento == 'TRS'){
                 
-                 estadoId = 'Traslado Bodega';
+                 estadoId = `Orden # ${item.salidas_ids} Traslado Bodega`;
 
             }
             else{
@@ -121,7 +131,6 @@ const OrdenCompras = async () => {
 
             // if(item.tipo_documento == 'OR'){
             //     idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
-
             // }
         
             let botonCancelar = '';
@@ -132,16 +141,49 @@ const OrdenCompras = async () => {
                     </button>
                 `;
             }
+            
+
+            if(item.estado == 'generada'){
+                
+                estadoActual = 'Pendiente Confirmar';
+
+            }else if(item.estado == 'recibida' ){
+
+                 estadoActual = item.estado+' '+item.orden_compra;
+
+            }else if(item.tipo_documento == 'TRR' ){
+
+                 estadoActual = item.orden_compra;
+
+                 estadoId = 'Ingreso Traslado';
+
+            }
+            else{
+
+                 estadoActual = '';
+
+            }
+
+          
+            let claseEstado = '';
+            if (item.estado === 'generada') {
+            claseEstado = 'estado-pendiente';
+            } else if (item.estado === 'recibida') {
+            claseEstado = 'estado-recibida';
+            } else if (item.estado === 'Cancelada') {
+            claseEstado = 'estado-cancelada';
+            }
         
             // if(item.proveedor == ){
             // }
 
             content += `
-                <tr class="text-center">
-                    <td>${idTipoDoc}</td>
+                <tr class="text-center ${claseEstado}">
+                    <td>${item.id+' - '+item.tipo_documento}</td>
                     <td style="text-transform: uppercase;">${item.proveedor}</td>
                     <td style="text-transform: uppercase;">${estadoId}</td>
                     <td class="total">${item.total}</td> 
+                    <td style="text-transform: uppercase;">${estadoActual}</td> 
                     <td>${formatearFecha(item.fecha)}</td>
                     <td style="text-transform: uppercase;">${item.usuario}</td>
                     <td>

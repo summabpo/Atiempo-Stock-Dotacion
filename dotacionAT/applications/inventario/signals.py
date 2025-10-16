@@ -115,3 +115,5 @@ def actualizar_inventario_salida(sender, instance, created, **kwargs):
 
     producto.stock = stock_total
     producto.save(update_fields=['stock'])
+    
+    

@@ -3,7 +3,7 @@
 {% load humanize %}
 {% block content %}
 
-{% if orden.tipo_documento != "TR" %}
+{% if orden.tipo_documento != "TRS" %}
 
 <div class="content-wrapper">
 
@@ -20,6 +20,7 @@
                     <div class="col-md-3 mb-2">
                         <label>Fecha Orden Compra:</label>
                         <input class="form-control" type="text" value="{{ orden.fecha_creacion }}" readonly>
+                     
                     </div>
                     <div class="col-md-3 mb-2">
                         <label>Fecha Compra:</label>
@@ -45,6 +46,7 @@
                         <label>Estado:</label>
                         <input type="text" class="form-control" value="{{ orden.get_estado_display }}" readonly>
                     </div>
+                    
                     <div class="col-md-6">
                         <label>Numero Factura:</label>
 
@@ -175,9 +177,13 @@
                         <label>Ciudad Proveedor:</label>
                         <input type="text" class="form-control" value="{{ orden.proveedor.ciudad }}" readonly>
                     </div>
-                    <div class="col-md-6 mb-2">
+                      <div class="col-md-4 mb-2">
                         <label>Estado:</label>
                         <input type="text" class="form-control" value="{{ orden.get_estado_display }}" readonly>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label>Tipo Doc:</label>
+                        <input type="text" class="form-control" name="tipo_documento" value="{{ orden.tipo_documento}}" readonly>
                     </div>
                     <div class="col-md-6">
                         <label>Numero Factura:</label>
