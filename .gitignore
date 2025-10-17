@@ -1,6 +1,11 @@
 # Ignorar entorno virtual
 /entornoV/
 
+env/
+venv/
+entornoV/
+__pycache__/
+
 # Ignorar base de datos SQLite
 db.sqlite3
 
