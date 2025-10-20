@@ -48,8 +48,6 @@ const dataTableOptionsCategoria = {
 
 const initDataTable = async () => {
 
-
-
     if (dataTableIsInitialized) {
         dataTable.destroy();
     }
@@ -69,7 +67,6 @@ const categorias = async () => {
         const response = await fetch('/list_categorias/');
         const data = await response.json();
        
-        
         // Verificamos que el tbody exista antes de modificarlo
         const tableBody = document.getElementById('tableBody_categoria');
         if (tableBody) {

@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import Ciudad
-
 @admin.register(Ciudad)
 class CiudadAdmin(admin.ModelAdmin):
     list_display = ('id_ciudad', 'nombre', 'fecha_creacion', 'activo', 'id_usuario_insert', 'id_usuario_update')
@@ -15,4 +14,3 @@ class CiudadAdmin(admin.ModelAdmin):
             # Si ya existe, se guarda quien lo modificó
             obj.id_usuario_update = request.user
         super().save_model(request, obj, form, change)
-

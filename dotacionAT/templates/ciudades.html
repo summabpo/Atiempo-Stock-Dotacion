@@ -4,14 +4,12 @@
 
 {% load static %}
 
-
 {% load humanize %}
 
 <br>
 <br>
 <div class="card">
   <div class="card-body">
-
 
     <div class="d-flex justify-content-between align-items-center">
       <h2 class="text-center">Ciudades</h2>
@@ -36,7 +34,6 @@
     </div>
 </div>
 
-
 {% block extra_js %}
   <script src="{% static 'js/ciudades.js' %}"></script>
 
@@ -44,41 +41,3 @@
 
 
 {% endblock %}
-
-
-
-
-
-
-
-
-
-<!-- {% for ciudad in ciudades %}
-        <tr>
-
-          <th scope="col">{{ciudad.id_ciudad}}</th>
-
-          <th scope="col">
-            <a href="{% url 'ciudad_detalle' ciudad.id_ciudad %}">
-              <h1>{{ciudad.nombre | capfirst}}</h1>
-            </a></th> -->
-
-            <!-- <th scope="col">
-              {{ciudad.nombre | capfirst}}
-            </th>   -->
-  
-            <!-- {%if ciudad.activo == True %}
-            <th scope="col">✅ {{ciudad.activo}}</th>
-            {% else %}
-            <th scope="col"> {{ciudad.activo}}</th>
-            {% endif %} -->
-  
-            <!-- <th scope="col"><a href="{% url 'modificar_ciudad' ciudad.id_ciudad %}"> <button class="btn btn-warning">
-              Actualizar
-            </button></a></th> -->
- 
-            <!-- <button>
-              ✅ Done
-            </button> -->
-          <!-- </tr>
-          {% endfor %} -->

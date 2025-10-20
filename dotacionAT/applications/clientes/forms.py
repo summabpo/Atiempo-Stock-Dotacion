@@ -23,18 +23,11 @@ class ClienteForm(forms.ModelForm):
             raise forms.ValidationError("El número de teléfono solo debe contener dígitos.")
         return telefono
 
-    # def clean_email(self):
-    #     email = self.cleaned_data.get('email')
-    #     if email and not email.endswith('@gmail.com'):  # Un ejemplo de validación
-    #         raise forms.ValidationError("Solo se permite el dominio '@gmail.com'.")
-    #     return email
     def clean_correo(self):
         correo = self.cleaned_data.get('correo')
         if '@' not in correo:
             raise forms.ValidationError("El correo debe contener un '@'.")
         return correo
-    
-    
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

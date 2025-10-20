@@ -15,46 +15,34 @@ from functools import lru_cache
 class EmpleadoDotacion(models.Model):
     cedula = models.CharField(max_length=20)
     nombre = models.CharField(max_length=100)
-    #ciudad = models.ForeignKey(Ciudad, on_delete=models.PROTECT, default=1)
     ciudad = models.ForeignKey(Ciudad, on_delete=models.PROTECT, blank=True, null=True)
     fecha_ingreso = models.DateField(null=True, blank=True)
     cargo  = models.ForeignKey(Cargo, on_delete=models.PROTECT, blank=True, null=True)
-    #cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, blank=True, null=True)
     centro_costo = models.CharField(max_length=100)
     sexo = models.CharField(max_length=20)
-
     talla_camisa = models.CharField(max_length=20, blank=True, null=True)
     cantidad_camisa = models.PositiveIntegerField(default=0, blank=True, null=True)
-
     talla_pantalon = models.CharField(max_length=20, blank=True, null=True)
     cantidad_pantalon = models.PositiveIntegerField(default=0, blank=True, null=True)
-
     talla_zapatos = models.CharField(max_length=20, blank=True, null=True)
-    
     cantidad_zapatos = models.PositiveIntegerField(default=0, blank=True, null=True)
-
     cantidad_botas_caucho = models.PositiveIntegerField(default=0, blank=True, null=True)
-
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.nombre} ({self.cedula}) - {self.cargo or "Sin cargo"}'
     
-    
     class Meta:
         verbose_name = "Empleado con Dotación"
         verbose_name_plural = "Empleados con Dotación"
-        
     class Meta:
         ordering = ['-fecha_registro']
-        
         
 def validar_periodo(valor):
     """Valida que el periodo tenga el formato MM/YYYY"""
     if not re.match(r'^(0[1-9]|1[0-2])/\d{4}$', valor):
         raise ValidationError('El periodo debe tener el formato MM/YYYY')
-
 class EntregaDotacion(models.Model):
     TIPO_ENTREGA_CHOICES = [
         ('ingreso', 'Por ingreso'),
@@ -68,8 +56,6 @@ class EntregaDotacion(models.Model):
     periodo = models.CharField(max_length=10, null=True, blank=True)
     tipo_entrega = models.CharField(max_length=10, choices=TIPO_ENTREGA_CHOICES, null=True, blank=True)
     estado = models.CharField(max_length=10, blank=True, null=True)
-
-
 
     def __str__(self):
         return f"Entrega {self.id} - {self.empleado.nombre if self.empleado else 'Sin empleado'}"
@@ -86,7 +72,6 @@ class EntregaDotacion(models.Model):
     
     def _obtener_filtro_talla_por_categoria(self, categoria, empleado):
         nombre_categoria = categoria.nombre.upper()
-        # print(f"🔍 Analizando categoría: {nombre_categoria}")
         
         # Mapeo de categorías a campos de talla del empleado
         mapeo_tallas = {
@@ -101,9 +86,7 @@ class EntregaDotacion(models.Model):
             'BOTA': 'talla_zapatos',
             'BOTAS': 'talla_zapatos',
         }
-        
         #print(f"   Mapeo disponible: {list(mapeo_tallas.keys())}")
-        
         # Obtener el campo de talla del empleado según la categoría
         campo_empleado = None
         for key, campo in mapeo_tallas.items():
@@ -156,10 +139,7 @@ class EntregaDotacion(models.Model):
         """
         Retorna los productos ESPECÍFICOS para este empleado según su talla
         """
-        #print(f"\n🎯 ===== INICIANDO ANÁLISIS ENTREGA {self.id} =====")
-        #print(f"👤 Empleado: {self.empleado.nombre}")
-        #print(f"📏 Tallas: Camisa={self.empleado.talla_camisa}, Pantalon={self.empleado.talla_pantalon}, Zapatos={self.empleado.talla_zapatos}")
-        
+            
         if not self.grupo:
             #print("❌ NO tiene grupo asignado")
             return {}
@@ -185,7 +165,6 @@ class EntregaDotacion(models.Model):
         
         #print(f"📊 Total productos esperados: {len(productos_esperados)}")
         return productos_esperados
-    
     
     
     @lru_cache(maxsize=None)
@@ -280,8 +259,6 @@ class EntregaDotacion(models.Model):
         
         return faltantes
            
-    
-    
 class DetalleEntregaDotacion(models.Model):
     entrega = models.ForeignKey(EntregaDotacion, on_delete=models.CASCADE, related_name='detalles')
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
@@ -289,9 +266,6 @@ class DetalleEntregaDotacion(models.Model):
 
     def __str__(self):
         return f"{self.producto.nombre} x{self.cantidad}"
-    
-    
-    
 
 class HistorialIngresoEmpleado(models.Model):
     empleado = models.ForeignKey(
@@ -310,16 +284,12 @@ class HistorialIngresoEmpleado(models.Model):
         verbose_name_plural = "Historial de Ingresos"
         ordering = ['-fecha_ingreso']
 
-
-
-
 class FaltanteEntrega(models.Model):
     ESTADO_CHOICES = [
         ('pendiente', 'Pendiente'),
         ('entregado', 'Entregado'),
         ('cancelado', 'Cancelado'),
     ]
-
     entrega = models.ForeignKey(
         EntregaDotacion,
         on_delete=models.CASCADE,

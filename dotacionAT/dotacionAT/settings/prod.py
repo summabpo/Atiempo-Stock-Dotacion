@@ -1,24 +1,51 @@
 from .base import *
+import os
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['DanielYustres.pythonanywhere.com']  # usa tu dominio tal cual
+# (Datos que estaba manehando en PythonAnywhere)
+ALLOWED_HOSTS = ['DanielYustres.pythonanywhere.com']
 CSRF_TRUSTED_ORIGINS = ['https://danielyustres.pythonanywhere.com']
 
-# Usar la misma BD SQLite por ahora
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# 💾 Base de datos:
+# Si existen variables de entorno de PostgreSQL, las usa.
+# Si no, se mantiene en SQLite (útil para pruebas).
+if os.getenv('DB_ENGINE') == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'dotacion_at'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'root'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
-# Static
+# 📦 Archivos estáticos
 STATIC_URL = '/static/'
-
-# IMPORTANTE: Asegúrate que esta ruta existe y es la misma que usaste en collectstatic
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # si tienes carpeta "static" dentro del proyecto
-# Si tienes archivos estáticos dentro de apps (como ya tienes), puedes dejar tus STATICFILES_DIRS en base.py
-# Ajuste para producción: añade hashes a los archivos estáticos
+
+# Si usas una carpeta "static" en tu proyecto (además de las apps)
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+# Evita servir estáticos obsoletos (usa hashes)
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+
+# (Opcional) Archivos de usuario, si los manejas
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# 🔒 Seguridad adicional
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 3600
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True

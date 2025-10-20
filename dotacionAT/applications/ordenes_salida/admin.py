@@ -1,14 +1,12 @@
 from django.contrib import admin
 from .models import Salida, ItemSalida
 
-
 class ItemSalidaInline(admin.TabularInline):
     model = ItemSalida
     extra = 1
     readonly_fields = ['subtotal_formateado']
     fields = ['producto', 'cantidad', 'precio_unitario', 'subtotal_formateado']
     show_change_link = False
-
 
 @admin.register(Salida)
 class SalidaAdmin(admin.ModelAdmin):
@@ -26,7 +24,6 @@ class SalidaAdmin(admin.ModelAdmin):
             'fields': ('total', 'observaciones')
         }),
     )
-
 
 @admin.register(ItemSalida)
 class ItemSalidaAdmin(admin.ModelAdmin):

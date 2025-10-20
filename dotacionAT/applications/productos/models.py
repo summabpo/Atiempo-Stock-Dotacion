@@ -4,21 +4,7 @@ from django.conf import settings
 from ..data.choices import CATEGORIAS
 from ..data.choices import unidadMedida
 from django.shortcuts import get_object_or_404
-
-# class Categoria(models.Model):
-#     id_categoria = models.AutoField(primary_key=True)
-#     nombre = models.CharField(max_length=100, unique=True)  # Nombre único de la categoría
-#     activo = models.BooleanField(default=True, verbose_name="Activo/Inactivo")
-    
-
-#     def __str__(self):
-#         return self.nombre
-
-#     class Meta:
-#         verbose_name = "Categoría"
-#         verbose_name_plural = "Categorías"
-        
-        
+     
 class Categoria(models.Model):
     id_categoria = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100, unique=True)
@@ -32,7 +18,6 @@ class Categoria(models.Model):
         verbose_name="Usuario Creador"
     )
     
-      
     id_usuario_editor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -48,7 +33,6 @@ class Categoria(models.Model):
         verbose_name = "Categoría"
         verbose_name_plural = "Categorías"        
         
-
 class Producto(models.Model):
     id_producto = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255)

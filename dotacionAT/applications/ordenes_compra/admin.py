@@ -61,8 +61,6 @@ class ItemCompraAdmin(admin.ModelAdmin):
         return obj.producto.pk if obj.producto else 'N/A'  
     
 
-
-
 @admin.register(DiferenciaTraslado)
 class DiferenciaTrasladoAdmin(admin.ModelAdmin):
     list_display = (

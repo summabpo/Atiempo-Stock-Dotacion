@@ -23,11 +23,9 @@ body {
     text-decoration: none;
 }
 
-
 .navbar ul li a {
     color: white;
 }
-
 
 .navbar ul li a:hover{
   color: aquamarine;

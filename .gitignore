@@ -8,7 +8,7 @@ __pycache__/
 
 # Ignorar base de datos SQLite
 db.sqlite3
-
+requirements_complete.txt
 # Ignorar template antiguo
 dotacionAT/templates/layouts/base2.html
 dotacionAT/templates/historial_entregas2.html
@@ -39,7 +39,7 @@ pip-selfcheck.json
 .pytest_cache/
 
 # Ignorar archivos estáticos generados
-staticfiles/
+# staticfiles/
 
 # Archivos de configuración de IDE (ej. Visual Studio Code, PyCharm, etc.)
 .vscode/
@@ -72,6 +72,8 @@ Desktop.ini
 # Archivos de entorno
 .env
 .env.*
+.entornoV
+.entorno
 
 # Archivos de compilación de frontend (si llegas a tener JS, CSS, etc.)
 node_modules/

@@ -12,8 +12,7 @@ from django.utils.safestring import mark_safe
 
 
 @login_required(login_url='login_usuario')
-def hello(request, username):
-   
+def hello(request, username):   
     return HttpResponse("<h1>Hola Ciudades %s</h1>" %username)
 
 @login_required(login_url='login_usuario')
@@ -26,9 +25,7 @@ def index(request):
 
 @login_required(login_url='login_usuario')
 def list_ciudades(_request):
-    # ciudades =list(Ciudad.objects.values())
-    # data={'ciudades':ciudades}
-    # return JsonResponse(data)
+   
     ciudades = Ciudad.objects.all()
     data = {
         'ciudades': [
@@ -55,7 +52,6 @@ def ciudad(request, id):
     #ciudad = Ciudad.objects.get(id_ciudad=id)
     ciudad = get_object_or_404(Ciudad, id_ciudad=id)
     return HttpResponse('ciudad: %s' % ciudad.nombre)
-
 
 ABREVIATURAS_CIUDADES = {
     'apartado': 'Apartadó',
@@ -146,10 +142,8 @@ def crear_ciudad(request):
 
     return redirect('ciudades')
 
-    
 @login_required(login_url='login_usuario')    
 def ciudad_detalle(request, id):
-    ##ciudad = Ciudad.objects.get(id_ciudad=id)
     ciudad =  get_object_or_404(Ciudad, id_ciudad=id)
     print(ciudad)
     return render(request, 'ciudadDetalle.html',
@@ -157,23 +151,15 @@ def ciudad_detalle(request, id):
                       'ciudad':ciudad
                   })
 
-
-
 @login_required(login_url='login_usuario')
 def modificar_ciudad(request, id):
     
     ciudad =  get_object_or_404(Ciudad, id_ciudad=id)
-    # print(ciudad)
-    # return render(request, 'ciudadDetalle.html',
-    #               {
-    #                   'ciudad':ciudad
-    #               })
     
     data = {
         'form': CiudadActualizaForm(instance=ciudad)
     }
            
-    
     if request.method == 'POST':
         formulario = CiudadActualizaForm(data=request.POST, instance=ciudad)
         if formulario.is_valid():

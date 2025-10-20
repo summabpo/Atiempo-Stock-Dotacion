@@ -11,13 +11,3 @@ urlpatterns = [
     path('crear_ciudad', views.crear_ciudad, name='crear_ciudad'),
     path('modificar_ciudad/<int:id>/', views.modificar_ciudad, name='modificar_ciudad'),  # Aquí debe estar 'productos'
 ]
-
-
-# from django.conf import settings
-
-
-# if settings.DEBUG:
-#     import debug_toolbar
-#     urlpatterns += [
-#         path('__debug__/', include(debug_toolbar.urls)),
-#     ] 

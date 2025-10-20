@@ -1,20 +1,14 @@
 from io import BytesIO
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, LETTER
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import cm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from django.http import FileResponse
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+from django.http import FileResponse, HttpResponse
 from reportlab.pdfgen import canvas
-from django.http import FileResponse
 from .models import EntregaDotacion, DetalleEntregaDotacion, HistorialIngresoEmpleado, EmpleadoDotacion
-from django.http import HttpResponse
-from reportlab.lib.pagesizes import LETTER
-from reportlab.platypus import Image
 import os
 from django.conf import settings
-from reportlab.platypus import Image
 import pandas as pd
 from django.db import transaction
 from django.utils import timezone
@@ -23,16 +17,9 @@ from applications.grupos_dotacion.models import Cargo
 from applications.grupos_dotacion.models import Cargo
 from applications.clientes.models import Cliente
 from datetime import timedelta
-from datetime import timedelta
 from django.utils.timezone import now
 from collections import Counter
 
-# from .models import (
-#     EmpleadoDotacion,
-#     HistorialIngresoEmpleado
-    
-# )
-# from .utils import safe_str, safe_str_number, normalizar_talla
 
 def obtener_talla_para_categoria(categoria, empleado):
     nombre = categoria.nombre.lower().strip()
@@ -47,7 +34,6 @@ def obtener_talla_para_categoria(categoria, empleado):
     elif "zapato" in nombre or "botas" in nombre or "bota" in nombre:
         return empleado.talla_zapatos
     return None
-
 
 def safe_str_number(value):
     """Convierte un valor a string limpio, sin '.0' si es número."""
@@ -103,7 +89,6 @@ def safe_int(value):
         return int(value)
     except (ValueError, TypeError):
         return 0
-
 
 
 def generar_formato_entrega_pdf(request):
@@ -333,9 +318,6 @@ def generar_formato_entrega_pdf(request):
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename='entregas_dotacion.pdf')
 
-
-
-
 def generar_pdf_entregas(entregas):
     from reportlab.platypus import (
         SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
@@ -474,7 +456,6 @@ def generar_pdf_entregas(entregas):
     buffer.seek(0)
     return buffer
 
-
 def crear_historial_ingreso_inicial(empleado):
     """
     Crea el registro inicial de historial de ingreso
@@ -489,8 +470,7 @@ def crear_historial_ingreso_inicial(empleado):
         fecha_ingreso=empleado.fecha_ingreso,
         observaciones="Ingreso inicial"
     )
-       
-        
+         
 def limpiar_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Normaliza el DataFrame:
@@ -632,7 +612,6 @@ def obtener_o_crear_empleado(fila):
 
     return empleado
 
-
 def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):
     """
     Aplica las reglas de negocio para generar la entrega de dotación.
@@ -706,7 +685,6 @@ def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):
         )
 
     return None
-
 
 def reconstruir_productos_esperados(grupo_productos, tallas_empleado):
     """

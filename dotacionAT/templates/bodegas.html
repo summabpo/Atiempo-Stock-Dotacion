@@ -6,7 +6,6 @@
 
 {% load humanize %}
 
-
 <br>
 <br>
 <div class="card">
@@ -38,54 +37,9 @@
     </div>
 </div>
 
-
 {% block extra_js %}
   <script src="{% static 'js/bodegas.js' %}"></script>
 
 {% endblock %}
 
 {% endblock %}
-
-
-<!-- <tbody>
-  {% for bodega in bodegas %}
-  <tr>
-    <th scope="col">{{bodega.id_bodega}}</th> -->
-    <!-- <th scope="col">
-      <a href="{% url 'bodega_detalle' bodega.id_bodega %}">
-        <h3>{{bodega.nombre | capfirst }}</h3>
-      </a></th> -->
-      <!-- <th scope="col">
-        {{bodega.nombre | capfirst }}
-      </th>
-
-      <th scope="col">
-        {{bodega.id_ciudad | title}}
-      </th>
-
-      <th scope="col">
-        {{bodega.direccion | title }}
-      </th>
-  
-      {%if bodega.estado == True %}
-      <th scope="col">✅ {{bodega.estado}}</th>
-      {% else %}
-      <th scope="col"> {{bodega.estado}}</th>
-      {% endif %}
-
-      <th scope="col"><a href="{% url 'modificar_bodega' bodega.id_bodega %}"> 
-
-        <button class="btn btn-warning">
-          Actualizar
-        </button></a>
-      </th> -->
-
-      <!-- {%if ciudad.activo == True %}
-      <h1>✅ {{ciudad.activo}}</h1>
-      {% else %}
-      <h1>inactivo</h1>
-      {% endif %} -->
-
-    <!-- </tr>
-    {% endfor %}
-  </tbody> -->

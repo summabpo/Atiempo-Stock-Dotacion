@@ -8,8 +8,6 @@ from decimal import Decimal
 from django.conf import settings
 # Create your models here.
 
-
-
 class OrdenCompra(models.Model):
     ESTADO_CHOICES = [
         ('generada', 'generada'),
@@ -62,20 +60,6 @@ class ItemOrdenCompra(models.Model):
     def tipo_documento(self):
         return "OC"
     
-    
-# class Compra(models.Model):
-#     orden_compra = models.OneToOneField(OrdenCompra, on_delete=models.CASCADE, related_name='compra')
-#     fecha_recepcion = models.DateField(auto_now_add=True)
-#     observaciones = models.TextField(blank=True)
-     
-#     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-
-#     def __str__(self):
-#         return f"Compra de orden #{self.orden_compra.id}"
-    
-#     @property
-#     def tipo_documento(self):
-#         return "OR"
 
 class Compra(models.Model):
     # orden_compra = models.OneToOneField(OrdenCompra, on_delete=models.CASCADE, related_name='compra')
@@ -107,12 +91,6 @@ class Compra(models.Model):
         if self.orden_compra:
             return f"Compra de orden #{self.orden_compra.id}"
         return f"Compra sin orden asociada #{self.id}"
-
-    # @property
-    # def tipo_documento(self):
-    #     if self.orden_compra:
-    #         return "CP"  # Orden Regular
-    #     return "TRR" 
 
 
 class ItemCompra(models.Model):

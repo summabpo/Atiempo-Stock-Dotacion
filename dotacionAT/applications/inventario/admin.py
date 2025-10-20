@@ -2,7 +2,6 @@ from django.contrib import admin
 from .models import InventarioBodega
 # Register your models here.
 
-
 @admin.register(InventarioBodega)
 class InventarioBodegaAdmin(admin.ModelAdmin):
     list_display = ('bodega', 'producto', 'producto_id_display', 'entradas', 'salidas', 'stock', 'ultima_entrada', 'ultima_salida', 'usuario_ultima_salida', 'usuario_ultima_entrada')

@@ -5,7 +5,6 @@ from applications.productos.models import Producto, Categoria
 from django.conf import settings  # O tu modelo de usuario
 
 # Create your models here.
-
 class Cargo(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     activo = models.BooleanField(default=True, verbose_name="Activo/Inactivo")
@@ -39,15 +38,3 @@ class GrupoDotacionProducto(models.Model):
     def __str__(self):
         estado = "Activo" if self.activo else "Inactivo"
         return f"{self.categoria.nombre} - {estado} x{self.cantidad} en {self.grupo}"
-
-# class GrupoDotacionProducto(models.Model):
-#     grupo = models.ForeignKey(GrupoDotacion, on_delete=models.CASCADE, related_name='productos')
-#     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
-#     cantidad = models.PositiveIntegerField(default=1)
-#     activo = models.BooleanField(default=True)  # <- añade esto si lo necesitas
-
-#     def __str__(self):
-#         estado = "Activo" if self.activo else "Inactivo"
-#         return f"{self.producto.nombre} - {estado} x{self.cantidad} en {self.grupo}"
-    
-    

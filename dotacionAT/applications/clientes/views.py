@@ -10,7 +10,6 @@ from django.utils.html import escape
 
 # Create your views here.
 
-
 def normalizar_nombre(nombre):
     nombre = unicodedata.normalize('NFKD', nombre).encode('ASCII', 'ignore').decode('utf-8')
     nombre = nombre.lower().strip().replace(" ", "")
@@ -26,10 +25,7 @@ def cliente(request):
   
 @login_required(login_url='login_usuario')    
 def list_clientes(_request):
-    # def list_Cliente(request):
-    # proveedores =list(Proveedor.objects.values())
-    # data={'proveedores':proveedores}
-    # return JsonResponse(data)
+  
     cliente = Cliente.objects.all()
     data = {
         'cliente': [
@@ -46,7 +42,6 @@ def list_clientes(_request):
         ]
     }
     return JsonResponse(data)     
-
 
 @login_required(login_url='login_usuario')
 def crear_cliente(request):

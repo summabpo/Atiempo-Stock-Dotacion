@@ -7,16 +7,4 @@ urlpatterns = [
     path('crear_salida/', views.crear_salida, name='crear_salida'),
     path('detalle_salida/<int:id>/', views.detalle_salida, name='detalle_salida'),
     path('diferencias_por_salida/<int:salida_id>/', views.diferencias_por_salida, name='diferencias_por_salida'),
-
-
 ]
-
-
-# from django.conf import settings
-
-
-# if settings.DEBUG:
-#     import debug_toolbar
-#     urlpatterns += [
-#         path('__debug__/', include(debug_toolbar.urls)),
-#     ] 

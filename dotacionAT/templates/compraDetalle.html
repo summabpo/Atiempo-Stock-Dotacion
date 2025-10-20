@@ -124,9 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-    console.log("Hola Comprar compra");
-
-
+console.log("Hola Comprar compra");
 
 
 
@@ -167,14 +165,9 @@ $(document).ready(function () {
         // Actualizar el input hidden
         $row.find('input.cantidad').val(valorLimpio);
 
-       
-
         // Recalcular subtotal
         actualizarSubtotal(this); // Reutilizas tu función pasando el input como referencia
     });
-
-
-
 
 
 });
@@ -217,10 +210,6 @@ function actualizarSubtotal(input) {
     const precioVisible = row.querySelector('input.precio');
     const hiddenSubtotal = row.querySelector('input.subtotal-hidden');
     const precioHiddenInput = row.querySelector('input.precio-hidden').value;
-
-    // console.log(precioHiddenInput);
-
-    // console.log(hiddenSubtotal);
       
 
     // Convertimos el valor visible a número real
@@ -244,64 +233,10 @@ function actualizarSubtotal(input) {
     hiddenSubtotal.value = subtotal;
    
 
-    // hiddenSubtotal.childNodes[0].textContent = subtotal.toLocaleString('es-CO', {
-    //     // style: 'currency',
-    //     // currency: 'COP',
-    //     minimumFractionDigits: 2
-    // });
-
-   
-    // Guardar el subtotal sin formato en el hidden
-    //const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
-    // subtotalHiddenInput.value = subtotal;
-
-    //     const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
-    // if (subtotalHiddenInput) {
-    //     subtotalHiddenInput.value = subtotal;
-    // }
-
     actualizarTotalGeneral()
 
 
 }
-
-
-// function actualizarSubtotal(input) {
-//     const row = input.closest('tr');
-
-//     const cantidad = parseFloat(row.querySelector('input[name="cantidades[]"]').value) || 0;
-//     const precioHiddenInput = row.querySelector('input.precio-hidden');
-//     const precioVisible = row.querySelector('input.precio');
-//     const subtotalHiddenInput = row.querySelector('input.subtotal-hidden');
-
-//     const precioLimpio = parsePrecioColombiano(precioHiddenInput.value);
-
-//     // Calcular el subtotal
-//     const subtotal = cantidad * precioLimpio;
-
-//     // Actualizar la celda visible del subtotal
-//     const subtotalTd = row.querySelector('.subtotal');
-//     subtotalTd.textContent = subtotal.toLocaleString('es-CO', {
-//         style: 'currency',
-//         currency: 'COP',
-//         minimumFractionDigits: 2
-//     });
-
-//     // Actualizar el input hidden con el valor sin formato
-//     if (subtotalHiddenInput) {
-//         subtotalHiddenInput.value = subtotal;
-//     }
-
-//     actualizarTotalGeneral();
-// }
-
-
-// precioTextInput.addEventListener('change', function () {
-//     const nuevoValor = parsePrecioColombiano(this.value);
-//     row.querySelector('input.precio-hidden').value = nuevoValor;
-// });
-
-
 
 
 function quitarProducto(button) {
@@ -325,48 +260,6 @@ function quitarProducto(button) {
     console.log('Producto con ID', id, 'eliminado');
     
 }
-
- 
-
-
-
-    // Función para formatear el número con comas y decimales
-// function formatearNumero(input) {
-//     console.log("hola");
-    
-//     // Obtener el valor del input y formatearlo con decimales y comas
-//     let value = input.value.replace(/[^0-9.]/g, ''); // Quitar caracteres no numéricos
-//     let formattedValue = parseFloat(value).toFixed(2); // Formatear el valor a dos decimales
-
-//     // Establecer el valor formateado en el input
-//     input.value = formattedValue;
-
-//     // Llamar a la función para actualizar el subtotal después de formatear el precio
-//     actualizarSubtotal(input);
-// }
-
-
-    // function formatearNumero(input) {
-    //     let value = input.value;
-
-    //     // Eliminar todos los caracteres no numéricos, excepto el punto decimal
-    //     value = value.replace(/[^0-9.]/g, '');
-
-    //     // Si tiene más de un punto decimal, eliminar los demás
-    //     const parts = value.split('.');
-    //     if (parts.length > 2) {
-    //         value = parts[0] + '.' + parts.slice(1).join('');
-    //     }
-
-    //     // Formatear el número con dos decimales
-    //     let formattedValue = parseFloat(value).toFixed(2);
-
-    //     // Usar el formato con comas como separadores de miles
-    //     formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-    //     // Asignar el valor formateado de nuevo al input
-    //     input.value = formattedValue;
-    // }
 
 
     //   Calcular total al cargar

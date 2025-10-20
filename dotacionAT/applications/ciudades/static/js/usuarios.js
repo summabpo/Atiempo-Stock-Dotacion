@@ -47,7 +47,6 @@ const initDataTable = async () => {
         dataTable.destroy();
     }
     
-
     await usuarios();
 
     // Verificamos si la tabla existe antes de inicializar DataTable
@@ -57,7 +56,6 @@ const initDataTable = async () => {
         dataTableIsInitialized = true;
     }
 }
-
 
 const usuarios = async () => {
     console.log("hola");
@@ -75,11 +73,10 @@ const usuarios = async () => {
             data.usuario.forEach((usuario, index) => {
     
     const rolDisplay = usuario.rol_display || usuario.rol || 'N/A';
-    
+
     // ✅ CORREGIDO: Manejar tanto boolean como string
     const estadoEsActivo = usuario.estado === true || usuario.estado === 'activo';
     const estadoDisplay = estadoEsActivo ? 'Activo' : 'Inactivo';
-    
     const fechaCreacion = usuario.fecha_creacion || 'N/A';
     
     content += `

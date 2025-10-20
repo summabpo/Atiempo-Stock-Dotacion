@@ -1,5 +1,5 @@
 (function () {
-    console.log("Hola Bodega");
+    // console.log("Hola Bodega");
 
     let dataTable;
     let dataTableIsInitialized = false;

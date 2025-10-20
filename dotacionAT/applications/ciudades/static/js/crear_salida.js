@@ -115,8 +115,6 @@ if(nombre === 'ATIEMPO SAS'){
     if (visible) {
         bodegaSelect.setAttribute("required", "required");
     } 
-    
-
 }
 
 }
@@ -125,13 +123,9 @@ function quitarProveedor() {
     const tbody = document.querySelector("#proveedorSeleccionado tbody");
     tbody.innerHTML = '';
     document.getElementById('listaCliente').value = ''; // limpiar input oculto
-
-
-
     document.getElementById("bodegaDestinoContainer").style.display = "none";
 
 }
-
 
 const dataTableOptionsOrden = {
     columnDefs: [
@@ -168,7 +162,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-
 })
 
 
@@ -178,7 +171,6 @@ window.addEventListener("load", async () => {
     // await initDataTableProductos();
     console.log("Página cargada");
 });
-
 
 let productosAgregados = [];
 
@@ -208,22 +200,17 @@ function agregarProductoAOrden(id, nombre, stock) {
     `;
     tbody.appendChild(fila);
     
-    console.log(typeof $.fn.number);
+    // console.log(typeof $.fn.number);
     
     // $(fila).find(".valorUnitario").number(true, 2);
     // $(fila).find(".cantidad").number(true);
     // $(fila).find(".subtotal").number(true, 2);
-    
     // actualizarSubtotal(fila); 
     // actualizarTotalGeneral();
     // calcular subtotal inicial
     //formatNumber()
     cambiarCantidad()
 }
-
-//   <td class="subtotal text-right">0.00</td>
-//<td><input type="text" name="precios[]" class="form-control text-right valorUnitario"   
-// onchange="actualizarSubtotal(this)" value="${costo}"  required></td>
 
 function formatNumberInput(inputElement) {
     let value = parseFloat(inputElement.value);
@@ -270,9 +257,7 @@ function parsePrecioColombiano(valorRaw) {
 
 function actualizarSubtotal(input) {
     const fila = input.closest('tr');
-
     const cantidad = parseFloat(fila.querySelector('input[name="cantidades[]"]').value) || 0;
-
     const inputPrecio = fila.querySelector('input[name="precios[]"]');
     const raw = inputPrecio.value.trim();
     const precio = parsePrecioColombiano(raw) || 0;  // Solo convierte coma decimal
@@ -284,11 +269,6 @@ function actualizarSubtotal(input) {
         currency: 'COP',
         minimumFractionDigits: 2
     });
-
-//     console.log(cantidad);
-//     console.log("Raw:", raw);      // Lo que ve el usuario
-// console.log("Clean:", clean);  // Lo que se va a parsear
-// console.log("Precio:", precio);
 
     console.log(subtotal);
 
@@ -321,17 +301,13 @@ tipo_doc = 'SI';
         <td>${nombre}<input type="hidden" name="proveedor[]" value="${id}"></td>
         <td>${proveedor.id_ciudad}</td>
         <td>${proveedor.telefono}</td>
-      
         <td>
             <button type="button" class="btn btn-danger btn-sm" onclick="quitarProducto(${id}, this)">
                 <i class="fa fa-times"></i>
             </button>
-            
         </td>
     `;
-
     tbody.appendChild(fila);
-    
 }
 
 function actualizarTotalGeneral() {
@@ -347,9 +323,7 @@ function actualizarTotalGeneral() {
         currency: 'COP',
         minimumFractionDigits: 2
     });
-
     document.getElementById('totalOrden').textContent = totalFormateado;
-
     // Actualizar el campo oculto para enviar al backend
     document.getElementById('inputTotalOrden').value = total.toFixed(2); // Valor limpio, sin formato
 }
@@ -371,7 +345,6 @@ $(document).ready(function() {
         allowClear: true,
         width: '100%'
     });
-
 });
 
 let bodegas = [];
@@ -396,7 +369,6 @@ async function cargarBodegas() {
         console.error('❌ Error al cargar las bodegas:', error);
     }
 }
-
 // 📦 Cargar productos por bodega
 async function cargarProductos(bodegaId) {
     try {
@@ -458,7 +430,7 @@ function configurarEventoBodegaSalida() {
         const salidaId = this.value;
         const entradaSelect = document.getElementById('selectBodegaEntrada');
         const entradaContainer = document.getElementById('bodegaDestinoContainer');
-         const nombreProveedor = document.getElementById('nombre');
+        const nombreProveedor = document.getElementById('nombre');
 
         if (salidaId) {
             // Filtrar bodegas destino distintas
@@ -472,8 +444,6 @@ function configurarEventoBodegaSalida() {
                 entradaSelect.appendChild(option);
             });
 
-            // entradaContainer.style.display = 'block';
-
             // ✅ Cargar productos disponibles en la bodega seleccionada
             cargarProductos(salidaId);
 
@@ -483,7 +453,6 @@ function configurarEventoBodegaSalida() {
         }
     });
 }
-
 
 async function configurarEventoBodegaSalida() {
     $('#selectBodegaSalida').on('change', async function () {
@@ -495,7 +464,6 @@ async function configurarEventoBodegaSalida() {
             const response = await fetch('/list_bodegas/');
             const data = await response.json();
             const todasBodegas = data.bodegas || [];
-
             entradaSelect.innerHTML = '<option value="">Seleccione Bodega Entrada</option>';
 
             // Mostrar todas menos la seleccionada en salida

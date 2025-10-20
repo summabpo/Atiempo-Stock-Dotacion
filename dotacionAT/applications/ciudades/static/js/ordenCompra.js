@@ -6,7 +6,6 @@ function getCSRFToken() {
     return token ? token.content : '';
 }
 
-
 function formatearFecha(fechaISO) {
     const fecha = new Date(fechaISO);
     return fecha.toLocaleString('es-ES', {
@@ -91,27 +90,7 @@ const OrdenCompras = async () => {
             let content = ``;
             data.ordenes_compras.forEach((item, index) => {
                 let estadoActual = '';
-                const activo = item.activo === true;
-
-
-            // if(item.tipo_documento == 'OC'){
-
-            //     idTipoDoc =   item.id+' - '+item.tipo_documento;
-            // }else if(item.tipo_documento == 'CP'){
-
-            //    idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
-
-            // }else if(item.tipo_documento == 'TRS'){
-
-            //    idTipoDoc = item.id+' - '+item.tipo_documento;
-
-            // }else if(item.tipo_documento == 'TRR'){
-
-            //    idTipoDoc = item.id+' - '+item.tipo_documento;
-            // }    
-
-            // console.log(idTipoDoc);
-            
+                const activo = item.activo === true;            
                 
             if(item.tipo_documento == 'OC' && item.estado == 'comprada'){
                 
@@ -128,10 +107,6 @@ const OrdenCompras = async () => {
                 estadoId = item.estado;
 
             }
-
-            // if(item.tipo_documento == 'OR'){
-            //     idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
-            // }
         
             let botonCancelar = '';
             if (item.tipo_documento == 'OC' && item.estado == 'generada') {
@@ -142,29 +117,19 @@ const OrdenCompras = async () => {
                 `;
             }
             
-
             if(item.estado == 'generada'){
-                
                 estadoActual = 'Pendiente Confirmar';
-
             }else if(item.estado == 'recibida' ){
-
                  estadoActual = item.estado+' '+item.orden_compra;
-
             }else if(item.tipo_documento == 'TRR' ){
-
                  estadoActual = item.orden_compra;
-
                  estadoId = 'Ingreso Traslado';
 
             }
             else{
-
                  estadoActual = '';
-
             }
 
-          
             let claseEstado = '';
             if (item.estado === 'generada') {
             claseEstado = 'estado-pendiente';
@@ -173,9 +138,6 @@ const OrdenCompras = async () => {
             } else if (item.estado === 'Cancelada') {
             claseEstado = 'estado-cancelada';
             }
-        
-            // if(item.proveedor == ){
-            // }
 
             content += `
                 <tr class="text-center ${claseEstado}">
@@ -209,20 +171,10 @@ const OrdenCompras = async () => {
     $(".total").number(true, 2);
 };
 
-
 window.addEventListener("load", async () => {
     await initDataTable();
     console.log("Página cargada");
 });
-
-
-
-    // <td>
-        //     ${item.activo
-        //         ? "<i class='fa-solid fa-check' style='color: green;'></i>"
-        //         : "<i class='fa-solid fa-xmark' style='color: red;'></i>"
-        //     }
-        // </td>
 
         function confirmarCambioEstado(ordenId) {
             Swal.fire({
@@ -238,7 +190,6 @@ window.addEventListener("load", async () => {
 
                    console.log('Hola');
                    
-
                     // Puedes usar fetch o enviar un formulario
                     fetch(`${ordenId}`, {
                         method: 'POST',

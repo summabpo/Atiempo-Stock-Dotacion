@@ -3,7 +3,6 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.db.models import Sum
 from decimal import Decimal
-
 from .models import InventarioBodega
 from applications.ordenes_compra.models import ItemCompra, Compra, Proveedor
 from applications.ordenes_salida.models import ItemSalida
@@ -39,7 +38,6 @@ def actualizar_inventario_y_producto(sender, instance, created, **kwargs):
 
         producto.stock = stock_total
         producto.save(update_fields=['stock'])
-
 
 # 🔁 Salida y traslado entre bodegas
 @receiver(post_save, sender=ItemSalida)
@@ -115,5 +113,3 @@ def actualizar_inventario_salida(sender, instance, created, **kwargs):
 
     producto.stock = stock_total
     producto.save(update_fields=['stock'])
-    
-    

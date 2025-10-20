@@ -3,18 +3,12 @@ from applications.clientes.models import Cliente
 from applications.productos.models import Producto
 from applications.bodegas.models import Bodega
 from applications.ordenes_compra.models import OrdenCompra
-
 from django.utils.html import format_html
 from decimal import Decimal
 from django.conf import settings
 
 # Create your models here.
-
 class Salida(models.Model):
-    # TIPO_DOCUMENTO_CHOICES = [
-    #     ('TR', 'Traslado'),
-    #     ('SI', 'Salida'),
-    # ]
 
     tipo_documento = models.CharField(
         max_length=2,
@@ -46,9 +40,6 @@ class Salida(models.Model):
     def __str__(self):
         return f"Salida {self.id} - {self.tipo_documento}"
     
-
-     
-
 class ItemSalida(models.Model):
     salida = models.ForeignKey(Salida, on_delete=models.CASCADE, related_name='items_salida')
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)

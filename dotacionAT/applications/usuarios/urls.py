@@ -10,8 +10,3 @@ urlpatterns = [
     path('crear/', views.crear_usuario, name='crear_usuario'),
     path("editar/<int:user_id>/", views.editar_usuario, name="editar_usuario"),
 ]
-
-
-
-
-    

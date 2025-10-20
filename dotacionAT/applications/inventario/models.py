@@ -3,10 +3,7 @@ from django.utils import timezone
 from applications.productos.models import Producto
 from applications.bodegas.models import Bodega
 from django.conf import settings
-
 # Create your models here.
-
-
 class InventarioBodega(models.Model):
     bodega = models.ForeignKey(Bodega, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
@@ -68,4 +65,3 @@ class InventarioBodega(models.Model):
     @property
     def disponible(self):
         return self.stock
-

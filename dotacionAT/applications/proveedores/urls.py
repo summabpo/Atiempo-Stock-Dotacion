@@ -1,9 +1,7 @@
 from django.urls import path, include
 from . import views
 
-
 # from django.conf import settings
-
 urlpatterns = [
     path('proveedor/', views.proveedor, name='proveedores'),  # Cambiado a proveedor
     path('crear_proveedor/', views.crear_proveedor, name='crear_proveedor'),
@@ -11,9 +9,3 @@ urlpatterns = [
     path('modificar_proveedor/<int:id>/', views.modificar_proveedor, name='modificar_proveedor'),
     path('list_proveedores/', views.list_proveedores, name='list_proveedores'),
 ]
-
-# if settings.DEBUG:
-#     import debug_toolbar
-#     urlpatterns += [
-#         path('__debug__/', include(debug_toolbar.urls)),
-#     ] 

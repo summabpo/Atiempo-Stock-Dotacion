@@ -61,6 +61,7 @@ $(document).ready(function () {
     }
   });
 });
+
 function aplicarSelect2() {
     console.log("Aplicando Select2 solo a elementos específicos");
     
@@ -74,14 +75,9 @@ function aplicarSelect2() {
     });
 }
 
-
-    
-    aplicarSelect2();
+aplicarSelect2();
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Hola");
-
-   
-
 
     const formsetContainer = document.getElementById('formset-container');
     const prefix = formsetContainer.dataset.prefix;
@@ -136,27 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
         attachRemoveButtons(); // asegurar que el nuevo botón funcione
     });
 
-    // 🔴 Función para quitar form
-    // function attachRemoveButtons() {
-    //     formsetContainer.querySelectorAll(".remove-form").forEach(btn => {
-    //         btn.onclick = function() {
-    //             btn.closest(".formset-item").remove();
-    //             // Renumerar forms
-    //             const items = formsetContainer.querySelectorAll('.formset-item');
-    //             items.forEach((item, index) => {
-    //                 item.querySelectorAll('input, select, textarea').forEach(field => {
-    //                     if(field.name){
-    //                         field.name = field.name.replace(/\-\d+\-/, '-' + index + '-');
-    //                         field.id = 'id_' + field.name;
-    //                     }
-    //                 });
-    //             });
-    //             totalForms.value = items.length;
-    //             actualizarOpcionesDisponibles();
-    //         };
-    //     });
-    // }
-
     attachRemoveButtons();
 
     // 🔴 Validación duplicados antes de enviar
@@ -185,7 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ejecutar al cargar la página
     actualizarOpcionesDisponibles();
 });
-
 
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("formset-container");
@@ -229,8 +203,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
-
 function attachRemoveButtons() {
     formsetContainer.querySelectorAll(".remove-form").forEach(btn => {
         btn.onclick = function() {
@@ -271,13 +243,9 @@ function attachRemoveButtons() {
     });
 }
 
-
-
 let formsetContainer;  // declarar arriba del todo
 
 document.addEventListener("DOMContentLoaded", () => {
     formsetContainer = document.getElementById("formset-container");
     attachRemoveButtons(); // ahora sí existe
 });
-
-

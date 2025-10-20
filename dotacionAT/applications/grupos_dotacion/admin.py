@@ -1,17 +1,14 @@
 from django.contrib import admin
 from .models import GrupoDotacion, GrupoDotacionProducto, Cargo
 
-
 class GrupoDotacionProductoInline(admin.TabularInline):
     model = GrupoDotacionProducto
     extra = 1
-
 @admin.register(Cargo)
 class CargoAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'activo')
     search_fields = ('nombre', 'activo')
     ordering = ('nombre',)
-
 @admin.register(GrupoDotacion)
 class GrupoDotacionAdmin(admin.ModelAdmin):
     list_display = ('mostrar_cargos', 'mostrar_cliente', 'mostrar_ciudades', 'genero', 'creado_por', 'fecha_creacion')
@@ -32,9 +29,7 @@ class GrupoDotacionAdmin(admin.ModelAdmin):
     def mostrar_ciudades(self, obj):
         return ", ".join([c.nombre for c in obj.ciudades.all()])
     mostrar_ciudades.short_description = "Ciudades"
-    
-    
-    
+
 @admin.register(GrupoDotacionProducto)
 class GrupoDotacionProductoAdmin(admin.ModelAdmin):
     list_display = ('grupo', 'categoria', 'cantidad')

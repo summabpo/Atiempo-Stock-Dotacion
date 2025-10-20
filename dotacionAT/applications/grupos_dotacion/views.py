@@ -6,19 +6,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # Create your views here.
 
-# @login_required
-# def listar_grupos_dotacion(request):
-#     grupos = GrupoDotacion.objects.all().select_related('cargo', 'cliente', 'ciudad')
-#     return render(request, 'lista_grupos.html', {'grupos': grupos})
-
 @login_required
 def listar_grupos_dotacion(request):
     grupos = GrupoDotacion.objects.all() \
         .select_related('cliente', 'creado_por') \
         .prefetch_related('cargos', 'ciudades', 'categorias__categoria')
     return render(request, 'lista_grupos.html', {'grupos': grupos})
-
-
 
 @login_required
 def crear_grupo_dotacion(request):
@@ -74,7 +67,6 @@ def editar_grupo_dotacion(request, pk):
         'formset': formset,
         'grupo': grupo
     })
-    
     
 @login_required 
 def eliminar_grupo_dotacion(request, grupo_id):

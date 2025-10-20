@@ -30,7 +30,6 @@
     </div>
 </div>
 
-
 {% block extra_js %}
 
 <script src="{% static 'js/categorias.js' %}"></script>
@@ -38,22 +37,3 @@
 {% endblock %}
 
 {% endblock %}
-
-
-<!-- <tbody>
-    {% for categoria in categorias %}
-    <tr> 
-        <th scope="col">{{categoria.id_categoria}}</th>
-        <th scope="col">{{categoria.nombre | title }}</th>
-        {%if categoria.activo == True %}
-        <th scope="col">✅ {{categoria.activo | title }}</th>
-        {% else %}
-        <th scope="col"> {{categoria.activo | title }}</th>
-        {% endif %}
-
-        <th scope="col"><a href="{% url 'modificar_categoria' categoria.id_categoria %}"> <button class="btn btn-warning">
-            Actualizar
-        </button></a></th>
-    </tr>
-    {% endfor %}
-</tbody> -->

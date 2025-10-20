@@ -236,20 +236,6 @@ const cargarProveedores = async () => {
     }
 };
 
-// function seleccionarProveedor(id, nombre) {
-//     // Setear valores ocultos
-//     document.getElementById('listaProveedor').value = id;
-
-//     // Insertar nombre visualmente en el div
-//     const divProveedor = document.querySelector('.nuevoProveedor');
-//     divProveedor.innerHTML = `
-//         <label class="col-sm-4 col-form-label">Proveedor seleccionado:</label>
-//         <div class="col-sm-8">
-//             <input type="text" class="form-control" value="${nombre}" readonly>
-//         </div>
-//     `;
-// }
-
 function seleccionarProveedor(id, nombre, ciudad, telefono) {
     // Prevenir múltiples selecciones
     const tbody = document.querySelector("#proveedorSeleccionado tbody");
@@ -417,20 +403,6 @@ function quitarProducto(id, btn) {
     actualizarTotalGeneral();
 }
 
-// function actualizarSubtotal(elemento) {
-//     const fila = elemento.closest("tr");
-//     const cantidad = parseFloat(fila.querySelector('input[name="cantidades[]"]').value) || 0;
-//      console.log("Tipo:", typeof cantidad);
-//     const precio = parseFloat(fila.querySelector('input[name="precios[]"]').value) || 0;
-//     console.log("Tipo:", typeof precio);
-//     const subtotal = (cantidad * precio);
-//     fila.querySelector(".subtotal").innerText = subtotal;
-
-//     console.log(cantidad);
-//     console.log(precio);
-//     console.log(subtotal);
-    
-// }
 
 function parsePrecioColombiano(valorRaw) {
     const soloNumeros = valorRaw.replace(/[^0-9.,]/g, '');  // limpia símbolos
@@ -472,11 +444,6 @@ function actualizarSubtotal(input) {
         currency: 'COP',
         minimumFractionDigits: 2
     });
-
-//console.log(cantidad);
-//console.log("Raw:", raw);      // Lo que ve el usuario
-// console.log("Clean:", clean);  // Lo que se va a parsear
-// console.log("Precio:", precio);
 
 
     console.log(subtotal);
@@ -534,25 +501,6 @@ function actualizarTotalGeneral() {
     document.getElementById('inputTotalOrden').value = total.toFixed(2); // Valor limpio, sin formato
 }
 
-// function validarCantidad(input) {
-//     input.value = input.value.replace(/[^0-9]/g, ''); // solo números enteros positivos
-//     if (input.value === '' || parseInt(input.value) < 1) {
-//         input.value = 1;
-//     }
-// }
-
-// function validarPrecio(input) {
-//     // Elimina caracteres no permitidos excepto el punto
-//     input.value = input.value.replace(/[^0-9.]/g, '');
-
-//     // Limita a 2 decimales
-//     let valor = parseFloat(input.value);
-//     if (isNaN(valor) || valor < 0) {
-//         input.value = '00000000.00';
-//     } else {
-//         input.value = valor.toFixed(2);
-//     }
-// }
 
 document.querySelector('form').addEventListener('submit', function() {
     document.querySelectorAll('input[name="precios[]"]').forEach(input => {

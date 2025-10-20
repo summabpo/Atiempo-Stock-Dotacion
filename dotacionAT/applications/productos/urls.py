@@ -11,14 +11,4 @@ urlpatterns = [
     path('modificar_categoria/<int:id>/', views.modificar_categoria, name='modificar_categoria'),  # Aquí debe estar 'productos'
     path('list_categorias/', views.list_categorias, name='list_categorias'),  # Aquí debe estar 'productos'
     path('list_productos/', views.list_productos, name='list_productos'),  # Aquí debe estar 'productos'
-
 ]
-
-# from django.conf import settings
-
-
-# if settings.DEBUG:
-#     import debug_toolbar
-#     urlpatterns += [
-#         path('__debug__/', include(debug_toolbar.urls)),
-#     ] 

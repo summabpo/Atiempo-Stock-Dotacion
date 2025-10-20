@@ -1,14 +1,6 @@
 from django import forms
 from .models import Ciudad
 from .utils import normalizar_ciudad  # o desde donde hayas puesto la función
-
-# class CiudadNueva(forms.ModelForm):
-    
-#     class Meta:
-#         nombre = forms.CharField(label="Ciudad", required=True, max_length=200, widget=forms.TextInput(attrs={'class': 'input'}))
-#         model = Ciudad
-#         fields = ['nombre']
-
 class CiudadNueva(forms.ModelForm):
     class Meta:
         model = Ciudad
@@ -22,8 +14,7 @@ class CiudadNueva(forms.ModelForm):
         if Ciudad.objects.filter(nombre__iexact=nombre_normalizado).exists():
             raise forms.ValidationError(f"La ciudad '{nombre_normalizado}' ya está registrada.")
         
-        return nombre_normalizado
-        
+        return nombre_normalizado 
         
 class CiudadActualizaForm(forms.ModelForm):
     class Meta:
@@ -35,5 +26,4 @@ class CiudadActualizaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Personalización para actualizar
         self.fields['nombre'].widget.attrs.update({'class': 'form-control'})
-        self.fields['activo'].widget.attrs.update({'class': 'form-control'})        
-        
+        self.fields['activo'].widget.attrs.update({'class': 'form-control'})          

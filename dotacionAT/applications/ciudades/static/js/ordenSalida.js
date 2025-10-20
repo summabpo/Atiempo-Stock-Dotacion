@@ -21,7 +21,6 @@ function getCSRFToken() {
 let dataTable;
 let dataTableIsInitialized = false;
 
-
 const dataTableOptions = {
     columnDefs: [
         { className: "text-center", targets: [0, 1, 2, 3] },
@@ -97,31 +96,6 @@ const OrdenSalida = async () => {
                 const activo = item.activo === true;
                 let botonNovedad = '';
                 let estadoActual = '';
-           
-            // if(item.tipo_documento == 'OC'){
-
-            //     idTipoDoc =   item.id+' - '+item.tipo_documento;
-            // }else if(item.tipo_documento == 'OR'){
-
-            //    idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
-            // } 
-                
-           
-
-            // if(item.tipo_documento == 'OC' && item.estado == 'comprada'){
-                
-            //     estadoId = item.estado+' # '+item.numero_factura;
-                                                
-            // }else{
-                
-            //     estadoId = item.estado;
-
-            // }
-
-            // if(item.tipo_documento == 'OR'){
-            //     idTipoDoc = item.numero_factura+' - '+item.tipo_documento;
-
-            // }
             
             let botonCancelar = '';
              let estado = '';
@@ -140,15 +114,10 @@ const OrdenSalida = async () => {
             }
 
             if(item.estado_orden_compra == 'generada'){
-                
                 estadoActual = 'Pendiente Recibido';
-
             }else if(item.estado_orden_compra == 'recibida'){
-
                 estadoActual = 'Recibido OK';
-
             }else{
-
                 estadoActual = ' ';
             }
 
@@ -164,9 +133,7 @@ const OrdenSalida = async () => {
             // 🚨 Si tiene diferencias, sobrescribimos la clase
             if (item.tiene_diferencias) {
                 claseEstado = 'estado-novedad';
-
                 estadoActual = 'Recibido Novedad';
-
             }
 
             if (item.tiene_diferencias) {
@@ -177,7 +144,6 @@ const OrdenSalida = async () => {
                         </button>
                 `;
             }
-
         
             if(item.tipo_documento == 'TRS'){
 
@@ -201,10 +167,7 @@ const OrdenSalida = async () => {
                     </td>
                 </tr>
                 `;
-
-
             }
-            
             });
 
             tableBody.innerHTML = content;
@@ -225,14 +188,11 @@ window.addEventListener("load", async () => {
 
 })(); 
 
-
 document.addEventListener('click', async (e) => {
   if (e.target.closest('.btn-ver-diferencias')) {
     const salidaId = e.target.closest('.btn-ver-diferencias').dataset.salidaId;
-
     const response = await fetch(`/diferencias_por_salida/${salidaId}/`);
     const data = await response.json();
-
     const tbody = document.querySelector('#tablaDiferencias tbody');
     tbody.innerHTML = '';
 

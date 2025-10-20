@@ -8,7 +8,6 @@ from django.contrib.auth.decorators import login_required
 import unicodedata
 from django.utils.html import escape
 
-
 def normalizar_nombre_proveedor(nombre):
     nombre = unicodedata.normalize('NFKD', nombre).encode('ASCII', 'ignore').decode('utf-8')
     nombre = nombre.lower().strip().replace(" ", "")
@@ -23,17 +22,13 @@ def proveedor(request):
         'proveedores': proveedor
     })
 
-
 @login_required(login_url='login_usuario')
 def list_proveedores(request):
     proveedores =list(Proveedor.objects.values())
     data={'proveedores':proveedores}
     return JsonResponse(data)
 def list_proveedores(_request):
-    # def list_proveedores(request):
-    # proveedores =list(Proveedor.objects.values())
-    # data={'proveedores':proveedores}
-    # return JsonResponse(data)
+
     proveedores = Proveedor.objects.all()
     data = {
         'proveedores': [
@@ -78,10 +73,9 @@ def crear_proveedor(request):
     return render(request, 'crear_proveedor.html', {'form': form})
 
 
-
 @login_required(login_url='login_usuario')
 def proveedor_detalle(request, id):
-    ##ciudad = Ciudad.objects.get(id_ciudad=id)
+    
     proveedor =  get_object_or_404(Proveedor, id_proveedor=id)
     print(proveedor)
     return render(request, 'proveedorDetalle.html',

@@ -8,14 +8,10 @@ from django.urls import reverse
 from .forms import UsuarioForm  # Asegúrate de importar el formulario
 # Create your views here.
 
-# Redirección por rol
-
-
 # Vista para redireccionar por rol
 @login_required
 def dashboard_redirect(request):
     return redirect(redirect_por_rol(request.user))
-
 
 # Retorna el nombre de la URL según el rol del usuario
 def redirect_por_rol(user):
@@ -76,10 +72,7 @@ def usuario(request):
     
 @login_required(login_url='login_usuario')    
 def list_usuarios(_request):
-    # def list_Cliente(request):
-    # proveedores =list(Proveedor.objects.values())
-    # data={'proveedores':proveedores}
-    # return JsonResponse(data)
+
     usuario = Usuario.objects.all()
     data = {
         'usuario': [
@@ -96,7 +89,6 @@ def list_usuarios(_request):
         ]
     }
     return JsonResponse(data) 
-
 
 
 @login_required(login_url='login_usuario')

@@ -9,7 +9,6 @@ from django.contrib.auth.decorators import login_required
 from django.utils.html import escape
 import unicodedata
 
-
 # Importar las categorías desde el archivo choices_categoria.py
 from ..data.choices import CATEGORIAS
 
@@ -29,7 +28,6 @@ def normalizar_nombre_categoria(nombre):
     if nombre.endswith('s') and not nombre.endswith('es'):
         nombre = nombre[:-1]
     return nombre
-
 
 @login_required(login_url='login_usuario')
 def list_productos(_request):
@@ -60,7 +58,6 @@ def productos(request):
         'productos': producto
     })
     
-
 @login_required(login_url='login_usuario')
 def crear_productos(request):
     if request.method == 'POST':
@@ -86,8 +83,6 @@ def crear_productos(request):
         form = ProductoForm()
 
     return render(request, 'crear_productos.html', {'form': form})
-
-
 
 @login_required(login_url='login_usuario')
 def productos_detalle(request, id):
@@ -128,9 +123,6 @@ def categorias(request):
 
 @login_required(login_url='login_usuario')
 def list_categorias(_request):
-    # categorias =list(Categoria.objects.values())
-    # data={'categorias':categorias}
-    # return JsonResponse(data)
     categorias = Categoria.objects.all()
     data = {
         'categorias': [
@@ -144,9 +136,6 @@ def list_categorias(_request):
     }
     return JsonResponse(data)
     
-    
-
-
 @login_required(login_url='login_usuario')
 def crear_categoria(request):
     if request.method == 'GET':
@@ -174,7 +163,7 @@ def crear_categoria(request):
         messages.success(request, "¡Categoría creada correctamente!")
         return redirect('categorias')
 
-    
+
 @login_required(login_url='login_usuario')
 def modificar_categoria(request, id):
     categoria = get_object_or_404(Categoria, id_categoria=id)

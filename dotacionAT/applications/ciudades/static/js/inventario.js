@@ -2,11 +2,6 @@
 
 console.log("Hola Orden Inventario");
 
-// function getCSRFToken() {
-//     const token = document.querySelector('meta[name="csrf-token"]');
-//     return token ? token.content : '';
-// }
-
 function formatearFecha(fechaISO) {
     const fecha = new Date(fechaISO);
     return fecha.toLocaleString('es-ES', {
@@ -17,7 +12,6 @@ function formatearFecha(fechaISO) {
         minute: '2-digit'
     });
 }
-
 
 let dataTable;
 let dataTableIsInitialized = false;
@@ -113,8 +107,6 @@ const Inventario = async () => {
     } else {
         colorClass = 'bg-success text-white fw-bold rounded px-2 py-1'; // verde
     }
-
-        
             content += `
                 <tr class="text-center">
                     <td>${item.bodega}</td>
@@ -137,7 +129,6 @@ const Inventario = async () => {
 
     $(".total").number(true, 2);
 };
-
 
 window.addEventListener("load", async () => {
     await initDataTable();

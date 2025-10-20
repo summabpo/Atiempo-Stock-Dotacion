@@ -8,13 +8,3 @@ urlpatterns = [
     path('registrar_inventario_inicial/', views.registrar_inventario_inicial, name='registrar_inventario_inicial'),
     path('', views.index, name='index'),  # ← ahora / mostrará el index  
 ]
-
-
-# from django.conf import settings
-
-
-# if settings.DEBUG:
-#     import debug_toolbar
-#     urlpatterns += [
-#         path('__debug__/', include(debug_toolbar.urls)),
-#     ] 

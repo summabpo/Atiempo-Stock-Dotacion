@@ -8,7 +8,6 @@ from applications.ciudades.models import Ciudad
 # -------------------------------
 # Formulario para GrupoDotacion
 # -------------------------------
-
 class GrupoDotacionForm(forms.ModelForm):
     class Meta:
         model = GrupoDotacion
@@ -28,7 +27,6 @@ class GrupoDotacionForm(forms.ModelForm):
 # Formulario para GrupoDotacionProducto
 # (ahora usando Categoría)
 # -------------------------------
-
 class GrupoDotacionProductoForm(forms.ModelForm):
     class Meta:
         model = GrupoDotacionProducto
@@ -42,7 +40,6 @@ class GrupoDotacionProductoForm(forms.ModelForm):
 # -------------------------------
 # Validación para evitar categorías repetidas
 # -------------------------------
-
 class BaseGrupoDotacionProductoFormSet(BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -67,7 +64,6 @@ GrupoDotacionProductoFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,  # <--- Esto es lo que faltaba
 )
-
 
 GrupoDotacionProductoFormSetEdit = inlineformset_factory(
     GrupoDotacion,

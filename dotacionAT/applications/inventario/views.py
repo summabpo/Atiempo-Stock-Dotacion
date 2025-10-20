@@ -1,4 +1,4 @@
-from django.shortcuts import render
+
 from .models import InventarioBodega
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
@@ -20,28 +20,6 @@ def inventario_bodega_list(request):
         'inventario': inventario
 
     })
-
-
-# def inventario_bodega_json(_request):
-#     inventarios = InventarioBodega.objects.all()
-    
-#     data = {
-#         'inventarios': [
-#             {
-#                 'id': inventario.id,
-#                 'bodega': inventario.bodega.nombre,
-#                 'bodega_id': inventario.bodega.id_bodega,
-#                 'producto': inventario.producto.nombre,  # <-- corregido
-#                 'entradas': inventario.entradas,
-#                 'salidas': inventario.salidas,
-#                 'stock': inventario.stock,
-#                 'ultima_entrada': inventario.ultima_entrada,
-#                 'ultima_salida': inventario.ultima_salida
-#             } for inventario in inventarios
-#         ]
-#     }
-
-#     return JsonResponse(data)
 
 
 @login_required(login_url='login_usuario')
@@ -80,49 +58,7 @@ def inventario_bodega_json(request):
     }
     return JsonResponse(data)
 
-
 #comento este codigo era el que estaba antes del que dejo arriba este esta sin filtros por rol
-
-# @login_required(login_url='login_usuario')
-# def inventario_bodega_json(request):
-#     bodega_id = request.GET.get('bodega')
-#     inventarios = InventarioBodega.objects.all()
-
-#     if bodega_id:
-#         inventarios = inventarios.filter(bodega_id=bodega_id)
-
-#     data = {
-#         'inventarios': [
-#             {
-#                 'id': inventario.id,
-#                 'bodega': inventario.bodega.nombre,
-#                 'bodega_id': inventario.bodega.id_bodega,
-#                 'producto': inventario.producto.nombre,  # <-- corregido
-#                 'id_producto': inventario.producto.id_producto,  # <-- corregido
-#                 'entradas': inventario.entradas,
-#                 'salidas': inventario.salidas,
-#                 'stock': inventario.stock,
-#                 'ultima_entrada': inventario.ultima_entrada,
-#                 'ultima_salida': inventario.ultima_salida
-#             } for inventario in inventarios
-#         ]
-#     }
-
-#     return JsonResponse(data)
-
-# def index(request):
-#     productos_bajos = (
-#         InventarioBodega.objects
-#         .select_related("producto", "bodega")
-#         .order_by("stock")[:15]
-#     )
-    
-#     print("DEBUG → productos bajos:", productos_bajos)  # 👈 revisa la consola
-
-#     return render(request, "index.html", {
-#         "productos_bajos": productos_bajos,
-#     })
-
 
 @login_required
 def index(request):
@@ -155,8 +91,7 @@ def index(request):
     return render(request, "index.html", {
         "productos_bajos": productos_bajos
     })
-    
-    
+
     
 @login_required(login_url='login_usuario')
 def cargar_inventario(request):
@@ -174,7 +109,6 @@ def cargar_inventario(request):
     return render(request, 'cargar_inventario.html', {
         'cargar_inventario': cargar_inventario
     })
-    
     
 @login_required(login_url='login_usuario')
 def registrar_inventario_inicial(request):
@@ -207,7 +141,6 @@ def registrar_inventario_inicial(request):
                 precio_unitario=0
             )
             
-
             # inventario, creado = InventarioBodega.objects.get_or_create(
             #     bodega=bodega,
             #     producto=producto
@@ -216,8 +149,6 @@ def registrar_inventario_inicial(request):
             # inventario.usuario_ultima_entrada = request.user
             # inventario.save()
             
-         
-
         return JsonResponse({"success": True, "message": "Inventario inicial registrado correctamente"})
 
     else:
@@ -227,4 +158,3 @@ def registrar_inventario_inicial(request):
         #     bodegas = [request.user.sucursal]
         return render(request, "cargar_inventario.html", {"bodegas": bodegas})
         # return render(request, "inventario/cargar_inventario.html", context)
-    

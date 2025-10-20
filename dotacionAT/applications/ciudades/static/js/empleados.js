@@ -85,7 +85,6 @@ const empleadoDotacion = async () => {
             let content = ``;
             data.empleado.forEach((item, index) => {
 
-              
                 content += `
                     <tr class="text-center">
                         <td style=" text-align: center !important;">${item.cedula}</td>
@@ -97,9 +96,6 @@ const empleadoDotacion = async () => {
                         <td>${item.Genero}</td>
                         <td>${item.fecha_ingreso}</td>
                         <td>${formatearFecha(item.fecha_registro)}</td>
-
-                                    
-                        
                     </tr>
                 `;
             });

@@ -28,8 +28,6 @@ class HistorialIngresoEmpleadoAdmin(admin.ModelAdmin):
     list_filter = ('fecha_ingreso', 'empleado__cliente', 'empleado__ciudad')
     ordering = ['-fecha_ingreso']
 
-
-
 # Inline para mostrar los detalles (productos entregados) dentro del admin de EntregaDotacion
 class DetalleEntregaDotacionInline(admin.TabularInline):
     model = DetalleEntregaDotacion
@@ -96,9 +94,6 @@ class DetalleEntregaDotacionAdmin(admin.ModelAdmin):
     list_display = ('entrega', 'producto', 'cantidad')
     search_fields = ('producto__nombre', 'entrega__empleado__nombre')
     list_filter = ('producto',)
-    
-    
-    
 
 @admin.register(FaltanteEntrega)
 class FaltanteEntregaAdmin(admin.ModelAdmin):

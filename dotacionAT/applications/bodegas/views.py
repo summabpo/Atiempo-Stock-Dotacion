@@ -10,10 +10,8 @@ from django.contrib.auth.decorators import login_required
 def hello(request):
     return HttpResponse("Hola, bienvenido a Bodegas!")
 
-
 @login_required(login_url='login_usuario')
 def bodegas(request):
-    #Bodegaes = list(Bodega.objects.values())
     bodega = Bodega.objects.all()
     return render(request, 'bodegas.html', {
         'bodegas': bodega
@@ -45,12 +43,10 @@ def list_bodegas_filtradas(request):
     }
     return JsonResponse(data)
 
-# se comenta para dejar el codigo aca
+
 @login_required(login_url='login_usuario')    
 def list_bodegas(_request):
-    # bodegas =list(Bodega.objects.values())
-    # data={'bodegas':bodegas}
-    # return JsonResponse(data)
+   
     bodegas = Bodega.objects.select_related('id_ciudad')  # ¡importante para eficiencia!
     data = {
         'bodegas': [
@@ -66,7 +62,6 @@ def list_bodegas(_request):
         ]
     }
     return JsonResponse(data)    
-
 
 @login_required(login_url='login_usuario')
 def crear_bodega(request):
@@ -96,7 +91,6 @@ def crear_bodega(request):
 
 @login_required(login_url='login_usuario')
 def bodegas(request):
-    #ciudades = list(Ciudad.objects.values())
     bodegas = Bodega.objects.all()
     return render(request, 'bodegas.html', {
         'bodegas': bodegas
@@ -104,7 +98,6 @@ def bodegas(request):
     
 @login_required(login_url='login_usuario')    
 def bodega_detalle(request, id):
-    ##ciudad = Ciudad.objects.get(id_ciudad=id)
     bodega =  get_object_or_404(Bodega, id_bodega=id)
     print(bodega)
     return render(request, 'bodegaDetalle.html',

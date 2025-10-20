@@ -25,42 +25,7 @@ def ordenes_salida(request):
         'ordenes_salida': ordenes_salida
     })
     
-   
-# @login_required(login_url='login_usuario')
-# def list_orden_salida(request):
-#     # base queryset
-#     salidas = Salida.objects.select_related(
-#         'bodegaEntrada', 'bodegaSalida', 'cliente', 'usuario_creador__sucursal'
-#     )
 
-#     # 🔒 Restricción por rol
-#     if request.user.rol == "almacen":
-#         salidas = salidas.filter(usuario_creador__sucursal=request.user.sucursal)
-
-#     data = []
-#     for salida in salidas:
-#         data.append({
-#             'id': salida.id,
-#             'cliente': salida.cliente.nombre if salida.cliente else "Sin cliente",
-#             'fecha': salida.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') if salida.fecha_creacion else '',
-#             'tipo_documento': salida.tipo_documento,
-#             'bodegaSalida': salida.bodegaSalida.nombre if salida.bodegaSalida else "Sin bodega",
-#             'bodegaEntrada': salida.bodegaEntrada.nombre if salida.bodegaEntrada else "Sin bodega",
-#             'usuario': (
-#                 f"{salida.usuario_creador.get_full_name()} - {salida.usuario_creador.sucursal.nombre}"
-#                 if salida.usuario_creador and salida.usuario_creador.sucursal else
-#                 salida.usuario_creador.get_full_name() if salida.usuario_creador else "Sin usuario"
-#             ),
-#             'estado_orden_compra': (
-#                 salida.orden_compra_asociada.estado 
-#                 if salida.orden_compra_asociada else 
-#                 "Sin orden asociada"
-#             ),
-#             'id_orden': salida.orden_compra_asociada.id if salida.orden_compra_asociada else '',
-#             'url_editar': f'/detalle_salida/{salida.id}/',
-#         })
-
-#     return JsonResponse({'ordenes_salida': data}) 
 
 @login_required(login_url='login_usuario')
 def list_orden_salida(request):
@@ -250,14 +215,7 @@ def detalle_salida(request, id):
         'items': items,
     })
     
-    
-    
-    
-    
-    
-    
-    
-    
+
 def diferencias_por_salida(request, salida_id):
     diferencias = DiferenciaTraslado.objects.filter(salida__id=salida_id).select_related('producto', 'compra')
     

@@ -108,14 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#deleteForm').attr('action', "{% url 'eliminar_grupo_dotacion' 0 %}".replace('0', grupoId));
     });
 
-    // Mostrar mensajes de Django
-    // {% if messages %}
-    //     {% for message in messages %}
-    //         setTimeout(function() {
-    //             alert('{{ message|safe }}');
-    //         }, 100);
-    //     {% endfor %}
-    // {% endif %}
+
 });
 </script>
 {% endblock %}
