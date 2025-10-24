@@ -17,6 +17,7 @@ djangorestframework==3.15.2
 
 # --- Base de datos (PostgreSQL) ---
 psycopg2==2.9.10
+python-dotenv==1.1.1
 
 # --- Archivos Excel / Procesamiento de datos ---
 pandas==2.3.3

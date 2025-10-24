@@ -9,6 +9,15 @@ from django.core.exceptions import ValidationError
 import re
 from django.utils import timezone
 from functools import lru_cache
+from django.utils import timezone
+from datetime import timedelta
+from applications.bodegas.models import Bodega
+
+
+def redondear_a_minuto():
+    fecha = timezone.localtime()
+    return fecha.replace(second=0, microsecond=0)
+
 
 # Create your models here.
 
@@ -50,12 +59,22 @@ class EntregaDotacion(models.Model):
     ]
     
     empleado = models.ForeignKey(EmpleadoDotacion, on_delete=models.CASCADE, related_name='entregas')
-    grupo = models.ForeignKey(GrupoDotacion, on_delete=models.SET_NULL, null=True, blank=True)
-    fecha_entrega = models.DateTimeField(auto_now_add=True)
+    grupo_dotacion = models.ForeignKey(GrupoDotacion, on_delete=models.SET_NULL, null=True, blank=True)
+    fecha_entrega = models.DateTimeField(default=redondear_a_minuto)
     observaciones = models.TextField(blank=True, null=True)
     periodo = models.CharField(max_length=10, null=True, blank=True)
     tipo_entrega = models.CharField(max_length=10, choices=TIPO_ENTREGA_CHOICES, null=True, blank=True)
     estado = models.CharField(max_length=10, blank=True, null=True)
+    
+    # 🏢 NUEVO CAMPO: bodega desde donde salió la entrega
+    bodega = models.ForeignKey(
+        Bodega,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='entregas_realizadas',
+        verbose_name="Bodega de salida"
+    )
 
     def __str__(self):
         return f"Entrega {self.id} - {self.empleado.nombre if self.empleado else 'Sin empleado'}"
@@ -66,12 +85,16 @@ class EntregaDotacion(models.Model):
     def normalizar_talla(self, talla):
         if not talla: return None
         talla_normalizada = talla.upper()
-        for prefijo in ['TALLA', 'N°', 'NO', 'NUMERO', 'SIZE']:
+        for prefijo in ['TALLA', 'N°', 'NO', 'NUMERO', 'SIZE', '.', '-', ':']:
             talla_normalizada = talla_normalizada.replace(prefijo, '')
         return talla_normalizada.strip().replace(' ', '')
     
+          
+    
+    
     def _obtener_filtro_talla_por_categoria(self, categoria, empleado):
         nombre_categoria = categoria.nombre.upper()
+        # print(f"🔍 Analizando categoría: {nombre_categoria}")
         
         # Mapeo de categorías a campos de talla del empleado
         mapeo_tallas = {
@@ -86,7 +109,9 @@ class EntregaDotacion(models.Model):
             'BOTA': 'talla_zapatos',
             'BOTAS': 'talla_zapatos',
         }
+        
         #print(f"   Mapeo disponible: {list(mapeo_tallas.keys())}")
+        
         # Obtener el campo de talla del empleado según la categoría
         campo_empleado = None
         for key, campo in mapeo_tallas.items():
@@ -134,20 +159,23 @@ class EntregaDotacion(models.Model):
         #print(f"   🎯 Productos coincidentes encontrados: {len(productos_coincidentes)}")
         return productos_coincidentes
     
-    @lru_cache(maxsize=None)
+    # @lru_cache(maxsize=None)
     def obtener_productos_esperados(self):
         """
         Retorna los productos ESPECÍFICOS para este empleado según su talla
         """
-            
-        if not self.grupo:
+        #print(f"\n🎯 ===== INICIANDO ANÁLISIS ENTREGA {self.id} =====")
+        #print(f"👤 Empleado: {self.empleado.nombre}")
+        #print(f"📏 Tallas: Camisa={self.empleado.talla_camisa}, Pantalon={self.empleado.talla_pantalon}, Zapatos={self.empleado.talla_zapatos}")
+        
+        if not self.grupo_dotacion:
             #print("❌ NO tiene grupo asignado")
             return {}
         
         #print(f"📋 Grupo: {self.grupo}")
         
         productos_esperados = {}
-        for categoria_grupo in self.grupo.categorias.all():
+        for categoria_grupo in self.grupo_dotacion.categorias.all():
             #print(f"\n   📁 Categoría del grupo: {categoria_grupo.categoria.nombre}")
             #print(f"   🔢 Cantidad esperada: {categoria_grupo.cantidad}")
             
@@ -167,7 +195,8 @@ class EntregaDotacion(models.Model):
         return productos_esperados
     
     
-    @lru_cache(maxsize=None)
+    
+    # @lru_cache(maxsize=None)
     def obtener_productos_entregados(self):
         """
         Retorna diccionario con los productos y cantidades entregadas,
@@ -211,11 +240,11 @@ class EntregaDotacion(models.Model):
 
         return productos_entregados
     
-    @lru_cache(maxsize=None)
+    # @lru_cache(maxsize=None)
     def es_entrega_completa(self):
         #print(f"\n🔍🔍🔍 ANALIZANDO ENTREGA {self.id} - {self.empleado.nombre}")
         
-        if not self.grupo:
+        if not self.grupo_dotacion:
             #print("❌ Sin grupo - return False")
             return False
             
@@ -236,12 +265,13 @@ class EntregaDotacion(models.Model):
         
         #print("✅ ENTREGA COMPLETA")
         return True
-    @lru_cache(maxsize=None)
+    
+    # @lru_cache(maxsize=None)
     def productos_faltantes(self):
         """
         Retorna lista de productos que faltaron en la entrega con sus cantidades
         """
-        if not self.grupo:
+        if not self.grupo_dotacion:
             return []
             
         esperados = self.obtener_productos_esperados()

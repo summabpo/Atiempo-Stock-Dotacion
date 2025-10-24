@@ -24,12 +24,12 @@ from openpyxl import load_workbook
 from io import BytesIO
 from django.utils.timezone import now
 from crum import set_current_user, get_current_user
-from django.db.models import Q, F, Func, Value, CharField, Value
+from django.db.models import Q, F, Func, Value, CharField, Count, Case, When, BooleanField, Subquery, OuterRef
 from datetime import datetime
 from django.db.models import Count, Sum
 from applications.dotacion_empleado.utils import generar_pdf_entregas
 from urllib.parse import unquote
-from django.db.models.functions import Replace, Upper, Concat
+from django.db.models.functions import Replace, Upper, Concat, TruncMinute
 from django.template.loader import render_to_string
 import pdfkit  # o WeasyPrint, xhtml2pdf, etc.
 from reportlab.lib import colors
@@ -41,7 +41,10 @@ import os
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
-
+from collections import defaultdict
+from applications.ciudades.utils import normalizar_ciudad
+ 
+ 
 
 def get_or_none(modelo, **filtros):
     try:
@@ -82,7 +85,7 @@ def descontar_stock_directo(productos_entregados, bodega):
         
     
 def historial_entregas2(request):
-    entregas = EntregaDotacion.objects.select_related('empleado', 'grupo') \
+    entregas = EntregaDotacion.objects.select_related('empleado', 'grupo_dotacion') \
         .order_by('-fecha_entrega')
     return render(request, 'historial_entregas2.html', {'entregas': entregas})
 
@@ -142,7 +145,7 @@ def historial_entregas(request):
 
     entregas = (
         EntregaDotacion.objects
-        .select_related('empleado__cliente',  'empleado__ciudad', 'grupo')
+        .select_related('empleado__cliente',  'empleado__ciudad', 'grupo_dotacion')
         .prefetch_related('detalles__producto')
         .order_by('-fecha_entrega')
     )
@@ -341,7 +344,7 @@ def cargar_empleados_desde_excel(request):
                 columnas_requeridas = [
                     'NUMERO_DE_DOCUMENTO', 'NOMBRE_COMPLETO', 'CENTRO_TRABAJO',
                     'INGRESO', 'CARGO', 'CLIENTE', 'C._COSTO',
-                    'SEXO', 'TALLA_CAMISA', 'TALLA_PANTALON', 'TALLA_ZAPATOS'
+                    'SEXO', 'TALLA_CAMISA', 'TALLA_PANTALON', 'TALLA_ZAPATOS', 'RETIRO'
                 ]
                 faltantes = [col for col in columnas_requeridas if col not in df.columns]
                 if faltantes:
@@ -349,12 +352,47 @@ def cargar_empleados_desde_excel(request):
                     return render(request, 'cargar_empleados.html', {'form': form})
 
                 contador, entregas = 0, 0
+                
+                df["RETIRO"] = df["RETIRO"].astype(str).str.strip().str.upper()
 
-                try:
-                    bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
-                except Bodega.DoesNotExist:
-                    messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+                # 🔹 Registrar empleados inactivos o retirados
+                empleados_inactivos = df[df["RETIRO"] != "VIGENTE"]
+                for _, fila in empleados_inactivos.iterrows():
+                    cedula = safe_str(fila['NUMERO_DE_DOCUMENTO']).strip()
+                    nombre = fila['NOMBRE_COMPLETO']
+                    empleados_sin_entrega.append(f"{nombre} ({cedula}) - Empleado inactivo o retirado")
+
+                # 🔹 Filtrar solo empleados vigentes
+                total_inicial = len(df)
+                df = df[df["RETIRO"] == "VIGENTE"]
+                descartados = total_inicial - len(df)
+
+                if descartados > 0:
+                    messages.info(request, f"ℹ️ Se omitieron {descartados} empleados no vigentes (RETIRO ≠ 'VIGENTE').")
+
+                if df.empty:
+                    messages.warning(request, "⚠️ No hay empleados con estado 'VIGENTE' para procesar.")
                     return render(request, 'cargar_empleados.html', {'form': form})
+
+                # try:
+                #     bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
+                # except Bodega.DoesNotExist:
+                #     messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+                #     return render(request, 'cargar_empleados.html', {'form': form})
+                # 🔹 Determinar la bodega según el tipo de entrega
+                if tipo_entrega.lower() == "ley":
+                    try:
+                        bodega_dotacion = Bodega.objects.get(nombre__iexact="Principal")
+                    except Bodega.DoesNotExist:
+                        messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+                        return render(request, 'cargar_empleados.html', {'form': form})
+                else:
+                    # Para entregas de tipo "ingreso", usar la sucursal asociada al usuario
+                    if request.user.sucursal:
+                        bodega_dotacion = request.user.sucursal
+                    else:
+                        messages.error(request, "⚠️ No tienes una bodega asignada en tu perfil de usuario. Asigna una sucursal para continuar.")
+                        return render(request, 'cargar_empleados.html', {'form': form})
 
                 # 🔹 4. Procesamos cada fila
                 for _, fila in df.iterrows():
@@ -375,12 +413,29 @@ def cargar_empleados_desde_excel(request):
                     cache.set('progreso_carga', progreso, timeout=600)
 
                     cargo_obj = empleado.cargo
-                    grupos = GrupoDotacion.objects.filter(
-                        cargos=cargo_obj,
-                        ciudades__nombre__iexact=empleado.ciudad.nombre if empleado.ciudad else None,
-                        cliente=empleado.cliente,
-                        genero__iexact=empleado.sexo
-                    ).distinct()
+                    # Normalizar el nombre de la ciudad antes del filtro
+                    # Normalizar el nombre de la ciudad antes del filtro
+                    if empleado.ciudad:
+                        nombre_ciudad = normalizar_ciudad(empleado.ciudad.nombre)
+                    else:
+                        nombre_ciudad = None
+
+                    if nombre_ciudad:
+                        variantes_ciudad = {
+                            nombre_ciudad,
+                            nombre_ciudad.lower(),
+                            nombre_ciudad.upper(),
+                            nombre_ciudad.replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+                        }
+
+                        grupos = GrupoDotacion.objects.filter(
+                            cargos=cargo_obj,
+                            cliente=empleado.cliente,
+                            genero__iexact=empleado.sexo,
+                            ciudades__nombre__in=variantes_ciudad
+                        ).distinct()
+                    else:
+                        grupos = GrupoDotacion.objects.none()
 
                     if not grupos.exists():
                         empleados_sin_entrega.append(f"{empleado.nombre} ({cedula}) - Sin grupo de dotación")
@@ -390,7 +445,7 @@ def cargar_empleados_desde_excel(request):
                     grupo = grupos.first()
                     productos = GrupoDotacionProducto.objects.filter(grupo=grupo)
 
-                    entrega = crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo)
+                    entrega = crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo, bodega_dotacion)
                     if not entrega:
                         motivo = f"No cumple reglas para entrega {tipo_entrega.lower()}"
                         no_cumple_ley.append(f"{empleado.nombre} ({cedula}) - {motivo}")
@@ -504,23 +559,22 @@ def cargar_empleados_desde_excel(request):
                     resumen = f"✅ Se procesaron {contador} filas y se generaron {entregas} entregas."
                     messages.success(request, resumen)
 
-                    # Construir lista de detalles
-                    empleados_detalle = []
+                    # Agrupar empleados sin entrega por motivo
+                    motivos_dict = defaultdict(list)
                     for e in empleados_sin_entrega:
-                        # separa el motivo si existe
                         nombre_cedula, sep, motivo = e.rpartition(" - ")
-                        # extraer nombre y cédula
+                        if not motivo:
+                            motivo = "Motivo no especificado"
                         nombre = nombre_cedula.split("(")[0].strip()
                         cedula = nombre_cedula[nombre_cedula.find("(")+1 : nombre_cedula.find(")")]
-                        empleados_detalle.append({
+                        motivos_dict[motivo].append({
                             "nombre": nombre,
-                            "cedula": cedula,
-                            "motivo": motivo if motivo else "No especificado"
+                            "cedula": cedula
                         })
 
                     return render(request, "cargar_empleados_resultado.html", {
                         "mensaje": resumen,
-                        "empleados_sin_entrega": empleados_detalle
+                        "motivos_dict": dict(motivos_dict),
                     })
 
                 else:
@@ -551,42 +605,56 @@ def descargar_pdf_entrega(request, entrega_id):
 
 
 def vista_consolidado(request):
-    # Base queryset
     entregas = EntregaDotacion.objects.all()
 
-    # 👷 Filtro según rol y sucursal
+    # 👷 Filtro por rol y sucursal (solo ve su bodega)
     if request.user.rol == 'almacen' and request.user.sucursal:
-        ciudad_bodega = request.user.sucursal.id_ciudad  # campo FK en Bodega
-        entregas = entregas.filter(empleado__ciudad=ciudad_bodega)
-        print(f"👷 Usuario Almacén -> filtrando por bodega: {request.user.sucursal.nombre}")
-        print(f"📍 Ciudad asociada: {request.user.sucursal.id_ciudad.nombre}")
+        entregas = entregas.filter(bodega=request.user.sucursal)
+        print(f"👷 Usuario Almacén -> filtrando por su bodega: {request.user.sucursal.nombre}")
         print(f"📦 Entregas visibles: {entregas.count()}")
     else:
-        print(f"👑 Usuario {request.user.rol} -> sin filtro de ciudad (ve todo)")
+        print(f"👑 Usuario {request.user.rol} -> sin filtro de bodega (ve todo)")
 
-    # Consolidado final
+    # 📊 Consolidado final (ya no usamos Subquery)
     consolidado = (
         entregas
+        .annotate(
+            fecha_minuto=TruncMinute('fecha_entrega'),
+        )
         .values(
             'empleado__cliente__nombre',
             'empleado__cliente__id_cliente',
             'empleado__ciudad__id_ciudad',
             'empleado__ciudad__nombre',
             'empleado__centro_costo',
+            'bodega__nombre',  # ✅ ahora se toma directo del modelo
             'periodo',
             'tipo_entrega',
+            'fecha_minuto',
         )
-        .annotate(total_entregas=Count('id'))
+        .annotate(
+            total_entregas=Count('id'),
+            parciales=Count('id', filter=Q(estado='parcial')),
+            completas=Count('id', filter=Q(estado='completa')),
+        )
+        .annotate(
+            tiene_parciales=Case(
+                When(parciales__gt=0, then=Value(True)),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+        )
         .order_by(
             'empleado__cliente__nombre',
             'empleado__ciudad__nombre',
             'empleado__centro_costo',
             'periodo',
-            'tipo_entrega'
+            'tipo_entrega',
+            'fecha_minuto',
         )
     )
 
-    return render(request, 'consolidado.html', {'consolidado': consolidado})
+    return render(request, "consolidado.html", {"consolidado": consolidado})
 
 
 # Función para reemplazar caracteres en DB
@@ -629,7 +697,7 @@ def generar_pdf_por_periodo(request):
 
     # Aplicar filtro
     entregas = EntregaDotacion.objects.filter(**filtros).select_related(
-        'empleado__cliente', 'grupo'
+        'empleado__cliente', 'grupo_dotacion'
     ).prefetch_related('detalles__producto')
 
     if not entregas.exists():
@@ -812,7 +880,7 @@ def generar_pdf_por_periodo(request):
 
 def generar_pdf_por_entrega(request, entrega_id):
     entrega = get_object_or_404(
-        EntregaDotacion.objects.select_related('empleado', 'grupo').prefetch_related('detalles__producto'),
+        EntregaDotacion.objects.select_related('empleado', 'grupo_dotacion').prefetch_related('detalles__producto'),
         id=entrega_id
     )
     empleado = entrega.empleado
@@ -951,10 +1019,185 @@ def generar_pdf_por_entrega(request, entrega_id):
 
 
 
+# def generar_entrega_faltantes(request, entrega_id):
+#     """
+#     Genera la entrega de los productos faltantes de una entrega parcial.
+#     Solo entrega los productos exactos que están en FaltanteEntrega
+#     y cuya talla coincide con la talla del empleado.
+#     """
+#     entrega = get_object_or_404(EntregaDotacion, id=entrega_id)
+#     faltantes = FaltanteEntrega.objects.filter(entrega=entrega, estado='pendiente')
+
+#     if not faltantes.exists():
+#         messages.info(request, "Esta entrega no tiene faltantes pendientes.")
+#         return redirect('historial_entregas')
+
+#     # Obtener bodega principal
+#     try:
+#         bodega = Bodega.objects.get(nombre__iexact='Principal')
+#     except Bodega.DoesNotExist:
+#         messages.error(request, "❌ No se encontró la bodega 'Principal'.")
+#         return redirect('historial_entregas')
+
+#     entregados, no_stock = [], []
+
+#     for faltante in faltantes:
+#         producto = faltante.producto
+#         categoria_nombre = producto.categoria.nombre.upper()
+
+#         # 🧩 Determinar talla del empleado según categoría
+#         if 'CAMISA' in categoria_nombre:
+#             talla_empleado = entrega.empleado.talla_camisa
+#         elif any(x in categoria_nombre for x in ['PANTALON', 'JEAN']):
+#             talla_empleado = entrega.empleado.talla_pantalon
+#         elif any(x in categoria_nombre for x in ['ZAPATO', 'BOTA']):
+#             talla_empleado = entrega.empleado.talla_zapatos
+#         else:
+#             talla_empleado = None
+
+#         # Extraer tallas numéricas (cuando aplican)
+#         talla_prod = re.findall(r'\d+', producto.nombre)
+#         talla_emp = re.findall(r'\d+', talla_empleado or '')
+
+#         talla_producto = talla_prod[0] if talla_prod else None
+#         talla_empleado = talla_emp[0] if talla_emp else talla_empleado  # usa texto si no hay número
+
+#         # ❌ Si la talla del producto no coincide con la del empleado → no entregar
+#         if talla_producto and talla_empleado and talla_producto != talla_empleado:
+#             no_stock.append(
+#                 f"{producto.nombre} - talla producto {talla_producto} ≠ talla empleado {talla_empleado}"
+#             )
+#             continue
+
+#         try:
+#             inventario = InventarioBodega.objects.get(bodega=bodega, producto=producto)
+
+#             if inventario.stock >= faltante.cantidad_faltante:
+#                 # ✅ Crear detalle de entrega solo del producto faltante exacto
+#                 DetalleEntregaDotacion.objects.create(
+#                     entrega=entrega,
+#                     producto=producto,
+#                     cantidad=faltante.cantidad_faltante
+#                 )
+
+#                 # Actualizar inventario y faltante
+#                 inventario.stock -= faltante.cantidad_faltante
+#                 inventario.save()
+
+#                 faltante.estado = 'entregado'
+#                 faltante.fecha_resolucion = timezone.now()
+#                 faltante.save()
+
+#                 entregados.append(f"{producto.nombre} x{faltante.cantidad_faltante}")
+#             else:
+#                 no_stock.append(f"{producto.nombre} (Stock insuficiente)")
+
+#         except InventarioBodega.DoesNotExist:
+#             no_stock.append(f"{producto.nombre} (Sin registro en bodega)")
+
+#     # Si ya no hay faltantes pendientes, marcar la entrega como completa
+#     if not FaltanteEntrega.objects.filter(entrega=entrega, estado='pendiente').exists():
+#         entrega.estado = 'completa'
+#         entrega.save()
+
+#     # ✅ Mensajes al usuario
+#     if entregados:
+#         messages.success(request, f"✅ Se entregaron: {', '.join(entregados)}.")
+#     if no_stock:
+#         messages.warning(request, f"⚠️ No se entregaron: {', '.join(no_stock)}.")
+
+#     return redirect('vista_consolidado')
+
+
+
+# def generar_entrega_faltantes(request, entrega_id):
+#     """
+#     Genera la entrega de los productos faltantes de una entrega parcial.
+#     Solo entrega productos cuya talla coincida con la talla del empleado.
+#     """
+#     entrega = get_object_or_404(EntregaDotacion, id=entrega_id)
+#     faltantes = FaltanteEntrega.objects.filter(entrega=entrega, estado='pendiente')
+
+#     if not faltantes.exists():
+#         messages.info(request, "Esta entrega no tiene faltantes pendientes.")
+#         return redirect('historial_entregas')
+
+#     # 🏢 Determinar bodega según el usuario
+#     bodega_usuario = getattr(request.user, 'bodega', None)
+#     if bodega_usuario:
+#         bodega = bodega_usuario
+#     else:
+#         try:
+#             bodega = Bodega.objects.get(nombre__iexact='Principal')
+#         except Bodega.DoesNotExist:
+#             messages.error(request, "❌ No se encontró la bodega asociada ni la 'Principal'.")
+#             return redirect('historial_entregas')
+
+#     entregados = []
+#     no_stock = []
+
+#     # Extraer talla del empleado (puede incluir texto como 'N° 40')
+#     talla_empleado_match = re.search(r'(\d+)', entrega.empleado.talla_zapatos or '')
+#     talla_empleado = talla_empleado_match.group(1) if talla_empleado_match else None
+
+#     for faltante in faltantes:
+#         try:
+#             # Verificamos inventario del producto faltante exacto
+#             inventario = InventarioBodega.objects.get(bodega=bodega, producto=faltante.producto)
+
+#             # 📌 Extraer talla numérica del producto faltante
+#             talla_producto_match = re.search(r'(\d+)', faltante.producto.nombre)
+#             talla_producto = talla_producto_match.group(1) if talla_producto_match else None
+
+#             # ❌ Si ambas tallas existen y no coinciden, saltar
+#             if talla_producto and talla_empleado and talla_producto != talla_empleado:
+#                 no_stock.append(
+#                     f"Excluida {faltante.producto.nombre}: talla entregada {talla_producto} ≠ talla empleado {talla_empleado}"
+#                 )
+#                 continue
+
+#             # ✅ Si hay stock suficiente, entregar
+#             if inventario.stock >= faltante.cantidad_faltante:
+#                 DetalleEntregaDotacion.objects.create(
+#                     entrega=entrega,
+#                     producto=faltante.producto,
+#                     cantidad=faltante.cantidad_faltante
+#                 )
+#                 inventario.stock -= faltante.cantidad_faltante
+#                 inventario.save()
+
+#                 faltante.estado = 'entregado'
+#                 faltante.fecha_resolucion = timezone.now()
+#                 faltante.save()
+
+#                 entregados.append(faltante.producto.nombre)
+#             else:
+#                 no_stock.append(f"{faltante.producto.nombre} (Faltan {faltante.cantidad_faltante})")
+
+#         except InventarioBodega.DoesNotExist:
+#             no_stock.append(f"{faltante.producto.nombre} (Sin registro en bodega)")
+
+#     # Si ya no hay faltantes pendientes, marcamos la entrega como completa
+#     if not FaltanteEntrega.objects.filter(entrega=entrega, estado='pendiente').exists():
+#         entrega.estado = 'completa'
+#         entrega.save()
+
+#     # ✅ Mensajes al usuario
+#     if entregados:
+#         messages.success(request, f"✅ Se entregaron: {', '.join(entregados)}.")
+#     if no_stock:
+#         messages.warning(request, f"⚠️ Sin stock o talla incorrecta para: {', '.join(no_stock)}.")
+
+#     return redirect('vista_consolidado')
+
+
+
+@transaction.atomic
 def generar_entrega_faltantes(request, entrega_id):
     """
     Genera la entrega de los productos faltantes de una entrega parcial.
-    Solo entrega productos cuya talla coincida con la talla del empleado.
+    Afecta el inventario directamente (usando descontar_stock_directo)
+    y actualiza el estado de la entrega cuando ya no quedan pendientes.
     """
     entrega = get_object_or_404(EntregaDotacion, id=entrega_id)
     faltantes = FaltanteEntrega.objects.filter(entrega=entrega, estado='pendiente')
@@ -963,66 +1206,87 @@ def generar_entrega_faltantes(request, entrega_id):
         messages.info(request, "Esta entrega no tiene faltantes pendientes.")
         return redirect('historial_entregas')
 
-    # Obtener bodega principal
-    try:
-        bodega = Bodega.objects.get(nombre__iexact='Principal')
-    except Bodega.DoesNotExist:
-        messages.error(request, "❌ No se encontró la bodega 'Principal'.")
-        return redirect('historial_entregas')
+    # 🏢 Determinar bodega desde el usuario
+    bodega = getattr(request.user, 'sucursal', None)
+    if not bodega:
+        try:
+            bodega = Bodega.objects.get(nombre__iexact='Principal')
+        except Bodega.DoesNotExist:
+            messages.error(request, "❌ No se encontró la bodega del usuario ni la 'Principal'.")
+            return redirect('historial_entregas')
 
     entregados = []
     no_stock = []
-
-    # Extraer talla del empleado (puede incluir texto como 'N° 40')
-    talla_empleado_match = re.search(r'(\d+)', entrega.empleado.talla_zapatos or '')
-    talla_empleado = talla_empleado_match.group(1) if talla_empleado_match else None
+    productos_entregados = []
 
     for faltante in faltantes:
+        producto = faltante.producto
+        categoria_nombre = producto.categoria.nombre.upper()
+
+        # 🧩 Determinar talla del empleado según categoría
+        if 'CAMISA' in categoria_nombre:
+            talla_empleado = entrega.empleado.talla_camisa
+        elif any(x in categoria_nombre for x in ['PANTALON', 'JEAN']):
+            talla_empleado = entrega.empleado.talla_pantalon
+        elif any(x in categoria_nombre for x in ['ZAPATO', 'BOTA']):
+            talla_empleado = entrega.empleado.talla_zapatos
+        else:
+            talla_empleado = None
+
+        # Extraer tallas numéricas
+        talla_prod = re.findall(r'\d+', producto.nombre)
+        talla_emp = re.findall(r'\d+', talla_empleado or '')
+
+        talla_producto = talla_prod[0] if talla_prod else None
+        talla_empleado = talla_emp[0] if talla_emp else talla_empleado
+
+        # ⚠️ Si las tallas no coinciden, saltar
+        if talla_producto and talla_empleado and talla_producto != talla_empleado:
+            no_stock.append(
+                f"{producto.nombre} - talla producto {talla_producto} ≠ talla empleado {talla_empleado}"
+            )
+            continue
+
         try:
-            # Verificamos inventario del producto faltante exacto
-            inventario = InventarioBodega.objects.get(bodega=bodega, producto=faltante.producto)
+            inventario = InventarioBodega.objects.get(bodega=bodega, producto=producto)
 
-            # 📌 Extraer talla numérica del producto faltante
-            talla_producto_match = re.search(r'(\d+)', faltante.producto.nombre)
-            talla_producto = talla_producto_match.group(1) if talla_producto_match else None
-
-            # ❌ Si ambas tallas existen y no coinciden, saltar
-            if talla_producto and talla_empleado and talla_producto != talla_empleado:
-                no_stock.append(
-                    f"Excluida {faltante.producto.nombre}: talla entregada {talla_producto} ≠ talla empleado {talla_empleado}"
-                )
-                continue
-
-            # ✅ Si hay stock suficiente, entregar
             if inventario.stock >= faltante.cantidad_faltante:
-                DetalleEntregaDotacion.objects.create(
+                # ✅ Crear detalle y agregar a lista de entregados
+                detalle = DetalleEntregaDotacion.objects.create(
                     entrega=entrega,
-                    producto=faltante.producto,
+                    producto=producto,
                     cantidad=faltante.cantidad_faltante
                 )
-                inventario.stock -= faltante.cantidad_faltante
-                inventario.save()
+                productos_entregados.append(detalle)
 
+                # Marcar faltante como entregado
                 faltante.estado = 'entregado'
                 faltante.fecha_resolucion = timezone.now()
                 faltante.save()
 
-                entregados.append(faltante.producto.nombre)
+                entregados.append(f"{producto.nombre} x{faltante.cantidad_faltante}")
             else:
-                no_stock.append(f"{faltante.producto.nombre} (Faltan {faltante.cantidad_faltante})")
+                no_stock.append(f"{producto.nombre} (Stock insuficiente en {bodega.nombre})")
 
         except InventarioBodega.DoesNotExist:
-            no_stock.append(f"{faltante.producto.nombre} (Sin registro en bodega)")
+            no_stock.append(f"{producto.nombre} (No existe en inventario de {bodega.nombre})")
 
-    # Si ya no hay faltantes pendientes, marcamos la entrega como completa
+    # 🧾 Descontar stock de todos los productos entregados
+    if productos_entregados:
+        try:
+            descontar_stock_directo(productos_entregados, bodega)
+        except Exception as e:
+            messages.error(request, f"❌ Error al descontar stock: {e}")
+
+    # ✅ Si ya no hay faltantes pendientes, marcar entrega como completa
     if not FaltanteEntrega.objects.filter(entrega=entrega, estado='pendiente').exists():
         entrega.estado = 'completa'
         entrega.save()
 
-    # ✅ Mensajes al usuario
+    # 📢 Mensajes de resultado
     if entregados:
-        messages.success(request, f"✅ Se entregaron: {', '.join(entregados)}.")
+        messages.success(request, f"✅ Se entregaron desde {bodega.nombre}: {', '.join(entregados)}.")
     if no_stock:
-        messages.warning(request, f"⚠️ Sin stock o talla incorrecta para: {', '.join(no_stock)}.")
+        messages.warning(request, f"⚠️ No se entregaron: {', '.join(no_stock)}.")
 
-    return redirect('historial_entregas')
+    return redirect('vista_consolidado')

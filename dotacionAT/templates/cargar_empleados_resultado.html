@@ -2,67 +2,32 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
 
-    <!-- Mensaje resumen -->
-    <div class="alert alert-info shadow-sm rounded">
-        {{ mensaje }}
+<h4>Resumen del proceso</h4>
+<pre>{{ mensaje }}</pre>
+
+{% if motivos_dict %}
+  <h5>Empleados sin entrega o con novedades</h5>
+  {% for motivo, empleados in motivos_dict.items %}
+    <div class="card mb-3">
+      <div class="card-header bg-light fw-bold">
+        {{ motivo }} ({{ empleados|length }})
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for e in empleados %}
+          <li class="list-group-item">
+            {{ e.nombre }} - {{ e.cedula }}
+          </li>
+        {% endfor %}
+      </ul>
     </div>
+  {% endfor %}
+{% else %}
+  <div class="alert alert-success mt-3">
+    ✅ Todos los empleados recibieron su entrega correctamente.
+  </div>
+{% endif %}
 
-    <!-- Tabla de resultados -->
-    {% if empleados_sin_entrega %}
-        <div class="card shadow-sm">
-            <div class="card-header bg-warning text-dark fw-bold">
-                ⚠️ No se generaron entregas para los siguientes empleados
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Empleado</th>
-                                <th>Cédula</th>
-                                <th>Motivo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for emp in empleados_sin_entrega %}
-                                <tr>
-                                    <td>{{ emp.nombre }}</td>
-                                    <td>{{ emp.cedula }}</td>
-                                    <td>
-                                        {% if emp.sin_stock %}
-                                            ⚠️ Sin stock para:
-                                            <ul class="mb-0">
-                                                {% for p in emp.sin_stock %}
-                                                    <li>{{ p.nombre }} - Talla: {{ p.talla }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% endif %}
-                                        {% if emp.sin_regla %}
-                                            ⚠️ No cumple reglas de dotación
-                                        {% endif %}
-                                        {% if emp.advertencias %}
-                                            ⚠️ Advertencias:
-                                            <ul class="mb-0">
-                                                {% for adv in emp.advertencias %}
-                                                    <li>{{ adv }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <div class="alert alert-success mt-3">
-            ✅ Todas las entregas se generaron correctamente.
-        </div>
-    {% endif %}
 
     <!-- Botón volver -->
     <div class="mt-3">

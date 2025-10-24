@@ -4,12 +4,14 @@ import os
 DEBUG = False
 
 # (Datos que estaba manehando en PythonAnywhere)
-ALLOWED_HOSTS = ['DanielYustres.pythonanywhere.com']
-CSRF_TRUSTED_ORIGINS = ['https://danielyustres.pythonanywhere.com']
+ALLOWED_HOSTS = []
+CSRF_TRUSTED_ORIGINS = []
 
 # 💾 Base de datos:
 # Si existen variables de entorno de PostgreSQL, las usa.
 # Si no, se mantiene en SQLite (útil para pruebas).
+
+
 if os.getenv('DB_ENGINE') == 'postgresql':
     DATABASES = {
         'default': {

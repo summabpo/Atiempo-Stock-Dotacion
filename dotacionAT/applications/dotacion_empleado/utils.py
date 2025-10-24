@@ -612,7 +612,7 @@ def obtener_o_crear_empleado(fila):
 
     return empleado
 
-def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):
+def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None, bodega=None):
     """
     Aplica las reglas de negocio para generar la entrega de dotación.
     Retorna la entrega creada o None si no corresponde generar.
@@ -636,7 +636,7 @@ def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):
         ).exists():
             return None  # ya tuvo una entrega de ley, no se permite ingreso
 
-        # validar si ya existe entrega para ese mismo ingreso
+        # Validar si ya existe entrega para ese mismo ingreso
         existe_entrega = EntregaDotacion.objects.filter(
             empleado=empleado,
             tipo_entrega="ingreso",
@@ -646,12 +646,13 @@ def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):
         if existe_entrega:
             return None  # ya tenía entrega por este ingreso
 
-        # crear la entrega
+        # Crear la entrega con bodega incluida
         return EntregaDotacion.objects.create(
             empleado=empleado,
-            grupo=grupo,
+            grupo_dotacion=grupo,
             tipo_entrega="ingreso",
-            periodo=ingreso_actual.fecha_ingreso
+            periodo=ingreso_actual.fecha_ingreso,
+            bodega=bodega  # 👈 Nueva línea
         )
 
     # --- Caso entrega por ley ---
@@ -663,12 +664,12 @@ def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):
         if not ultimo_ingreso:
             return None  # nunca ha ingresado, no corresponde
 
-        # validar antigüedad >= 90 días
+        # Validar antigüedad >= 90 días
         dias_transcurridos = (now().date() - ultimo_ingreso.fecha_ingreso).days
         if dias_transcurridos < 90:
             return None  # aún no cumple la antigüedad mínima
 
-        # validar que no exista entrega en el mismo periodo
+        # Validar que no exista entrega en el mismo periodo
         if EntregaDotacion.objects.filter(
             empleado=empleado,
             tipo_entrega="ley",
@@ -676,12 +677,13 @@ def crear_entrega_dotacion(empleado, grupo, tipo_entrega, periodo=None):
         ).exists():
             return None
 
-        # crear la entrega
+        # Crear la entrega con bodega incluida
         return EntregaDotacion.objects.create(
             empleado=empleado,
-            grupo=grupo,
+            grupo_dotacion=grupo,
             tipo_entrega="ley",
-            periodo=periodo
+            periodo=periodo,
+            bodega=bodega  # 👈 Nueva línea
         )
 
     return None

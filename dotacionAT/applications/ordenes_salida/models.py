@@ -11,13 +11,13 @@ from django.conf import settings
 class Salida(models.Model):
 
     tipo_documento = models.CharField(
-        max_length=2,
+        max_length=5,
         verbose_name="Tipo de Documento"
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     observaciones = models.TextField(blank=True)
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
-    estado = models.CharField(max_length=20, default='Salida')
+    estado = models.CharField(max_length=30, default='Salida')
     bodegaSalida = models.ForeignKey(Bodega, on_delete=models.SET_NULL, null=True, blank=True, related_name='salida')
     bodegaEntrada = models.ForeignKey(Bodega, on_delete=models.SET_NULL, null=True, blank=True, related_name='entrada')
     cliente = models.ForeignKey(Cliente, null=True, on_delete=models.CASCADE)

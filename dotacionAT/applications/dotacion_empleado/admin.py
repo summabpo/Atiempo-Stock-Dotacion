@@ -48,13 +48,13 @@ class EntregaDotacionAdmin(admin.ModelAdmin):
         'estado',
         'empleado_cliente',
         'empleado_sexo',
-        'grupo',
+        'grupo_dotacion',
         'fecha_entrega',
         'productos_entregados',
         
     )
     list_filter = ('fecha_entrega',)
-    search_fields = ('id', 'empleado__nombre', 'empleado__cedula', 'grupo__cliente__nombre')
+    search_fields = ('id', 'empleado__nombre', 'empleado__cedula', 'grupo_dotacion__cliente__nombre')
     inlines = [DetalleEntregaDotacionInline]
     date_hierarchy = 'fecha_entrega'
 

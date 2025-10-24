@@ -157,7 +157,7 @@ def crear_categoria(request):
 
         categoria = Categoria(
             nombre=nombre,
-            id_usuario_creador=request.user
+            id_usuario=request.user
         )
         categoria.save()
         messages.success(request, "¡Categoría creada correctamente!")
