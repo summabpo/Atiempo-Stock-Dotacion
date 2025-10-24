@@ -21,16 +21,40 @@ if DEBUG:
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',  # Usar PostgreSQL en lugar de SQLite
-        'NAME': 'dotacion_at',  # Nombre de tu base de datos (por ejemplo, 'mi_proyecto')
-        'USER': 'postgres',  # Usuario de PostgreSQL
-        'PASSWORD': 'root',  # La contraseña del usuario 'postgres'
-        'HOST': 'localhost',  # PostgreSQL está corriendo localmente
-        'PORT': '5432',  # Puerto por defecto de PostgreSQL
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',  # Usar PostgreSQL en lugar de SQLite
+#         'NAME': 'dotacion_at',  # Nombre de tu base de datos (por ejemplo, 'mi_proyecto')
+#         'USER': 'postgres',  # Usuario de PostgreSQL
+#         'PASSWORD': 'root',  # La contraseña del usuario 'postgres'
+#         'HOST': 'localhost',  # PostgreSQL está corriendo localmente
+#         'PORT': '5432',  # Puerto por defecto de PostgreSQL
+#     }
+# }
+
+# if os.getenv('DB_ENGINE') == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'dotacion_at'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'root'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
     }
-}
+# else:
+#     print("conexion else")
+#     DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',  # Usar PostgreSQL en lugar de SQLite
+#         'NAME': 'dotacion_at',  # Nombre de tu base de datos (por ejemplo, 'mi_proyecto')
+#         'USER': 'postgres',  # Usuario de PostgreSQL
+#         'PASSWORD': 'root',  # La contraseña del usuario 'postgres'
+#         'HOST': 'localhost',  # PostgreSQL está corriendo localmente
+#         'PORT': '5432',  # Puerto por defecto de PostgreSQL
+#     }
+# }
 
 
 # Static files (CSS, JavaScript, Images)
