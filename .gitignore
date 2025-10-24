@@ -1,3 +1,87 @@
+# Ignorar entorno virtual
+/entornoV/
+
+env/
+venv/
+entornoV/
+__pycache__/
+
+# Ignorar base de datos SQLite
+db.sqlite3
+requirements_complete.txt
+# Ignorar template antiguo
+dotacionAT/templates/layouts/base2.html
+dotacionAT/templates/historial_entregas2.html
+dotacionAT/templates/crearOrdenCompra1.html
+# Ignorar archivos de migración generados localmente (excepto las necesarias para el repositorio)
+*.log
+*.pot
+*.pyc
+*.pyo
+*.swp
+*.swo
+
+# Ignorar directorios de compilación de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorar archivos generados por pip
+pip-selfcheck.json
+
+# Ignorar archivos temporales generados por sistemas de archivos
+*.bak
+*.tmp
+
+# Ignorar archivos generados por herramientas de test
+.coverage
+*.coveragerc
+.pytest_cache/
+
+# Ignorar archivos estáticos generados
+# staticfiles/
+
+# Archivos de configuración de IDE (ej. Visual Studio Code, PyCharm, etc.)
+.vscode/
+.idea/
+
+# Archivos de configuración de Docker (si usas Docker)
+.docker/
+Dockerfile
+docker-compose.yml
+
+# Ignorar archivos generados por Pillow (si trabajas con imágenes)
+# *.png
+# *.jpg
+# *.jpeg
+*.gif
+
+# Archivos temporales de Windows (como Thumb.db, Desktop.ini)
+Thumbs.db
+Desktop.ini
+
+# Ignorar archivos relacionados con las configuraciones de Django
+*.pot
+
+
+
+# Archivos de migraciones (si prefieres ignorarlas temporalmente o localmente)
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# Archivos de entorno
+.env
+.env.*
+.entornoV
+.entorno
+
+# Archivos de compilación de frontend (si llegas a tener JS, CSS, etc.)
+node_modules/
+dist/
+build/
+
+
+
 # Byte-compiled / optimized / DLL files
 pycache/
 *.py[cod]
@@ -57,7 +141,7 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
-# db.sqlite3
+#db.sqlite3
 # db.sqlite3-journal
 
 # Flask stuff:
@@ -83,12 +167,7 @@ ipython_config.py
 # pyenv
 .python-version
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+
 
 # celery beat schedule file
 celerybeat-schedule
@@ -96,14 +175,7 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+
 
 # Spyder project settings
 .spyderproject
