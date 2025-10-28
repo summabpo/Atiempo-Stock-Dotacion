@@ -43,11 +43,17 @@ DATABASES = {
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# Si usas una carpeta "static" en tu proyecto (además de las apps)
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# Directorios adicionales de archivos estáticos durante el desarrollo
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'applications/ciudades/static'),
+]
 
-# Evita servir estáticos obsoletos (usa hashes)
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+# Configuración de WhiteNoise - usa storage simple de Django
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# Configuración adicional de WhiteNoise para producción
+WHITENOISE_USE_FINDERS = False
+WHITENOISE_AUTOREFRESH = False
 
 # (Opcional) Archivos de usuario, si los manejas
 MEDIA_URL = '/media/'

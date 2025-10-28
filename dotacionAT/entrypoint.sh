@@ -7,9 +7,9 @@ export DJANGO_SETTINGS_MODULE=dotacionAT.settings.prod
 echo 'Applying migrations...'
 #python manage.py migrate --noinput
 
-# Collect static files (ya ejecutado manualmente)
+# Collect static files
 echo "Collecting static files..."
-#python manage.py collectstatic --noinput
+python manage.py collectstatic --noinput
 
 # Run server with Gunicorn
 echo 'Running server...'

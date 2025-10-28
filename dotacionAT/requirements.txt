@@ -1,6 +1,10 @@
 # --- Django Core ---
 Django==5.1.6
 
+# --- Server ---
+gunicorn==23.0.0
+whitenoise==6.8.2
+
 # --- Formularios y UI ---
 django-crispy-forms==2.3
 crispy-bootstrap5==2024.10
