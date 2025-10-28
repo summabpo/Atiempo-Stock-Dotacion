@@ -206,3 +206,5 @@ requirements*.txt
 
 # Ignorar archivos .rst temporalmente
 *.rst
+
+.DS_Store
