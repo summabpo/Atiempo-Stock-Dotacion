@@ -4,8 +4,14 @@ import os
 DEBUG = False
 
 # (Datos que estaba manehando en PythonAnywhere)
-ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
+
+# CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'http://localhost:8083',
+    'https://atiempo.atiempo.co'
+]
 
 # 💾 Base de datos:
 # Si existen variables de entorno de PostgreSQL, las usa.
