@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings  # Importa settings para acceder al modelo de Usuario
 
+
+#prueba
 class Ciudad(models.Model):
     id_ciudad = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255, verbose_name="Nombre de la ciudad")
@@ -32,3 +34,4 @@ class Ciudad(models.Model):
         verbose_name = 'Ciudad'
         verbose_name_plural = 'Ciudades'
         db_table = 'ciudad'
+        

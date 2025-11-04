@@ -24,7 +24,7 @@ from applications.inventario import views as inventario_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-     path('', inventario_views.index, name='index'),
+    path('', inventario_views.index, name='index'),
     path('', include('applications.ciudades.urls')),
     path('', include('applications.bodegas.urls')),
     path('', include('applications.proveedores.urls')),

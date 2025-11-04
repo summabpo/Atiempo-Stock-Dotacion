@@ -70,7 +70,7 @@ INTERNAL_IPS = ['127.0.0.1']
 
 # Asegúrate de que Django puede acceder a los archivos estáticos de todas las aplicaciones
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'applications/ciudades/static'),
+    os.path.join(BASE_DIR, 'static'),
 ]
 
 CSRF_COOKIE_SECURE = False

@@ -135,6 +135,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Directorios adicionales de archivos estáticos durante el desarrollo
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'applications/ciudades/static'),
+# ]
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'applications/ciudades/static'),
+    os.path.join(BASE_DIR, 'static'),
 ]
