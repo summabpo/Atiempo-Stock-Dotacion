@@ -1,15 +1,15 @@
 from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
-if DEBUG:
-    INSTALLED_APPS += ["debug_toolbar"]
-    MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
+# if DEBUG:
+#     INSTALLED_APPS += ["debug_toolbar"]
+#     MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
