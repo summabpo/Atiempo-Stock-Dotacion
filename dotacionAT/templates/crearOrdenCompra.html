@@ -508,6 +508,36 @@ document.querySelector('form').addEventListener('submit', function() {
     });
 });
 
+
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector(".formularioCompra");
+
+    if (!form) return;
+
+    form.addEventListener("submit", function(e) {
+        e.preventDefault(); // primero bloquea el envío
+
+        let precios = form.querySelectorAll("input[name='precios[]']");
+        let error = false;
+
+        for (let precio of precios) {
+            let valor = parseFloat(precio.value.replace(',', '.')) || 0;
+            if (valor <= 0) {
+                alert("⚠️ Hay productos con precio 0 o negativo. Corrige antes de guardar.");
+                precio.focus();
+                error = true;
+                break;
+            }
+        }
+
+        if (!error) {
+            console.log("Validación correcta ✅ Enviando formulario...");
+            form.submit(); // ahora sí envía de forma segura
+        }
+    });
+});
+
+
 </script>
 
 {% endblock %}
